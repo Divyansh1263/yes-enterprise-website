@@ -1,18 +1,17 @@
 import { Link } from 'react-router-dom'
 import siteConfig from '../config/site.config'
 import { useLanguage } from '../i18n'
+import { useScrollReveal } from '../hooks/useScrollReveal'
+import { buildWhatsAppContactUrl, buildWholesaleEnquiryUrl } from '../lib/whatsapp'
 import {
   getFeaturedProducts, getAllCategories,
   getCategoryName, getProductName,
 } from '../data/products'
-import { useScrollReveal } from '../hooks/useScrollReveal'
 import ProductCard from '../components/ui/ProductCard'
-import { buildWhatsAppContactUrl, buildWholesaleEnquiryUrl } from '../lib/whatsapp'
 
 const featured   = getFeaturedProducts()
 const categories = getAllCategories()
 
-// Hero product images — chosen for visual impact
 const heroImages = [
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (1).jpeg', alt: 'SS 304 stainless steel feeding bottle with YE logo' },
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM (2).jpeg', alt: 'Silicone sleeve feeding bottles pair' },
@@ -20,7 +19,6 @@ const heroImages = [
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.54 PM.jpeg',     alt: 'Glass feeding bottle red cap' },
 ]
 
-// Per-category accent colours
 const catAccents = {
   'glass-bottles':   { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
   'plastic-bottles': { from: '#D8E9F4', to: '#BDE5D8', label: '#1B4A36' },
@@ -29,7 +27,6 @@ const catAccents = {
   'ss-accessories':  { from: '#F8DFD1', to: '#F8E9B7', label: '#7C4A1A' },
 }
 
-// USP data — icon paths + translation keys
 const USP_ITEMS = [
   {
     key: 'madeInIndia',
@@ -81,29 +78,21 @@ export default function Home() {
   const featuredRef  = useScrollReveal()
   const catRef       = useScrollReveal()
   const aboutRef     = useScrollReveal()
+  // wholesale section: ref goes directly on the content div, not the section wrapper
   const wholesaleRef = useScrollReveal()
 
   return (
     <div className="overflow-x-hidden">
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          HERO — full-height, navy gradient, split layout
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section className="relative bg-grad-hero min-h-[92vh] lg:min-h-screen flex items-center overflow-hidden">
 
-        {/* Decorative — corners only, never over text */}
+        {/* Decorative — corners only */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Top-right circle */}
-          <div
-            className="absolute -top-40 -right-40 w-[480px] h-[480px] rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)' }}
-          />
-          {/* Bottom-left circle */}
-          <div
-            className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-[0.06]"
-            style={{ background: 'radial-gradient(circle, #D8E9F4, transparent 70%)' }}
-          />
-          {/* Subtle dot grid */}
+          <div className="absolute -top-40 -right-40 w-[480px] h-[480px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)' }} />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #D8E9F4, transparent 70%)' }} />
           <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="dots" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
@@ -117,10 +106,8 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
           <div className="lg:grid lg:grid-cols-2 lg:gap-20 items-center">
 
-            {/* Left: text block */}
+            {/* Left: text */}
             <div ref={heroRef} className="reveal">
-
-              {/* Badge */}
               <span
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
                 style={{ background: 'rgba(233,185,86,0.15)', color: '#E9B956', border: '1px solid rgba(233,185,86,0.30)' }}
@@ -129,19 +116,15 @@ export default function Home() {
                 {t('hero.badge')}
               </span>
 
-              {/* Headline */}
               <h1 className="text-4xl sm:text-5xl xl:text-[3.6rem] 2xl:text-6xl font-bold text-white leading-[1.12] mb-6">
-                {t('hero.headline1')}
-                <br />
+                {t('hero.headline1')}<br />
                 <span className="text-brand-amber">{t('hero.headline2')}</span>
               </h1>
 
-              {/* Sub-paragraph — constrained width */}
               <p className="text-white/65 text-base sm:text-lg leading-relaxed max-w-[30rem] mb-10">
                 {t('hero.sub')}
               </p>
 
-              {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to={getLangPath('/products')}
@@ -163,7 +146,6 @@ export default function Home() {
                 </a>
               </div>
 
-              {/* Trust indicators */}
               <div className="mt-10 flex flex-wrap gap-4">
                 {[
                   lang === 'hi' ? 'भारत में निर्मित' : 'Made in India',
@@ -178,7 +160,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right: product image collage — desktop only */}
+            {/* Right: product image collage */}
             <div className="hidden lg:grid grid-cols-2 gap-4 hero-img-grid mt-0">
               {heroImages.map((img, i) => (
                 <div
@@ -186,15 +168,10 @@ export default function Home() {
                   className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/40 ${i % 2 === 1 ? 'mt-10' : ''}`}
                   style={{ aspectRatio: '3/4' }}
                 >
-                  <img
-                    src={img.src}
-                    alt={img.alt}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
-
           </div>
         </div>
 
@@ -206,21 +183,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          USP STRIP
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── USP STRIP ────────────────────────────────────────────────────────── */}
       <section className="bg-white py-10 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div ref={uspRef} className="reveal grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {USP_ITEMS.map(({ key, color, icon }) => (
-              <div
-                key={key}
-                className="flex items-start gap-4 p-4 lg:p-5 rounded-2xl hover:bg-brand-ivory transition-colors"
-              >
-                <div
-                  className="usp-icon-wrap shrink-0"
-                  style={{ background: color }}
-                >
+              <div key={key} className="flex items-start gap-4 p-4 lg:p-5 rounded-2xl hover:bg-brand-ivory transition-colors">
+                <div className="usp-icon-wrap shrink-0" style={{ background: color }}>
                   <span className="text-brand-navy">{icon}</span>
                 </div>
                 <div>
@@ -233,13 +202,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          FEATURED PRODUCTS
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Section header */}
           <div ref={featuredRef} className="reveal text-center mb-14">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
               {lang === 'hi' ? 'चुनिंदा प्रोडक्ट' : 'Featured'}
@@ -252,14 +217,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Grid — 2 col → 3 col → 4 col, max 4 featured shown */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {featured.slice(0, 4).map(product => (
               <ProductCard key={product.id} product={product} lang={lang} />
             ))}
           </div>
 
-          {/* View all CTA */}
           <div className="text-center mt-12">
             <Link
               to={getLangPath('/products')}
@@ -274,12 +237,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PRODUCT CATEGORIES
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── PRODUCT CATEGORIES ────────────────────────────────────────────────── */}
       <section className="py-16 md:py-24" style={{ background: 'linear-gradient(180deg, #F7F5EF 0%, #ffffff 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           <div ref={catRef} className="reveal text-center mb-14">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
               {lang === 'hi' ? 'श्रेणियाँ' : 'Categories'}
@@ -292,7 +252,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Category grid — responsive: 1→2→3→5 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {categories.map(cat => {
               const accent = catAccents[cat.id] || { from: '#D8E9F4', to: '#E8DDF7', label: '#19345A' }
@@ -303,37 +262,20 @@ export default function Home() {
                   className="cat-card group relative rounded-2xl overflow-hidden shadow-card"
                   style={{ minHeight: 240 }}
                 >
-                  {/* Background image or gradient */}
                   {cat.heroImage ? (
                     <div className="absolute inset-0">
-                      <img
-                        src={cat.heroImage}
-                        alt={getCategoryName(cat, lang)}
-                        className="cat-card-img w-full h-full object-cover"
-                      />
+                      <img src={cat.heroImage} alt={getCategoryName(cat, lang)} className="cat-card-img w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/92 via-brand-navy/45 to-transparent" />
                     </div>
                   ) : (
-                    <div
-                      className="absolute inset-0"
-                      style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }}
-                    />
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }} />
                   )}
-
-                  {/* Content */}
                   <div className="relative h-full flex flex-col justify-end p-5" style={{ minHeight: 240 }}>
-                    <h3 className="font-bold text-white text-base leading-tight mb-1.5">
-                      {getCategoryName(cat, lang)}
-                    </h3>
-                    <p className="text-white/65 text-xs leading-relaxed line-clamp-2">
-                      {t(`categories.${cat.id}Desc`)}
-                    </p>
+                    <h3 className="font-bold text-white text-base leading-tight mb-1.5">{getCategoryName(cat, lang)}</h3>
+                    <p className="text-white/65 text-xs leading-relaxed line-clamp-2">{t(`categories.${cat.id}Desc`)}</p>
                     <span className="mt-3 inline-flex items-center gap-1 text-brand-amber text-xs font-semibold">
                       {lang === 'hi' ? 'देखें' : 'Explore'}
-                      <svg
-                        className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                      >
+                      <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>
                     </span>
@@ -345,14 +287,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MANUFACTURER / ABOUT STRIP
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── ABOUT / MANUFACTURER STRIP ───────────────────────────────────────── */}
       <section className="py-16 md:py-24 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
-
-            {/* Text block */}
             <div ref={aboutRef} className="reveal">
               <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
                 {t('about.sectionBadge')}
@@ -389,20 +327,13 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Owner / brand card */}
+            {/* Owner card */}
             <div className="mt-12 lg:mt-0">
-              <div
-                className="rounded-3xl overflow-hidden relative"
-                style={{ background: 'linear-gradient(135deg, #19345A 0%, #263449 60%, #142A48 100%)' }}
-              >
-                {/* Decorative amber glow top-right */}
-                <div
-                  className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
-                  style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)', transform: 'translate(30%, -30%)' }}
-                />
-
+              <div className="rounded-3xl overflow-hidden relative"
+                style={{ background: 'linear-gradient(135deg, #19345A 0%, #263449 60%, #142A48 100%)' }}>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
+                  style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)', transform: 'translate(30%, -30%)' }} />
                 <div className="relative p-8 lg:p-10 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-7">
-                  {/* Owner photo */}
                   <div className="shrink-0">
                     <img
                       src="/assets/owner photo.jpeg"
@@ -413,15 +344,10 @@ export default function Home() {
                         e.currentTarget.nextElementSibling.style.display = 'flex'
                       }}
                     />
-                    {/* Fallback logo */}
-                    <div
-                      className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-white/10 flex items-center justify-center hidden"
-                    >
+                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-white/10 items-center justify-center hidden">
                       <img src="/assets/logo.jpeg" alt="YE" className="h-16 w-16 rounded-xl object-contain bg-white p-1" />
                     </div>
                   </div>
-
-                  {/* Info */}
                   <div className="text-center sm:text-left lg:text-center xl:text-left">
                     <div className="flex items-center gap-2 mb-1 justify-center sm:justify-start lg:justify-center xl:justify-start">
                       <img src="/assets/logo.jpeg" alt="YE" className="h-7 w-7 rounded-lg object-contain bg-white p-0.5" onError={e => e.currentTarget.style.display='none'} />
@@ -430,29 +356,21 @@ export default function Home() {
                     <p className="text-white/55 text-sm mb-4">
                       {lang === 'hi' ? 'भारतीय निर्माता और थोक सप्लायर' : 'Indian Manufacturer & Wholesale Supplier'}
                     </p>
-
                     <div className="flex flex-col gap-2.5">
-                      <a
-                        href={siteConfig.ownerPhoneTel}
-                        className="inline-flex items-center gap-2 text-white/80 text-sm hover:text-white transition-colors"
-                      >
+                      <a href={siteConfig.ownerPhoneTel}
+                        className="inline-flex items-center gap-2 text-white/80 text-sm hover:text-white transition-colors">
                         <svg className="w-4 h-4 text-brand-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                         {siteConfig.ownerPhoneDisplay}
                       </a>
-                      <a
-                        href={buildWhatsAppContactUrl(lang)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-shine inline-flex items-center gap-2 px-4 py-2 bg-brand-amber text-brand-navy text-sm font-bold rounded-xl hover:bg-yellow-400 transition-colors w-fit"
-                      >
+                      <a href={buildWhatsAppContactUrl(lang)} target="_blank" rel="noopener noreferrer"
+                        className="btn-shine inline-flex items-center gap-2 px-4 py-2 bg-brand-amber text-brand-navy text-sm font-bold rounded-xl hover:bg-yellow-400 transition-colors w-fit">
                         <WaIconSm />
                         {lang === 'hi' ? 'WhatsApp पर संपर्क करें' : 'WhatsApp Enquiry'}
                       </a>
                     </div>
-
                     <div className="mt-5 flex items-center gap-2 text-xs text-brand-amber font-semibold justify-center sm:justify-start lg:justify-center xl:justify-start">
                       <span className="w-6 h-px bg-brand-amber/60 inline-block" />
                       {lang === 'hi' ? 'भारत में निर्मित' : 'Made in India'}
@@ -462,33 +380,25 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          WHOLESALE CTA — full-width dark navy with gold accent
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── WHOLESALE CTA ────────────────────────────────────────────────────── */}
+      {/* NOTE: ref goes on the content div (not the section) so reveal animation works */}
       <section
         className="py-16 md:py-20 relative overflow-hidden"
-        ref={wholesaleRef}
         style={{ background: 'linear-gradient(135deg, #19345A 0%, #142A48 50%, #263449 100%)' }}
       >
-        {/* Decorative circles */}
-        <div
-          className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)' }}
-        />
-        <div
-          className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, #D8E9F4, transparent 70%)' }}
-        />
-        {/* Amber top border accent */}
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)' }} />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #D8E9F4, transparent 70%)' }} />
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-brand-amber/60 to-transparent" />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <div className="reveal">
+          {/* Fix: ref directly on the reveal div */}
+          <div ref={wholesaleRef} className="reveal">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-amber/80 mb-4 block">
               {lang === 'hi' ? 'थोक सप्लाई' : 'Wholesale Supply'}
             </span>
@@ -519,9 +429,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          CONTACT STRIP
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── CONTACT STRIP ────────────────────────────────────────────────────── */}
       <section className="py-8 bg-brand-ivory border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
@@ -534,21 +442,15 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3 items-center">
-              <a
-                href={siteConfig.ownerPhoneTel}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-navy text-white text-sm font-semibold rounded-xl hover:bg-brand-navy-light transition-colors"
-              >
+              <a href={siteConfig.ownerPhoneTel}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-navy text-white text-sm font-semibold rounded-xl hover:bg-brand-navy-light transition-colors">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
                 {siteConfig.ownerPhoneDisplay}
               </a>
-              <a
-                href={buildWhatsAppContactUrl(lang)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white text-sm font-semibold rounded-xl hover:bg-[#20b857] transition-colors"
-              >
+              <a href={buildWhatsAppContactUrl(lang)} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white text-sm font-semibold rounded-xl hover:bg-[#20b857] transition-colors">
                 <WaIconSm />
                 WhatsApp
               </a>
@@ -561,7 +463,6 @@ export default function Home() {
   )
 }
 
-/* ── Shared small WA icon ────────────────────────────────────────────────── */
 function WaIconSm() {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
