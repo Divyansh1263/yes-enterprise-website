@@ -14,3 +14,4 @@ export function slugify(text) {
     .replace(/^-+/, '')          // Trim leading hyphens
     .replace(/-+$/, '')          // Trim trailing hyphens
 }
+

@@ -24,3 +24,4 @@ export function validateImage(file) {
 
   return { valid: true }
 }
+

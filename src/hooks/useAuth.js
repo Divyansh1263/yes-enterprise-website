@@ -12,3 +12,4 @@ export function useAuth() {
     signOut: async () => { console.warn('Auth not connected yet') },
   }
 }
+

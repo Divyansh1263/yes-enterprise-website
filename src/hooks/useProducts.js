@@ -9,3 +9,4 @@ export function useProducts() {
     error: null,
   }
 }
+

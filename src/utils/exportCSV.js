@@ -38,3 +38,4 @@ export function exportProductsCSV(products, filename = 'products_export.csv') {
   link.click()
   URL.revokeObjectURL(url)
 }
+

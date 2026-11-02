@@ -5,3 +5,4 @@
 -- 002_rls_policies.sql  — Row Level Security policies for all tables
 -- 003_storage.sql       — Storage bucket and policies
 -- 004_seed_admin.sql    — Insert admin user into allowlist
+

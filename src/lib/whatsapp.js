@@ -30,3 +30,4 @@ export function buildWhatsAppContactUrl() {
   if (!phone) return '#'
   return `https://wa.me/${phone}?text=${encodeURIComponent('Hi! I would like to enquire about your products.')}`
 }
+
