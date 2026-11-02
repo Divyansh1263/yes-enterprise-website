@@ -1,0 +1,7 @@
+-- Migration files will be placed here and executed during Milestone C.
+-- See the architecture document for full SQL contents.
+--
+-- 001_schema.sql        — Tables, indexes, triggers, functions
+-- 002_rls_policies.sql  — Row Level Security policies for all tables
+-- 003_storage.sql       — Storage bucket and policies
+-- 004_seed_admin.sql    — Insert admin user into allowlist
