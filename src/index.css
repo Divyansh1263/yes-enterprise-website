@@ -1,30 +1,57 @@
-/* ── Google Font import (must be first) ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* ── Fonts (must be first) ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Base resets ── */
+/* ── Base ── */
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+}
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+img { background-color: #f9fafb; }
+
+/* ── Hindi typography ── */
+html[lang='hi'] body {
+  font-family: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+  line-height: 1.8;
+}
+html[lang='hi'] h1,
+html[lang='hi'] h2,
+html[lang='hi'] h3 {
+  line-height: 1.5;
 }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* ── Scroll-reveal animation ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* ── Smooth scrolling ── */
-html {
-  scroll-behavior: smooth;
-}
-
-/* ── Line-clamp utility (for product names) ── */
+/* ── Utility ── */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -40,29 +67,73 @@ html {
   }
 }
 
-/* ── Focus styles for accessibility ── */
+/* ── Focus ── */
 *:focus-visible {
   outline: 2px solid #1B365D;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* ── Image loading placeholder ── */
-img {
-  background-color: #f9fafb;
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ── Hero image stagger ── */
+.hero-img-grid img {
+  transition: transform 0.5s ease;
+}
+.hero-img-grid:hover img { transform: scale(1.02); }
+
+/* ── Category card image zoom ── */
+.cat-card-img {
+  transition: transform 0.5s ease;
+}
+.cat-card:hover .cat-card-img { transform: scale(1.06); }
+
+/* ── Product card hover ── */
+.product-card {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.product-card:hover {
+  box-shadow: 0 8px 24px 0 rgb(0 0 0 / 0.10);
+  transform: translateY(-2px);
+}
+.product-card-img {
+  transition: transform 0.5s ease;
+}
+.product-card:hover .product-card-img { transform: scale(1.05); }
+
+/* ── Sticky enquiry button (mobile product detail) ── */
+.sticky-enquiry {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #e5e7eb;
+  display: none;
+}
+@media (max-width: 1023px) {
+  .sticky-enquiry { display: block; }
 }
 
-/* ── Custom scrollbar (subtle) ── */
-::-webkit-scrollbar {
-  width: 6px;
+/* ── Language selector animation ── */
+.lang-menu {
+  transform-origin: top right;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+.lang-menu.closed {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
 }
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+.lang-menu.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
 }

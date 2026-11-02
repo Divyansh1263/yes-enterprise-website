@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { LanguageProvider } from './i18n'
 
 // Layouts
 import Layout from './components/layout/Layout'
@@ -22,31 +23,42 @@ import AdminSettings from './pages/admin/AdminSettings'
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public routes — wrapped in Navbar/Footer layout */}
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:slug" element={<ProductDetail />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
+    <LanguageProvider>
+      <Routes>
+        {/* ── English public routes ── */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-      {/* Admin login — standalone (no navbar/footer, no admin sidebar) */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+        {/* ── Hindi public routes (/hi prefix) ── */}
+        <Route path="/hi" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="products" element={<Products />} />
+          <Route path="products/:slug" element={<ProductDetail />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
-      {/* Admin routes — wrapped in admin sidebar layout */}
-      {/* TODO: Milestone C — wrap these in a <ProtectedRoute> component */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="products" element={<AdminProductList />} />
-        <Route path="products/new" element={<AdminProductNew />} />
-        <Route path="products/:id/edit" element={<AdminProductEdit />} />
-        <Route path="settings" element={<AdminSettings />} />
-      </Route>
-    </Routes>
+        {/* ── Admin login — standalone (no navbar/footer) ── */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* ── Admin routes — sidebar layout ── */}
+        {/* TODO Milestone C: wrap in <ProtectedRoute> */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProductList />} />
+          <Route path="products/new" element={<AdminProductNew />} />
+          <Route path="products/:id/edit" element={<AdminProductEdit />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+      </Routes>
+    </LanguageProvider>
   )
 }
-
