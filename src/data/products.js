@@ -107,7 +107,7 @@ const categories = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Products (12 distinct products after grouping alt-views)
+// Products (14 distinct products after grouping alt-views)
 // ─────────────────────────────────────────────────────────────────────────────
 const products = [
 

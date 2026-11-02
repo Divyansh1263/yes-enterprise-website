@@ -7,6 +7,9 @@ export default function ProductCard({ product }) {
   const { t, lang, getLangPath } = useLanguage()
   const primary = product.images?.find(i => i.is_primary) || product.images?.[0]
   const name = getProductName(product, lang)
+  const capacity = Array.isArray(product.capacity)
+    ? product.capacity.join(' / ')
+    : product.capacity
 
   function handleWA(e) {
     e.preventDefault()
@@ -72,11 +75,9 @@ export default function ProductCard({ product }) {
         </h3>
 
         {/* Capacity */}
-        {product.capacity_ml && (
+        {capacity && (
           <p className="text-xs text-gray-400 mb-3">
-            {product.capacity_ml.length > 1
-              ? `${product.capacity_ml.join(' / ')} ml`
-              : `${product.capacity_ml[0]} ml`}
+            {capacity}
           </p>
         )}
 

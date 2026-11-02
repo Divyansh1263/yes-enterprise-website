@@ -14,11 +14,13 @@ import CategoryFilter from '../components/ui/CategoryFilter'
 import SearchBar from '../components/ui/SearchBar'
 
 const categories = getAllCategories()
+const categoryIds = new Set(categories.map(category => category.id))
 
 export default function Products() {
   const { t, lang, getLangPath } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialCategory = searchParams.get('category') || 'all'
+  const categoryFromUrl = searchParams.get('category')
+  const initialCategory = categoryIds.has(categoryFromUrl) ? categoryFromUrl : 'all'
 
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState('')
@@ -27,6 +29,12 @@ export default function Products() {
 
   const headerRef = useScrollReveal()
   const gridRef = useScrollReveal()
+
+  // Keep the selected category aligned with browser navigation and external URL changes.
+  useEffect(() => {
+    const category = searchParams.get('category')
+    setActiveCategory(categoryIds.has(category) ? category : 'all')
+  }, [searchParams])
 
   // Update products when category or search changes
   useEffect(() => {
@@ -44,12 +52,17 @@ export default function Products() {
 
   // Sync URL param when category changes
   useEffect(() => {
-    if (activeCategory === 'all') {
-      setSearchParams({})
+    const categoryInUrl = searchParams.get('category')
+    const nextCategory = activeCategory === 'all' ? null : activeCategory
+
+    if (categoryInUrl === nextCategory) return
+
+    if (nextCategory) {
+      setSearchParams({ category: nextCategory })
     } else {
-      setSearchParams({ category: activeCategory })
+      setSearchParams({})
     }
-  }, [activeCategory, setSearchParams])
+  }, [activeCategory, searchParams, setSearchParams])
 
   const handleCategoryChange = (cat) => {
     setActiveCategory(cat)
