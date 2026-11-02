@@ -114,7 +114,7 @@ export default function ProductDetail() {
               {category && (
                 <Badge variant="primary">{categoryName}</Badge>
               )}
-              {product.brand && product.brand !== 'YE' && (
+              {product.brand && product.brand !== 'YE' && product.brand !== 'YES ENTERPRISES' && (
                 <Badge variant="teal">{product.brand}</Badge>
               )}
               {product.in_stock === false && (

@@ -1,8 +1,8 @@
 {
-  "name": "ye-baby-products",
+  "name": "yes-enterprises",
   "private": true,
   "version": "1.0.0",
-  "description": "YE Baby Products — manufacturer product catalogue website",
+  "description": "YES ENTERPRISES — Manufacturers & Suppliers of Feeding Bottles, Water Bottles and Stainless Steel Products",
   "type": "module",
   "scripts": {
     "dev": "vite",

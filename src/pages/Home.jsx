@@ -24,7 +24,8 @@ const catAccents = {
   'plastic-bottles': { from: '#D8E9F4', to: '#BDE5D8', label: '#1B4A36' },
   'silicone-sleeve': { from: '#B9D9CE', to: '#BDE5D8', label: '#1B4D3E' },
   'ss-bottles':      { from: '#D8E9F4', to: '#B9D9CE', label: '#19345A' },
-  'ss-accessories':  { from: '#F8DFD1', to: '#F8E9B7', label: '#7C4A1A' },
+  'ss-sippers':      { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
+  'ss-tiffin':       { from: '#F8DFD1', to: '#F8E9B7', label: '#7C4A1A' },
 }
 
 const USP_ITEMS = [
@@ -335,26 +336,19 @@ export default function Home() {
                   style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)', transform: 'translate(30%, -30%)' }} />
                 <div className="relative p-8 lg:p-10 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-7">
                   <div className="shrink-0">
-                    <img
-                      src="/assets/owner photo.jpeg"
-                      alt="YE owner"
-                      className="owner-photo h-28 w-28 lg:h-32 lg:w-32 rounded-2xl object-cover"
-                      onError={e => {
-                        e.currentTarget.style.display = 'none'
-                        e.currentTarget.nextElementSibling.style.display = 'flex'
-                      }}
-                    />
-                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-white/10 items-center justify-center hidden">
-                      <img src="/assets/logo.jpeg" alt="YE" className="h-16 w-16 rounded-xl object-contain bg-white p-1" />
+                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-white p-3 flex items-center justify-center shadow-lg ring-1 ring-white/20">
+                      <img src="/assets/logo.jpeg" alt="YES ENTERPRISES" className="w-full h-full object-contain" />
                     </div>
                   </div>
                   <div className="text-center sm:text-left lg:text-center xl:text-left">
                     <div className="flex items-center gap-2 mb-1 justify-center sm:justify-start lg:justify-center xl:justify-start">
-                      <img src="/assets/logo.jpeg" alt="YE" className="h-7 w-7 rounded-lg object-contain bg-white p-0.5" onError={e => e.currentTarget.style.display='none'} />
-                      <p className="text-white font-bold text-xl">YE Baby Products</p>
+                      <p className="text-white font-bold text-xl">{siteConfig.companyName}</p>
                     </div>
-                    <p className="text-white/55 text-sm mb-4">
-                      {lang === 'hi' ? 'भारतीय निर्माता और थोक सप्लायर' : 'Indian Manufacturer & Wholesale Supplier'}
+                    <p className="text-brand-amber font-medium text-xs tracking-wide uppercase mb-1">
+                      {lang === 'hi' ? 'निर्माता एवं सप्लायर' : 'Manufacturers & Suppliers'}
+                    </p>
+                    <p className="text-white/60 text-xs mb-4 max-w-sm">
+                      {lang === 'hi' ? 'फीडिंग बोतलें, पानी की बोतलें और स्टेनलेस स्टील प्रोडक्ट्स' : 'Feeding bottles, water bottles and stainless-steel products'}
                     </p>
                     <div className="flex flex-col gap-2.5">
                       <a href={siteConfig.ownerPhoneTel}

@@ -1,32 +1,29 @@
 /**
- * YE Baby Products — Corrected Product Data
+ * YES ENTERPRISES — Product Data
  *
  * Sourced from visual inspection of /assets/ images and product_image_mapping.csv.
- * Will be replaced by Supabase queries in Milestone C.
+ * Will be replaced by Supabase queries in Phase 2.
  *
  * CONTENT RULES:
  * - Material stated only where confirmed by CSV visual inspection
  * - No invented prices, certifications or specifications
  * - Alternate-view images grouped under their primary product (not listed as separate products)
  * - Provisional notes retained where identity uncertain
- * - Wholesale-only positioning throughout
  * - Hindi names/descriptions use natural conversational Hindi
  * - Brand names (YE, Moon Baby, BPA Free) not translated
  * - Units (ml, SS 304) not translated
  *
- * AUDIT CORRECTIONS vs. previous data:
- * - PROD-05 silicone sleeve bottles: body material NOT confirmed as glass — named neutrally
- * - PROD-07 120ml silicone sleeve: listed as separate product (different size), not PROD-05 variant
- * - PROD-09 frosted plastic 250ml: correctly classified as plastic, not glass
- * - PROD-13 large plastic with handles: correctly classified as plastic, not silicone
- * - PROD-14 SS bottles: grouped as ONE product (same model, 4 sizes) with 5 images
- * - PROD-15 SS tiffin: listed under ss-accessories, not ss-bottles
- * - PROD-16 SS sipper: listed under ss-accessories
- * - No stainless steel sippers in ss-bottles category
+ * CATEGORIES (6 distinct lines):
+ * - glass-bottles: Glass Feeding Bottles
+ * - plastic-bottles: Plastic Feeding Bottles
+ * - silicone-sleeve: Silicone Sleeve Feeding Bottles
+ * - ss-bottles: Stainless Steel Feeding Bottles
+ * - ss-sippers: Stainless Steel Sippers and Water Bottles
+ * - ss-tiffin: Stainless Steel Tiffin Boxes
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Categories
+// Categories (6 distinct categories reflecting the catalogue)
 // ─────────────────────────────────────────────────────────────────────────────
 const categories = [
   {
@@ -57,8 +54,8 @@ const categories = [
   },
   {
     id: 'silicone-sleeve',
-    name: 'Silicone Sleeve Bottles',
-    name_hi: 'सिलिकॉन स्लीव वाली बोतलें',
+    name: 'Silicone Sleeve Feeding Bottles',
+    name_hi: 'सिलिकॉन स्लीव फीडिंग बोतलें',
     slug: 'silicone-sleeve',
     sort_order: 3,
     description: 'Feeding bottles with protective silicone sleeves in multiple sizes',
@@ -82,13 +79,26 @@ const categories = [
     accentTo: '#B9D9CE',
   },
   {
-    id: 'ss-accessories',
-    name: 'Steel Sippers & Tiffin Boxes',
-    name_hi: 'स्टील सिपर और टिफिन बॉक्स',
-    slug: 'ss-accessories',
+    id: 'ss-sippers',
+    name: 'Stainless Steel Sippers and Water Bottles',
+    name_hi: 'स्टेनलेस स्टील सिपर और पानी की बोतलें',
+    slug: 'ss-sippers',
     sort_order: 5,
-    description: 'Stainless steel sippers and tiffin boxes for wholesale supply',
-    description_hi: 'थोक सप्लाई के लिए स्टेनलेस स्टील सिपर और टिफिन बॉक्स',
+    description: 'Stainless steel sippers and water bottles for retail and wholesale supply',
+    description_hi: 'रिटेल और थोक सप्लाई के लिए स्टेनलेस स्टील सिपर और पानी की बोतलें',
+    heroImage: '/assets/WhatsApp Image 2026-11-02 at 1.08.58 PM.jpeg',
+    // accent: cool blue
+    accentFrom: '#D8E9F4',
+    accentTo: '#E8DDF7',
+  },
+  {
+    id: 'ss-tiffin',
+    name: 'Stainless Steel Tiffin Boxes',
+    name_hi: 'स्टेनलेस स्टील टिफिन बॉक्स',
+    slug: 'ss-tiffin',
+    sort_order: 6,
+    description: 'Durable stainless steel tiffin and lunch box sets in multiple sizes',
+    description_hi: 'अलग-अलग साइज़ में टिकाऊ स्टेनलेस स्टील टिफिन और लंच बॉक्स सेट',
     heroImage: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (2).jpeg',
     // accent: peach/amber
     accentFrom: '#F8DFD1',
@@ -465,13 +475,13 @@ const products = [
     notes: 'YE logo and SS 304 grade clearly engraved on bottle. Studio-quality render images.',
   },
 
-  // ── Steel Sippers & Tiffin Boxes ──────────────────────────────────────────
+  // ── Stainless Steel Tiffin Boxes ──────────────────────────────────────────
   {
     id: 'prod-15',
     name: 'Stainless Steel Tiffin Box Set',
     name_hi: 'स्टेनलेस स्टील टिफिन बॉक्स सेट',
     slug: 'stainless-steel-tiffin-box-set',
-    category_id: 'ss-accessories',
+    category_id: 'ss-tiffin',
     description: 'Stainless steel tiffin / lunch box set with teal silicone clip-lock lid, available in two sizes. Contact for wholesale enquiries.',
     description_hi: 'टील सिलिकॉन क्लिप-लॉक ढक्कन के साथ स्टेनलेस स्टील टिफिन बॉक्स सेट, दो साइज़ में। थोक ऑर्डर के लिए संपर्क करें।',
     material: 'Stainless Steel',
@@ -496,12 +506,13 @@ const products = [
     notes: null,
   },
 
+  // ── Stainless Steel Sippers & Water Bottles ───────────────────────────────
   {
     id: 'prod-16',
     name: 'Stainless Steel Vacuum Sipper',
     name_hi: 'स्टेनलेस स्टील वैक्यूम सिपर',
     slug: 'stainless-steel-vacuum-sipper',
-    category_id: 'ss-accessories',
+    category_id: 'ss-sippers',
     description: 'Cola-shaped stainless steel sipper / water bottle with YE branding engraved. Contact for wholesale pricing.',
     description_hi: 'YE ब्रांड एनग्रेव किया हुआ स्टेनलेस स्टील सिपर / वाटर बोतल। थोक रेट के लिए संपर्क करें।',
     material: 'Stainless Steel',

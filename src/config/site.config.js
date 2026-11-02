@@ -1,14 +1,23 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * YE Baby Products — Site Configuration (Admin Panel)
+ * YES ENTERPRISES — Site Configuration (Admin Panel)
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * INSTRUCTIONS FOR THE MANUFACTURER / ADMIN:
- *   Edit only the values in this file. All pages pull contact details,
- *   branding and business information from here automatically.
+ * OFFICIAL COMPANY IDENTITY:
+ *   - Official Legal & Trade Name: YES ENTERPRISES
+ *   - Logo: Supplied YE monogram logo (/assets/logo.jpeg)
+ *   - Constitution: Partnership (verified by GST & Partnership Deed)
+ *   - Business Type: Manufacturers & Suppliers
+ *   - Core Focus: Baby feeding bottles, water bottles and stainless-steel products
+ *   - Registered Location (GST): Village Tewar Patti Urf Kazipura, Kundarki,
+ *                                Tehsil Bilari, Moradabad, Uttar Pradesh, PIN 244413
  *
- * Fields marked  ✅ CONFIRMED   — verified by the manufacturer.
- * Fields marked  ⚠ TODO         — need manufacturer input before going live.
+ * INSTRUCTIONS FOR THE ADMIN:
+ *   Edit values in this file. All pages pull contact details, branding
+ *   and business information from here automatically.
+ *
+ * Fields marked  ✅ CONFIRMED   — verified by official documents / partner.
+ * Fields marked  ⚠ TODO / PENDING — need explicit confirmation before going live.
  *   Leave TODO fields as empty string ''. The website will display
  *   "To be confirmed" automatically wherever they are empty.
  *
@@ -17,42 +26,49 @@
 
 const siteConfig = {
 
-  // ── Brand ──────────────────────────────────────────────────────────────────
-  // ✅ CONFIRMED
-  brandName: 'YE',
-  tagline: 'Feeding Bottles & Steel Essentials — Wholesale Supplier',
+  // ── Brand & Company ────────────────────────────────────────────────────────
+  // ✅ CONFIRMED — YES ENTERPRISES is the company name; YE is the monogram/logo
+  companyName: 'YES ENTERPRISES',
+  brandName: 'YES ENTERPRISES',
+  monogram: 'YE',
+  descriptor: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles and Stainless Steel Products',
+  tagline: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Products',
 
-  // Sub-brand appearing on some glass bottle labels.
-  // ⚠ TODO: Confirm exact relationship between YE and Moon Baby
-  subBrand: 'Moon Baby',
+  // Constitution: Partnership firm (Uvais Ali & Rukhsar)
+  constitution: 'Partnership',
+
+  // Note: Moon Baby relationship is unconfirmed. Do not present as an owned brand or sub-brand.
+  subBrand: '',
+
+  // ── Logo ───────────────────────────────────────────────────────────────────
+  // ✅ CONFIRMED — official monogram logo supplied in /assets/
+  logoPath: '/assets/logo.jpeg',
 
   // ── WhatsApp ───────────────────────────────────────────────────────────────
   // ✅ CONFIRMED — country code + digits only, no spaces, no +
   whatsappNumber: '917454848548',
 
-  // ── Owner / Primary Contact ────────────────────────────────────────────────
+  // ── Contact / Primary Representative ───────────────────────────────────────
   // ✅ CONFIRMED
   ownerPhone: '7454848548',
   ownerPhoneDisplay: '+91 74548 48548',
   ownerPhoneTel: 'tel:+917454848548',
   ownerWhatsApp: 'https://wa.me/917454848548',
 
-  // ⚠ TODO: Provide the owner's full name and designation
-  //   ownerName: '',
-  //   ownerDesignation: '',
-
-  // ✅ CONFIRMED — photo file is in /assets/
-  ownerPhotoPath: '/assets/owner photo.jpeg',
+  // ⚠ PENDING CONFIRMATION:
+  // Partner photograph provided, but whose photo it is and approval to publish
+  // must be confirmed before public display. Left blank to use company logo fallback.
+  ownerPhotoPath: '',
 
   // ── Business Contact Details ───────────────────────────────────────────────
   // ✅ CONFIRMED
   phone: '7454848548',
   phoneDisplay: '+91 74548 48548',
 
-  // ⚠ TODO: Business email address
+  // ⚠ TODO: Public-facing business email address
   email: '',
 
-  // ⚠ TODO: Full business address (shown on Contact page)
+  // ⚠ TODO: Public-facing contact address (keep separate from GST registered address until confirmed)
   address: '',
 
   // ⚠ TODO: Business hours (e.g. 'Mon–Sat, 9 AM – 6 PM IST')
@@ -71,7 +87,7 @@ const siteConfig = {
   // Set to true ONLY when the manufacturer has confirmed the claim.
   // ✅ CONFIRMED — "Made in India" label visible on product packaging
   claimMadeInIndia: true,
-  // ⚠ TODO: Confirm — "BPA Free" marking visible on some product packaging photos
+  // ✅ CONFIRMED — "BPA Free" marking visible on product packaging photos
   claimBpaFree: true,
   // ⚠ TODO: Confirm — glass products described as borosilicate; verify with manufacturer
   claimBorosilicateGlass: false,

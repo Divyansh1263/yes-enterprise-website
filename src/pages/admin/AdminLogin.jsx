@@ -17,9 +17,9 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/assets/logo.jpeg" alt="YE logo" className="h-16 w-16 mx-auto rounded-lg mb-4" />
-          <h1 className="text-2xl font-bold text-brand-navy">Admin Login</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to manage products</p>
+          <img src="/assets/logo.jpeg" alt="YES ENTERPRISES" className="h-16 w-16 mx-auto rounded-lg mb-4 object-contain bg-white p-1 shadow-sm" />
+          <h1 className="text-2xl font-bold text-brand-navy">YES ENTERPRISES</h1>
+          <p className="text-sm text-gray-500 mt-1">Admin Panel Sign In</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">

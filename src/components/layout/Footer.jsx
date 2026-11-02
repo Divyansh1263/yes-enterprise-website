@@ -24,11 +24,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to={getLangPath('/')} className="flex items-center gap-2.5 mb-4">
-              <img src="/assets/logo.jpeg" alt={`${siteConfig.brandName} logo`}
-                className="h-10 w-10 rounded-lg object-contain bg-white p-0.5 shrink-0" />
-              <div className="leading-none">
-                <span className="text-base font-bold text-white block">{siteConfig.brandName}</span>
-                <span className="text-[10px] text-white/40 tracking-widest uppercase">Baby Products</span>
+              <img src="/assets/logo.jpeg" alt="YES ENTERPRISES logo"
+                className="h-10 w-11 rounded-lg object-contain bg-white p-0.5 shrink-0" />
+              <div className="leading-tight">
+                <span className="text-base font-bold text-white block">{siteConfig.companyName}</span>
+                <span className="text-[10px] text-white/50 tracking-wider uppercase font-medium">Manufacturers &amp; Suppliers</span>
               </div>
             </Link>
             <p className="text-sm leading-relaxed text-white/50 max-w-xs">
@@ -102,7 +102,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-1.5 text-xs text-white/35">
-          <span>&copy; {year} {siteConfig.brandName}. {t('footer.rights')}</span>
+          <span>&copy; {year} {siteConfig.companyName}. {t('footer.rights')}</span>
           <span>{t('footer.madeInIndia')}</span>
         </div>
       </div>

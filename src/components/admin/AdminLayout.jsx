@@ -22,10 +22,10 @@ export default function AdminLayout() {
       <aside className="w-60 bg-brand-navy text-white shrink-0 hidden md:flex flex-col">
         <div className="p-4 border-b border-white/10">
           <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <img src="/assets/logo.jpeg" alt="YE" className="h-8 w-8 rounded bg-white p-0.5" />
+            <img src="/assets/logo.jpeg" alt="YES ENTERPRISES" className="h-8 w-8 rounded bg-white p-0.5 object-contain" />
             <div>
-              <span className="font-bold text-sm">YE Admin</span>
-              <span className="block text-xs text-white/50">Product Manager</span>
+              <span className="font-bold text-sm">YES ENTERPRISES</span>
+              <span className="block text-xs text-white/50">Admin Panel</span>
             </div>
           </Link>
         </div>
@@ -70,7 +70,7 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile admin header */}
         <header className="md:hidden bg-brand-navy text-white px-4 py-3 flex items-center justify-between">
-          <Link to="/admin/dashboard" className="font-bold text-sm">YE Admin</Link>
+          <Link to="/admin/dashboard" className="font-bold text-sm">YES ENTERPRISES Admin</Link>
           <Link to="/" className="text-xs text-white/60">← Site</Link>
         </header>
 

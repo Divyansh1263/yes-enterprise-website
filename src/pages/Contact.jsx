@@ -66,24 +66,17 @@ export default function Contact() {
               </a>
             </div>
 
-            {/* Owner / phone card */}
+            {/* Direct phone / representative card */}
             <div className="rounded-2xl p-7 flex flex-col"
               style={{ background: 'linear-gradient(135deg, #D8E9F4, #E8DDF7)', border: '1.5px solid #D8E9F4' }}>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-navy/10 overflow-hidden shrink-0 flex items-center justify-center">
-                  <img src={siteConfig.ownerPhotoPath} alt={lang === 'hi' ? 'निर्माता' : 'Manufacturer'}
-                    className="w-full h-full object-cover"
-                    onError={e => {
-                      e.currentTarget.style.display = 'none'
-                      e.currentTarget.nextElementSibling.style.display = 'block'
-                    }} />
-                  <svg className="w-6 h-6 text-brand-navy/30" style={{ display: 'none' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-sm shrink-0 flex items-center justify-center">
+                  <img src="/assets/logo.jpeg" alt="YES ENTERPRISES"
+                    className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-brand-amber uppercase tracking-wide mb-0.5">
-                    {lang === 'hi' ? 'सीधे बात करें' : 'Speak Directly'}
+                    {lang === 'hi' ? 'सीधे संपर्क करें' : 'Direct Contact'}
                   </p>
                   <h2 className="text-lg font-bold text-brand-navy">{t('contactPage.ownerTitle')}</h2>
                 </div>

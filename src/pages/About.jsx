@@ -75,11 +75,6 @@ export default function About() {
                   <span className="font-semibold">{t('detail.note')}: </span>{t('aboutPage.provisional')}
                 </p>
               </div>
-              <div className="mt-4 p-4 rounded-xl" style={{ background: '#D8E9F4' }}>
-                <p className="text-sm text-brand-navy/80">
-                  <span className="font-semibold">Moon Baby — </span>{t('aboutPage.subBrandNote')}
-                </p>
-              </div>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link to={getLangPath('/products')}
                   className="btn-shine inline-flex items-center gap-2 px-6 py-3 bg-brand-navy text-white font-semibold rounded-xl hover:bg-brand-navy-light transition-colors">
@@ -99,7 +94,7 @@ export default function About() {
             <div className="mt-10 lg:mt-0 grid grid-cols-2 gap-4">
               {[
                 { num: '14+', label: lang === 'hi' ? 'अलग-अलग प्रोडक्ट' : 'Distinct Products',   bg: '#D8E9F4' },
-                { num: '5',   label: lang === 'hi' ? 'प्रोडक्ट श्रेणियाँ' : 'Product Categories', bg: '#BDE5D8' },
+                { num: '6',   label: lang === 'hi' ? 'प्रोडक्ट श्रेणियाँ' : 'Product Categories', bg: '#BDE5D8' },
                 { num: '60–300ml', label: lang === 'hi' ? 'क्षमता रेंज' : 'Capacity Range',        bg: '#E8DDF7' },
                 { num: '🇮🇳', label: lang === 'hi' ? 'भारत में निर्मित' : 'Made in India',          bg: '#F8E9B7' },
               ].map((s, i) => (
@@ -204,52 +199,41 @@ export default function About() {
 
             <div className="bg-white rounded-3xl shadow-card-hover overflow-hidden">
               <div className="md:grid md:grid-cols-2">
-                {/* Owner photo — fixed height, no min-h causing blank space */}
-                <div className="relative bg-brand-navy overflow-hidden" style={{ height: 280 }}>
-                  <div className="absolute inset-0 opacity-10"
-                    style={{ background: 'radial-gradient(circle at 30% 70%, #D8E9F4, transparent)' }} />
-                  {siteConfig.ownerPhotoPath && (
-                    <img
-                      src={siteConfig.ownerPhotoPath}
-                      alt={lang === 'hi' ? 'निर्माता' : 'Manufacturer'}
-                      className="absolute inset-0 w-full h-full object-cover object-center"
-                      onError={e => {
-                        e.currentTarget.style.display = 'none'
-                        document.getElementById('about-owner-fallback').style.display = 'flex'
-                      }}
-                    />
-                  )}
-                  {/* Fallback */}
-                  <div
-                    id="about-owner-fallback"
-                    className="absolute inset-0 flex-col items-center justify-center text-center p-8"
-                    style={{ display: siteConfig.ownerPhotoPath ? 'none' : 'flex' }}
-                  >
-                    <div className="w-20 h-20 rounded-full bg-white/15 flex items-center justify-center mb-3">
-                      <svg className="w-10 h-10 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                {/* Official logo emblem */}
+                <div className="relative bg-brand-navy overflow-hidden flex items-center justify-center p-8" style={{ minHeight: 260 }}>
+                  <div className="absolute inset-0 opacity-15"
+                    style={{ background: 'radial-gradient(circle at 30% 70%, #E9B956, transparent 65%)' }} />
+                  <div className="relative text-center flex flex-col items-center">
+                    <div className="w-28 h-24 rounded-2xl bg-white p-3 shadow-xl ring-2 ring-brand-amber/30 flex items-center justify-center mb-3">
+                      <img
+                        src="/assets/logo.jpeg"
+                        alt="YES ENTERPRISES"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                    <p className="text-white/40 text-xs">
-                      {lang === 'hi' ? 'फोटो जल्द उपलब्ध होगी' : 'Owner photo — to be added'}
-                    </p>
+                    <span className="text-brand-amber font-bold text-sm tracking-wider uppercase block">
+                      {siteConfig.monogram || 'YE'} Monogram
+                    </span>
+                    <span className="text-white/60 text-xs mt-0.5">
+                      {siteConfig.companyName}
+                    </span>
                   </div>
                 </div>
 
-                {/* Owner info */}
+                {/* Business contact info */}
                 <div className="p-8 md:p-10 flex flex-col justify-center">
                   <div className="mb-5">
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-2">
-                      {lang === 'hi' ? 'प्रोपराइटर' : 'Proprietor'}
+                      {lang === 'hi' ? 'पार्टनरशिप फ़र्म' : 'Partnership Business'}
                     </p>
                     <h3 className="text-xl font-bold text-brand-navy mb-1">
-                      {t('aboutPage.ownerNameDefault')}
+                      {siteConfig.companyName}
                     </h3>
                     <p className="text-gray-500 text-sm">{t('aboutPage.ownerDesignationDefault')}</p>
                     <p className="mt-3 text-sm text-gray-400 italic">
                       {lang === 'hi'
-                        ? 'मालिक का नाम और परिचय जल्द उपलब्ध होगा।'
-                        : 'Owner name and profile to be provided by the manufacturer.'}
+                        ? 'फीडिंग बोतलें, पानी की बोतलें और स्टेनलेस स्टील प्रोडक्ट्स के लिए सीधे संपर्क करें।'
+                        : 'Contact us directly for feeding bottles, water bottles and stainless-steel products.'}
                     </p>
                   </div>
 

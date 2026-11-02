@@ -58,14 +58,16 @@ export default function Navbar() {
             <div className="relative">
               <img
                 src="/assets/logo.jpeg"
-                alt={`${siteConfig.brandName} logo`}
-                className="h-10 w-10 rounded-xl object-contain bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/20 transition-transform group-hover:scale-105"
+                alt="YES ENTERPRISES"
+                className="h-10 w-11 rounded-xl object-contain bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/20 transition-transform group-hover:scale-105"
               />
             </div>
-            <div className="leading-none">
-              <span className="text-[17px] font-bold tracking-wide block text-white">{siteConfig.brandName}</span>
-              <span className="text-[10px] text-brand-amber/80 tracking-[0.18em] uppercase font-medium">
-                Baby Products
+            <div className="leading-tight">
+              <span className="text-[15px] sm:text-[17px] font-bold tracking-wide block text-white">
+                {siteConfig.companyName}
+              </span>
+              <span className="text-[9px] sm:text-[10px] text-brand-amber tracking-wider uppercase font-semibold block">
+                Manufacturers &amp; Suppliers
               </span>
             </div>
           </Link>
