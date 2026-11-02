@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import siteConfig from '../../config/site.config'
 import { useLanguage } from '../../i18n'
 
@@ -14,7 +14,7 @@ export default function Navbar() {
   // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
-  // Shadow on scroll
+  // Shadow + border on scroll
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', fn, { passive: true })
@@ -29,10 +29,10 @@ export default function Navbar() {
   }, [])
 
   const navLinks = [
-    { to: getLangPath('/'), label: t('nav.home'), end: true },
+    { to: getLangPath('/'),         label: t('nav.home'),     end: true },
     { to: getLangPath('/products'), label: t('nav.products') },
-    { to: getLangPath('/about'), label: t('nav.about') },
-    { to: getLangPath('/contact'), label: t('nav.contact') },
+    { to: getLangPath('/about'),    label: t('nav.about') },
+    { to: getLangPath('/contact'),  label: t('nav.contact') },
   ]
 
   // Correct active matching for Hindi routes
@@ -42,85 +42,102 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`bg-brand-navy text-white sticky top-0 z-50 transition-shadow duration-300 ${scrolled ? 'shadow-lg shadow-brand-navy-dark/40' : ''}`}>
+    <header
+      className={`bg-brand-navy text-white sticky top-0 z-50 transition-all duration-300 ${
+        scrolled ? 'shadow-xl shadow-brand-navy-dark/50 border-b border-white/5' : ''
+      }`}
+    >
+      {/* Top gold accent line */}
+      <div className="h-0.5 bg-gradient-to-r from-brand-amber via-yellow-300 to-brand-amber opacity-80" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-[72px]">
 
           {/* ── Brand ── */}
-          <Link to={getLangPath('/')} className="flex items-center gap-2.5 shrink-0">
-            <img
-              src="/assets/logo.jpeg"
-              alt={`${siteConfig.brandName} logo`}
-              className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 shrink-0"
-            />
+          <Link to={getLangPath('/')} className="flex items-center gap-3 shrink-0 group">
+            <div className="relative">
+              <img
+                src="/assets/logo.jpeg"
+                alt={`${siteConfig.brandName} logo`}
+                className="h-10 w-10 rounded-xl object-contain bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/20 transition-transform group-hover:scale-105"
+              />
+            </div>
             <div className="leading-none">
-              <span className="text-base font-bold tracking-wide block">{siteConfig.brandName}</span>
-              <span className="text-[10px] text-white/45 tracking-widest uppercase">Baby Products</span>
+              <span className="text-[17px] font-bold tracking-wide block text-white">{siteConfig.brandName}</span>
+              <span className="text-[10px] text-brand-amber/80 tracking-[0.18em] uppercase font-medium">
+                Baby Products
+              </span>
             </div>
           </Link>
 
           {/* ── Desktop nav ── */}
-          <nav className="hidden md:flex items-center gap-0.5">
-            {navLinks.map(({ to, label, end }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(to, end)
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map(({ to, label, end }) => {
+              const active = isActive(to, end)
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    active
+                      ? 'nav-link-active bg-white/12 text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {label}
+                </Link>
+              )
+            })}
           </nav>
 
           {/* ── Right: Language selector + WhatsApp ── */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3">
 
-            {/* Language switcher */}
+            {/* Language switcher pill */}
             <div className="relative" ref={langRef}>
               <button
                 onClick={() => setLangOpen(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border border-white/15 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/25 transition-all"
                 aria-label="Switch language"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                </svg>
-                {lang === 'en' ? 'EN' : 'हि'}
-                <svg className={`w-3.5 h-3.5 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <span className="text-base leading-none">{lang === 'en' ? '🇬🇧' : '🇮🇳'}</span>
+                <span className="tracking-wide">{lang === 'en' ? 'EN' : 'हि'}</span>
+                <svg className={`w-3 h-3 transition-transform ${langOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {/* Dropdown */}
-              <div className={`lang-menu absolute right-0 top-full mt-1 w-36 bg-white rounded-xl shadow-xl border border-gray-100 py-1 overflow-hidden ${langOpen ? 'open' : 'closed'}`}>
+              <div className={`lang-menu absolute right-0 top-full mt-2 w-38 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 overflow-hidden ${langOpen ? 'open' : 'closed'}`}>
                 <button
                   onClick={() => { if (lang !== 'en') { switchLang(); setLangOpen(false) } else setLangOpen(false) }}
-                  className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${lang === 'en' ? 'text-brand-navy font-semibold bg-brand-navy/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors ${lang === 'en' ? 'text-brand-navy font-semibold bg-brand-soft-blue/30' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
-                  <span className="text-base">🇬🇧</span> English
+                  <span className="text-base">🇬🇧</span>
+                  <span>English</span>
+                  {lang === 'en' && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-amber" />}
                 </button>
                 <button
                   onClick={() => { if (lang !== 'hi') { switchLang(); setLangOpen(false) } else setLangOpen(false) }}
-                  className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${lang === 'hi' ? 'text-brand-navy font-semibold bg-brand-navy/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors ${lang === 'hi' ? 'text-brand-navy font-semibold bg-brand-soft-blue/30' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
-                  <span className="text-base">🇮🇳</span> हिन्दी
+                  <span className="text-base">🇮🇳</span>
+                  <span>हिन्दी</span>
+                  {lang === 'hi' && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-amber" />}
                 </button>
               </div>
             </div>
 
-            {/* WhatsApp */}
+            {/* WhatsApp CTA — gold-accented */}
             <a
               href={siteConfig.whatsappNumber ? `https://wa.me/${siteConfig.whatsappNumber}` : undefined}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg hover:bg-emerald-600 transition-colors ${!siteConfig.whatsappNumber ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`btn-shine inline-flex items-center gap-2 px-4 py-2 bg-brand-amber text-brand-navy text-sm font-bold rounded-xl hover:bg-yellow-400 transition-colors shadow-md shadow-brand-amber/25 ${!siteConfig.whatsappNumber ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <WaIcon className="w-4 h-4" />
-              {t('nav.whatsapp')}
+              <span className="hidden lg:inline">{t('nav.whatsapp')}</span>
+              <span className="lg:hidden">WhatsApp</span>
             </a>
           </div>
 
@@ -160,9 +177,7 @@ export default function Navbar() {
               onClick={switchLang}
               className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors mt-1"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-              </svg>
+              <span className="text-base">{lang === 'en' ? '🇮🇳' : '🇬🇧'}</span>
               {lang === 'en' ? 'हिन्दी में देखें' : 'View in English'}
             </button>
             {/* Mobile WhatsApp */}
@@ -170,7 +185,7 @@ export default function Navbar() {
               href={siteConfig.whatsappNumber ? `https://wa.me/${siteConfig.whatsappNumber}` : undefined}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-2 px-3 py-2.5 mt-1 bg-emerald-500 text-white font-medium rounded-lg text-sm ${!siteConfig.whatsappNumber ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`flex items-center gap-2 px-3 py-2.5 mt-1 bg-brand-amber text-brand-navy font-bold rounded-lg text-sm ${!siteConfig.whatsappNumber ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <WaIcon className="w-4 h-4" /> {t('nav.whatsapp')}
             </a>

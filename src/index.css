@@ -17,6 +17,12 @@
     background-color: #ffffff;
     color: #1a1a2e;
   }
+
+  /* Large heading tracking */
+  h1, h2 {
+    letter-spacing: -0.02em;
+  }
+
   /* Hindi typography */
   html[lang='hi'] body {
     font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
@@ -27,6 +33,11 @@
   html[lang='hi'] h4 {
     font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
     font-weight: 700;
+    line-height: 1.7;
+    letter-spacing: 0;
+  }
+  html[lang='hi'] p {
+    line-height: 1.85;
   }
 }
 
@@ -49,14 +60,14 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -8px rgb(27 54 93 / 0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -8px rgb(25 52 90 / 0.16), 0 8px 16px -4px rgb(0 0 0 / 0.08);
 }
 .product-card-img {
-  transition: transform 0.4s ease;
+  transition: transform 0.45s ease;
 }
 .product-card:hover .product-card-img {
-  transform: scale(1.06);
+  transform: scale(1.07);
 }
 
 /* ── Category card ────────────────────────────────────────────────────────── */
@@ -64,8 +75,8 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .cat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -8px rgb(0 0 0 / 0.20);
+  transform: translateY(-5px);
+  box-shadow: 0 24px 48px -8px rgb(0 0 0 / 0.22);
 }
 .cat-card-img {
   transition: transform 0.5s ease;
@@ -75,12 +86,16 @@
 }
 
 /* ── Hero image grid ──────────────────────────────────────────────────────── */
-.hero-img-grid img {
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+.hero-img-grid {
+  position: relative;
 }
-.hero-img-grid img:hover {
-  transform: scale(1.04) translateY(-4px);
-  box-shadow: 0 20px 40px -8px rgb(0 0 0 / 0.30);
+.hero-img-grid > div {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.hero-img-grid > div:hover {
+  transform: scale(1.03) translateY(-6px);
+  box-shadow: 0 24px 48px -8px rgb(0 0 0 / 0.35);
+  z-index: 2;
 }
 
 /* ── CTA button shine ─────────────────────────────────────────────────────── */
@@ -148,8 +163,42 @@
   100% { background-position: 0% 50%; }
 }
 
+/* ── Navbar active gold underline ─────────────────────────────────────────── */
+.nav-link-active {
+  position: relative;
+  color: #fff !important;
+}
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: #E9B956;
+}
+
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── USP strip icon bg ────────────────────────────────────────────────────── */
+.usp-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Owner photo frame ────────────────────────────────────────────────────── */
+.owner-photo {
+  border: 3px solid rgba(233, 185, 86, 0.4);
+  box-shadow: 0 12px 32px -6px rgb(25 52 90 / 0.25);
+}

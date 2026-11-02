@@ -10,6 +10,7 @@ export default function ProductCard({ product }) {
 
   function handleWA(e) {
     e.preventDefault()
+    e.stopPropagation()
     const url = buildWhatsAppUrl({ productName: name, lang })
     if (url !== '#') window.open(url, '_blank', 'noopener')
   }
@@ -17,7 +18,7 @@ export default function ProductCard({ product }) {
   return (
     <Link
       to={`${getLangPath('/products')}/${product.slug}`}
-      className="product-card group bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col"
+      className="product-card group bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-card"
     >
       {/* Image */}
       <div className="relative overflow-hidden bg-brand-ivory" style={{ aspectRatio: '4/5' }}>
@@ -45,16 +46,23 @@ export default function ProductCard({ product }) {
 
         {/* Image count badge */}
         {product.images?.length > 1 && (
-          <div className="absolute bottom-2.5 right-2.5 bg-black/40 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded-full">
+          <div className="absolute bottom-2.5 right-2.5 bg-black/40 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
             {product.images.length} {t('products.photos')}
           </div>
         )}
+
+        {/* Hover overlay with "View Details" */}
+        <div className="absolute inset-0 bg-brand-navy/0 group-hover:bg-brand-navy/10 transition-colors duration-300 flex items-center justify-center">
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-brand-navy text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+            {lang === 'hi' ? 'विवरण देखें' : 'View Details'}
+          </span>
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         {/* Category pill */}
-        <p className="text-[10px] font-semibold text-brand-navy/50 uppercase tracking-widest mb-1.5">
+        <p className="text-[10px] font-semibold text-brand-amber uppercase tracking-widest mb-1.5">
           {product.category_id?.replace(/-/g, ' ')}
         </p>
 
@@ -74,10 +82,10 @@ export default function ProductCard({ product }) {
 
         {/* Bottom row */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
-          <span className="text-xs text-gray-400">{t('products.contactForPrice')}</span>
+          <span className="text-xs text-gray-400 italic">{t('products.contactForPrice')}</span>
           <button
             onClick={handleWA}
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-semibold rounded-lg hover:bg-emerald-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white text-xs font-semibold rounded-lg hover:bg-emerald-600 transition-colors shrink-0"
             aria-label={`Enquire about ${name} on WhatsApp`}
           >
             <WaIcon />
@@ -96,6 +104,7 @@ function NoImageIcon() {
     </svg>
   )
 }
+
 function WaIcon() {
   return (
     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
