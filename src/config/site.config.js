@@ -1,45 +1,52 @@
 /**
  * Site configuration — YE Baby Products
  *
- * All business details below are placeholders.
- * Update these values once confirmed by the manufacturer.
- * Fields marked TODO require manufacturer input before launch.
+ * Update these values when confirmed by the manufacturer.
+ * Fields marked TODO require additional manufacturer input before launch.
  */
 
 const siteConfig = {
   // Brand
-  brandName: 'YE',                             // TODO: confirm full brand/company name
-  tagline: 'Quality Baby Products — Made in India',
+  brandName: 'YE',
+  tagline: 'Feeding Bottles & Steel Essentials — Wholesale Supplier',
 
-  // WhatsApp — CRITICAL: site CTA buttons depend on this
-  whatsappNumber: '',                           // TODO: e.g. '919876543210' (country code + number, digits only)
+  // WhatsApp — country code + number, digits only
+  whatsappNumber: '917454848548',
+
+  // Owner / contact
+  ownerPhone: '7454848548',
+  ownerPhoneDisplay: '+91 74548 48548',
+  ownerPhoneTel: 'tel:7454848548',
+  ownerWhatsApp: 'https://wa.me/917454848548',
+  // ownerName: '',        // TODO: confirm owner name before publishing
+  // ownerDesignation: '', // TODO: confirm designation before publishing
+  ownerPhotoPath: '/assets/owner photo.jpeg',
 
   // Contact details
-  phone: '',                                    // TODO: business phone number
-  email: '',                                    // TODO: business email
-  address: '',                                  // TODO: business address / service areas
-  businessHours: '',                            // TODO: e.g. 'Mon–Sat, 9 AM – 6 PM IST'
+  phone: '7454848548',
+  phoneDisplay: '+91 74548 48548',
+  email: '',            // TODO: business email
+  address: '',          // TODO: business address
+  businessHours: '',    // TODO: e.g. 'Mon–Sat, 9 AM – 6 PM IST'
 
   // Social (optional)
-  instagram: '',                                // TODO: if available
-  facebook: '',                                 // TODO: if available
+  instagram: '',        // TODO: if available
+  facebook: '',         // TODO: if available
 
   // Domain
-  siteUrl: '',                                  // TODO: e.g. 'https://yeproducts.in'
+  siteUrl: '',          // TODO: e.g. 'https://yeproducts.in'
 
-  // Brand relationship
-  subBrand: 'Moon Baby',                        // TODO: confirm relationship with YE
+  // Sub-brand (relationship unconfirmed)
+  subBrand: 'Moon Baby',
 
-  // Design
+  // Colours (mirrors tailwind.config.js tokens)
   colors: {
     primaryNavy: '#1B365D',
     primaryNavyLight: '#2A4A7A',
     primaryNavyDark: '#122440',
-    white: '#FFFFFF',
-    grayLight: '#F9FAFB',
-    grayMedium: '#6B7280',
+    ivory: '#F7F5EF',
+    amber: '#E8B85B',
   },
 }
 
 export default siteConfig
-

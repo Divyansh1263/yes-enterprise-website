@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LanguageProvider } from './i18n'
+import ScrollToTop from './components/ScrollToTop'
 
 // Layouts
 import Layout from './components/layout/Layout'
@@ -24,6 +25,7 @@ import AdminSettings from './pages/admin/AdminSettings'
 export default function App() {
   return (
     <LanguageProvider>
+      <ScrollToTop />
       <Routes>
         {/* ── English public routes ── */}
         <Route element={<Layout />}>
