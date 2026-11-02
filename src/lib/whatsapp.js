@@ -18,17 +18,17 @@ export function buildWhatsAppUrl({ productName, productUrl, quantity, lang = 'en
   let message
   if (lang === 'hi') {
     const parts = [
-      `नमस्ते! मुझे *${productName}* के बारे में थोक रेट और जानकारी चाहिए।`
+      `नमस्ते! मुझे YES ENTERPRISES के *${productName}* के बारे में जानकारी चाहिए।`
     ]
     if (productUrl) parts.push(productUrl)
     if (quantity && parseInt(quantity) > 0) parts.push(`मात्रा: ${quantity} यूनिट`)
     message = parts.join('\n')
   } else {
     const parts = [
-      `Hello! I would like to enquire about *${productName}* for wholesale / bulk order.`
+      `Hello! I would like to enquire about *${productName}* from YES ENTERPRISES.`
     ]
     if (productUrl) parts.push(productUrl)
-    if (quantity && parseInt(quantity) > 0) parts.push(`Quantity required: ${quantity} units`)
+    if (quantity && parseInt(quantity) > 0) parts.push(`Quantity: ${quantity} units`)
     message = parts.join('\n')
   }
 
@@ -44,8 +44,8 @@ export function buildWhatsAppContactUrl(lang = 'en') {
   if (!phone) return '#'
   const message =
     lang === 'hi'
-      ? 'नमस्ते! मुझे थोक ऑर्डर के बारे में जानकारी चाहिए। कृपया रेट और उपलब्धता बताएं।'
-      : 'Hello! I would like to enquire about wholesale pricing and bulk orders for your products.'
+      ? 'नमस्ते! मुझे YES ENTERPRISES के प्रोडक्ट्स और ऑर्डर के बारे में जानकारी चाहिए।'
+      : 'Hello! I would like to enquire about products and orders from YES ENTERPRISES.'
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 }
 
