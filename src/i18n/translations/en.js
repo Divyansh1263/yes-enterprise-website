@@ -66,7 +66,7 @@ export const en = {
     whyTitle: 'Why Choose YE',
     reasons: [
       'Made in India — Indian manufacturer',
-      'BPA-free plastics and SS 304 food-grade steel',
+      'BPA-free plastics and SS 304 stainless steel',
       'Direct manufacturer pricing — no middlemen',
       'Wide range: glass, plastic, silicone sleeve and steel',
       'Wholesale and bulk orders welcome',

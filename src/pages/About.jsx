@@ -101,7 +101,7 @@ export default function About() {
                 { num: '14+', label: lang === 'hi' ? 'अलग-अलग प्रोडक्ट' : 'Distinct Products',   bg: '#D8E9F4' },
                 { num: '5',   label: lang === 'hi' ? 'प्रोडक्ट श्रेणियाँ' : 'Product Categories', bg: '#BDE5D8' },
                 { num: '60–300ml', label: lang === 'hi' ? 'क्षमता रेंज' : 'Capacity Range',        bg: '#E8DDF7' },
-                { num: '100%', label: lang === 'hi' ? 'भारत में निर्मित' : 'Made in India',         bg: '#F8E9B7' },
+                { num: '🇮🇳', label: lang === 'hi' ? 'भारत में निर्मित' : 'Made in India',          bg: '#F8E9B7' },
               ].map((s, i) => (
                 <div key={i} className="rounded-2xl p-6 text-center" style={{ background: s.bg }}>
                   <p className="text-2xl font-bold text-brand-navy mb-1">{s.num}</p>

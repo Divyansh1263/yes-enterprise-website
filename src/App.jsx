@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { LanguageProvider } from './i18n'
 import ScrollToTop from './components/ScrollToTop'
+import { useAuth } from './hooks/useAuth'
 
 // Layouts
 import Layout from './components/layout/Layout'
@@ -21,6 +22,14 @@ import AdminProductList from './pages/admin/AdminProductList'
 import AdminProductNew from './pages/admin/AdminProductNew'
 import AdminProductEdit from './pages/admin/AdminProductEdit'
 import AdminSettings from './pages/admin/AdminSettings'
+
+/** Redirects unauthenticated users to /admin/login.
+ *  Phase 2 (Supabase) will replace useAuth with a real implementation. */
+function ProtectedRoute({ children }) {
+  const { isAdmin } = useAuth()
+  if (!isAdmin) return <Navigate to="/admin/login" replace />
+  return children
+}
 
 export default function App() {
   return (
@@ -51,8 +60,8 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
 
         {/* ── Admin routes — sidebar layout ── */}
-        {/* TODO Milestone C: wrap in <ProtectedRoute> */}
-        <Route path="/admin" element={<AdminLayout />}>
+        {/* ProtectedRoute redirects to /admin/login until Phase 2 auth is wired */}
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProductList />} />

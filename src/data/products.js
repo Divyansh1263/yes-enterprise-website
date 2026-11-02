@@ -426,7 +426,7 @@ const products = [
     name_hi: 'SS 304 स्टेनलेस स्टील फीडिंग बोतल',
     slug: 'stainless-steel-feeding-bottle-ss304',
     category_id: 'ss-bottles',
-    description: 'Food-grade SS 304 stainless steel feeding bottle with YE branding, available in 150 ml, 200 ml, 250 ml and 300 ml. Contact for wholesale pricing.',
+    description: 'SS 304 stainless steel feeding bottle with YE branding, available in 150 ml, 200 ml, 250 ml and 300 ml. Contact for wholesale pricing.',
     description_hi: 'YE ब्रांड की SS 304 स्टेनलेस स्टील फीडिंग बोतल — 150 ml, 200 ml, 250 ml और 300 ml में उपलब्ध। थोक रेट के लिए संपर्क करें।',
     material: 'SS 304 Stainless Steel',
     capacity: '150 ml, 200 ml, 250 ml, 300 ml',

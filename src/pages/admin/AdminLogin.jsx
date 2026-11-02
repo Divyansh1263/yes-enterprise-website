@@ -9,8 +9,8 @@ export default function AdminLogin() {
   const handleSubmit = (e) => {
     e.preventDefault()
     // TODO: Milestone C — connect to Supabase Auth
-    console.log('Login attempt:', email)
-    alert('Supabase Auth not connected yet. This will work after Milestone C.')
+    // Auth not yet wired — Phase 2 (Supabase) will replace this stub
+    alert('Admin login is not available yet. This will be enabled after Milestone C (Supabase).')
   }
 
   return (

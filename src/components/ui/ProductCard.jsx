@@ -27,7 +27,7 @@ export default function ProductCard({ product }) {
             src={primary.src}
             alt={primary.alt || name}
             className="product-card-img w-full h-full object-cover"
-            loading="eager"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-200">
