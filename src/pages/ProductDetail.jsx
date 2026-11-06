@@ -1,31 +1,138 @@
-import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import {
-  getProductBySlug,
+  getProductBySlug as getFixtureProductBySlug,
   getRelatedProducts,
   getCategoryById,
   getProductName,
   getProductDescription,
   getCategoryName,
-} from '../data/products'
-import { useLanguage } from '../i18n'
-import { useScrollReveal } from '../hooks/useScrollReveal'
-import { buildWhatsAppUrl } from '../lib/whatsapp'
-import ImageGallery from '../components/ui/ImageGallery'
-import WhatsAppButton from '../components/ui/WhatsAppButton'
-import ProductCard from '../components/ui/ProductCard'
-import Badge from '../components/ui/Badge'
+} from '../data/products';
+import { useLanguage } from '../i18n';
+import { useScrollReveal } from '../hooks/useScrollReveal';
+import { buildWhatsAppUrl, buildWhatsAppContactUrl } from '../lib/whatsapp';
+import { getPublicProductBySlug } from '../services/api/products.js';
+import { isFixtureFallbackAllowed } from '../services/api/client.js';
+import { paiseToInr } from '../utils/currency.js';
+import ImageGallery from '../components/ui/ImageGallery';
+import ProductCard from '../components/ui/ProductCard';
+import Badge from '../components/ui/Badge';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function ProductDetail() {
-  const { slug } = useParams()
-  const { t, lang, getLangPath } = useLanguage()
-  const product = getProductBySlug(slug)
-  const [quantity, setQuantity] = useState('')
+  const { slug } = useParams();
+  const { t, lang, getLangPath } = useLanguage();
 
-  const relatedRef = useScrollReveal()
+  const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState(null); // 'NOT_FOUND', 'OFFLINE', null
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [quantity, setQuantity] = useState('');
 
-  // ── Product not found ──────────────────────────────────────────────────────
-  if (!product) {
+  const relatedRef = useScrollReveal();
+
+  const fetchProduct = () => {
+    let isMounted = true;
+    setIsLoading(true);
+    setErrorStatus(null);
+    setErrorMessage(null);
+
+    getPublicProductBySlug(slug)
+      .then((data) => {
+        if (isMounted) {
+          if (data) {
+            setProduct(data);
+            if (data.has_variants && data.variants && data.variants.length > 0) {
+              setSelectedVariant(data.variants[0]);
+            }
+          } else {
+            setErrorStatus('NOT_FOUND');
+          }
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          // In local dev with explicit fallback enabled:
+          if (isFixtureFallbackAllowed()) {
+            const fixture = getFixtureProductBySlug(slug);
+            if (fixture) {
+              console.info('[ProductDetail] Using local dev fixture fallback (VITE_ENABLE_FIXTURE_FALLBACK=true).');
+              setProduct(fixture);
+              setIsLoading(false);
+              return;
+            }
+          }
+
+          // Production & default dev: live API is source of truth
+          if (err.status === 404 || err.code === 'PRODUCT_NOT_FOUND') {
+            setErrorStatus('NOT_FOUND');
+          } else {
+            setErrorStatus('OFFLINE');
+            setErrorMessage(err.message || 'Unable to connect to live inventory service.');
+          }
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  };
+
+  useEffect(() => {
+    fetchProduct();
+  }, [slug]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner message={lang === 'hi' ? 'उत्पाद विवरण लोड हो रहा है...' : 'Loading product details...'} size="lg" />
+      </div>
+    );
+  }
+
+  // ── Network / Server Offline Error ──────────────────────────────────────────
+  if (errorStatus === 'OFFLINE') {
+    const directWaUrl = buildWhatsAppContactUrl(lang);
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center py-20 space-y-4">
+          <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+            📡
+          </div>
+          <h1 className="text-2xl font-bold text-brand-navy">
+            {lang === 'hi' ? 'सेवा वर्तमान में अनुपलब्ध है' : 'Unable to Load Product'}
+          </h1>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            {errorMessage || (lang === 'hi' ? 'सर्वर से कनेक्ट करने में समस्या हुई। कृपया पुनः प्रयास करें।' : 'Could not retrieve live pricing and inventory data from the catalogue database.')}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <button
+              onClick={fetchProduct}
+              className="px-6 py-3 bg-brand-navy text-white font-semibold rounded-xl hover:bg-brand-navy-light transition-colors text-sm"
+            >
+              🔄 {lang === 'hi' ? 'पुनः प्रयास करें' : 'Try Again'}
+            </button>
+            <a
+              href={directWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white font-semibold rounded-xl hover:bg-[#20b857] transition-colors text-sm"
+            >
+              <span>💬</span>
+              <span>{lang === 'hi' ? 'WhatsApp पूछताछ' : 'Enquire on WhatsApp'}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Product not found (404) ────────────────────────────────────────────────
+  if (errorStatus === 'NOT_FOUND' || !product) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center py-20">
@@ -49,22 +156,44 @@ export default function ProductDetail() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
-  const category = getCategoryById(product.category_id)
-  const relatedProducts = getRelatedProducts(product, 3)
-  const productName = getProductName(product, lang)
-  const productDesc = getProductDescription(product, lang)
-  const categoryName = category ? getCategoryName(category, lang) : ''
+  const category = product.category || getCategoryById(product.category_id);
+  const relatedProducts = getRelatedProducts(product, 3);
+  const productName = getProductName(product, lang);
+  const productDesc = getProductDescription(product, lang);
+  const categoryName = category ? getCategoryName(category, lang) : '';
 
-  // WhatsApp enquiry URL
+  // WhatsApp enquiry detail with variant awareness
+  const enquiryItemName = selectedVariant
+    ? `${productName} (${selectedVariant.title || selectedVariant.sku})`
+    : productName;
+
   const waUrl = buildWhatsAppUrl({
-    productName,
+    productName: enquiryItemName,
     productUrl: typeof window !== 'undefined' ? window.location.href : '',
     quantity: quantity ? parseInt(quantity, 10) : undefined,
     lang,
-  })
+  });
+
+  // Calculate active price
+  let displayPrice = null;
+  if (selectedVariant && selectedVariant.price_paise != null) {
+    displayPrice = paiseToInr(selectedVariant.price_paise);
+  } else if (product.base_price_paise != null) {
+    displayPrice = paiseToInr(product.base_price_paise);
+  }
+
+  // Specifications
+  let specsList = [];
+  if (product.specifications) {
+    if (Array.isArray(product.specifications)) {
+      specsList = product.specifications;
+    } else if (typeof product.specifications === 'object') {
+      specsList = Object.entries(product.specifications).map(([key, value]) => ({ key, value }));
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -83,7 +212,7 @@ export default function ProductDetail() {
               <>
                 <span className="text-gray-300">/</span>
                 <Link
-                  to={getLangPath(`/products?category=${category.id}`)}
+                  to={getLangPath(`/products?category=${category.slug || category.id}`)}
                   className="hover:text-brand-navy transition-colors"
                 >
                   {categoryName}
@@ -104,7 +233,7 @@ export default function ProductDetail() {
 
           {/* Left: Image gallery */}
           <div className="mb-10 lg:mb-0">
-            <ImageGallery images={product.images} productName={productName} />
+            <ImageGallery images={product.images || []} productName={productName} />
           </div>
 
           {/* Right: Product info */}
@@ -117,7 +246,7 @@ export default function ProductDetail() {
               {product.brand && product.brand !== 'YE' && product.brand !== 'YES ENTERPRISES' && (
                 <Badge variant="teal">{product.brand}</Badge>
               )}
-              {product.in_stock === false && (
+              {(product.status === 'out_of_stock' || (product.stock_quantity !== undefined && product.stock_quantity <= 0)) && (
                 <Badge variant="warning">{t('detail.outOfStock')}</Badge>
               )}
             </div>
@@ -127,11 +256,67 @@ export default function ProductDetail() {
               {productName}
             </h1>
 
+            {/* Price Header (if available) */}
+            {displayPrice != null && (
+              <div className="mb-4 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-brand-navy">
+                  ₹{displayPrice.toLocaleString('en-IN')}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {lang === 'hi' ? '(थोक दर के लिए संपर्क करें)' : '(Wholesale pricing on request)'}
+                </span>
+              </div>
+            )}
+
             {/* Description */}
             {productDesc && (
               <p className="text-gray-600 leading-relaxed mb-6">
                 {productDesc}
               </p>
+            )}
+
+            {/* Variable Product Options / Variant Selection */}
+            {product.has_variants && product.variants && product.variants.length > 0 && (
+              <div className="bg-brand-ivory/60 border border-brand-navy/10 rounded-2xl p-5 mb-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-brand-navy uppercase tracking-wider">
+                    {lang === 'hi' ? 'वेरिएंट चुनें' : 'Select Option / Variant'}
+                  </h3>
+                  {selectedVariant && (
+                    <span className="text-xs font-mono text-gray-500">
+                      SKU: {selectedVariant.sku}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {product.variants.map((v) => {
+                    const isSelected = selectedVariant?.id === v.id;
+                    const vTitle = (lang === 'hi' && v.title_hi) ? v.title_hi : (v.title || v.sku);
+                    const vPrice = paiseToInr(v.price_paise);
+
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setSelectedVariant(v)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          isSelected
+                            ? 'border-brand-navy bg-white ring-2 ring-brand-navy/20 shadow-sm'
+                            : 'border-gray-200 bg-white/70 hover:border-gray-300'
+                        }`}
+                      >
+                        <p className={`text-xs font-bold ${isSelected ? 'text-brand-navy' : 'text-gray-800'}`}>
+                          {vTitle}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          ₹{vPrice.toLocaleString('en-IN')}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
             {/* Specs table */}
@@ -168,6 +353,13 @@ export default function ProductDetail() {
                     <dd className="text-gray-800 text-right">{product.brand}</dd>
                   </div>
                 )}
+                {/* Dynamic specs from D1 */}
+                {specsList.map((spec, i) => (
+                  <div key={i} className="flex items-start justify-between gap-4">
+                    <dt className="text-gray-500 font-medium shrink-0">{spec.key}</dt>
+                    <dd className="text-gray-800 text-right">{spec.value}</dd>
+                  </div>
+                ))}
               </dl>
             </div>
 
@@ -274,5 +466,5 @@ export default function ProductDetail() {
         </a>
       </div>
     </div>
-  )
+  );
 }

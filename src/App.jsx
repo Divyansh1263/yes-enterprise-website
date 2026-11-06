@@ -1,34 +1,55 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { LanguageProvider } from './i18n'
-import ScrollToTop from './components/ScrollToTop'
-import { useAuth } from './hooks/useAuth'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './i18n';
+import ScrollToTop from './components/ScrollToTop';
+import { useAuth } from './hooks/useAuth';
+import LoadingSpinner from './components/ui/LoadingSpinner.jsx';
+import AccessDenied from './components/admin/AccessDenied.jsx';
 
 // Layouts
-import Layout from './components/layout/Layout'
-import AdminLayout from './components/admin/AdminLayout'
+import Layout from './components/layout/Layout';
+import AdminLayout from './components/admin/AdminLayout';
 
 // Public pages
-import Home from './pages/Home'
-import Products from './pages/Products'
-import ProductDetail from './pages/ProductDetail'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import NotFound from './pages/NotFound'
+import Home from './pages/Home';
+import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
 
 // Admin pages
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminProductList from './pages/admin/AdminProductList'
-import AdminProductNew from './pages/admin/AdminProductNew'
-import AdminProductEdit from './pages/admin/AdminProductEdit'
-import AdminSettings from './pages/admin/AdminSettings'
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProductList from './pages/admin/AdminProductList';
+import AdminProductNew from './pages/admin/AdminProductNew';
+import AdminProductEdit from './pages/admin/AdminProductEdit';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminInventory from './pages/admin/AdminInventory';
+import AdminSettings from './pages/admin/AdminSettings';
 
-/** Redirects unauthenticated users to /admin/login.
- *  Phase 2 (Supabase) will replace useAuth with a real implementation. */
+/**
+ * ProtectedRoute: Enforces Cloudflare Access authentication with local dev bypass.
+ */
 function ProtectedRoute({ children }) {
-  const { isAdmin } = useAuth()
-  if (!isAdmin) return <Navigate to="/admin/login" replace />
-  return children
+  const { isAdmin, isLoading, isForbidden } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner message="Verifying admin credentials..." size="lg" />
+      </div>
+    );
+  }
+
+  if (isForbidden) {
+    return <AccessDenied />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
@@ -56,20 +77,21 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* ── Admin login — standalone (no navbar/footer) ── */}
+        {/* ── Admin login — standalone ── */}
         <Route path="/admin/login" element={<AdminLogin />} />
 
         {/* ── Admin routes — sidebar layout ── */}
-        {/* ProtectedRoute redirects to /admin/login until Phase 2 auth is wired */}
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProductList />} />
           <Route path="products/new" element={<AdminProductNew />} />
           <Route path="products/:id/edit" element={<AdminProductEdit />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="inventory" element={<AdminInventory />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>
     </LanguageProvider>
-  )
+  );
 }

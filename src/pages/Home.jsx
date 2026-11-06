@@ -1,23 +1,28 @@
-import { Link } from 'react-router-dom'
-import siteConfig from '../config/site.config'
-import { useLanguage } from '../i18n'
-import { useScrollReveal } from '../hooks/useScrollReveal'
-import { buildWhatsAppContactUrl, buildWholesaleEnquiryUrl } from '../lib/whatsapp'
+import { Link } from 'react-router-dom';
+import siteConfig from '../config/site.config';
+import { useLanguage } from '../i18n';
+import { useScrollReveal } from '../hooks/useScrollReveal';
+import { buildWhatsAppContactUrl, buildWholesaleEnquiryUrl } from '../lib/whatsapp';
 import {
-  getFeaturedProducts, getAllCategories,
-  getCategoryName, getProductName,
-} from '../data/products'
-import ProductCard from '../components/ui/ProductCard'
+  getFeaturedProducts,
+  getAllCategories,
+  getCategoryName,
+} from '../data/products';
+import { useProducts } from '../hooks/useProducts';
+import { useCategories } from '../hooks/useCategories';
+import ProductCard from '../components/ui/ProductCard';
 
-const featured   = getFeaturedProducts()
-const categories = getAllCategories()
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+
+const fallbackFeatured = getFeaturedProducts();
+const fallbackCategories = getAllCategories();
 
 const heroImages = [
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (1).jpeg', alt: 'SS 304 stainless steel feeding bottle with YE logo' },
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM (2).jpeg', alt: 'Silicone sleeve feeding bottles pair' },
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (2).jpeg', alt: 'Stainless steel tiffin box set' },
   { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.54 PM.jpeg',     alt: 'Glass feeding bottle red cap' },
-]
+];
 
 const catAccents = {
   'glass-bottles':   { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
@@ -26,7 +31,7 @@ const catAccents = {
   'ss-bottles':      { from: '#D8E9F4', to: '#B9D9CE', label: '#19345A' },
   'ss-sippers':      { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
   'ss-tiffin':       { from: '#F8DFD1', to: '#F8E9B7', label: '#7C4A1A' },
-}
+};
 
 const USP_ITEMS = [
   {
@@ -69,18 +74,32 @@ const USP_ITEMS = [
       </svg>
     ),
   },
-]
+];
 
 export default function Home() {
-  const { t, lang, getLangPath } = useLanguage()
+  const { t, lang, getLangPath } = useLanguage();
 
-  const heroRef      = useScrollReveal()
-  const uspRef       = useScrollReveal()
-  const featuredRef  = useScrollReveal()
-  const catRef       = useScrollReveal()
-  const aboutRef     = useScrollReveal()
-  // wholesale section: ref goes directly on the content div, not the section wrapper
-  const wholesaleRef = useScrollReveal()
+  const heroRef      = useScrollReveal();
+  const uspRef       = useScrollReveal();
+  const featuredRef  = useScrollReveal();
+  const catRef       = useScrollReveal();
+  const aboutRef     = useScrollReveal();
+  const wholesaleRef = useScrollReveal();
+
+  // Load live data
+  const {
+    categories,
+    loading: loadingCategories,
+    error: categoriesError,
+    refetch: refetchCategories
+  } = useCategories(fallbackCategories);
+
+  const {
+    products: featuredProducts,
+    loading: loadingProducts,
+    error: productsError,
+    refetch: refetchProducts
+  } = useProducts({ featured: true, limit: 4 }, fallbackFeatured);
 
   return (
     <div className="overflow-x-hidden">
@@ -218,11 +237,45 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {featured.slice(0, 4).map(product => (
-              <ProductCard key={product.id} product={product} lang={lang} />
-            ))}
-          </div>
+          {loadingProducts && featuredProducts.length === 0 ? (
+            <div className="py-12 flex justify-center">
+              <LoadingSpinner message={lang === 'hi' ? 'चुनिंदा उत्पाद लोड हो रहे हैं...' : 'Loading featured products...'} size="md" />
+            </div>
+          ) : productsError && featuredProducts.length === 0 ? (
+            <div className="max-w-md mx-auto my-6 p-6 bg-red-50/60 border border-red-200 rounded-2xl text-center space-y-3">
+              <p className="text-sm font-bold text-brand-navy">
+                {lang === 'hi' ? 'उत्पाद डेटा लोड नहीं हो सका' : 'Unable to load featured products'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {lang === 'hi'
+                  ? 'लाइव इन्वेंटरी सेवा अनुपलब्ध है। वास्तविक समय की कीमतें प्रदर्शित नहीं की जा सकतीं।'
+                  : 'Live inventory service is temporarily unavailable.'}
+              </p>
+              <div className="flex gap-2 justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={refetchProducts}
+                  className="px-4 py-2 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light"
+                >
+                  🔄 {lang === 'hi' ? 'पुनः प्रयास' : 'Retry'}
+                </button>
+                <a
+                  href={buildWholesaleEnquiryUrl(lang)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#25D366] text-white text-xs font-bold rounded-xl hover:bg-[#20b857]"
+                >
+                  💬 WhatsApp
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featuredProducts.slice(0, 4).map(product => (
+                <ProductCard key={product.id} product={product} lang={lang} />
+              ))}
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link
@@ -253,38 +306,61 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-            {categories.map(cat => {
-              const accent = catAccents[cat.id] || { from: '#D8E9F4', to: '#E8DDF7', label: '#19345A' }
-              return (
-                <Link
-                  key={cat.id}
-                  to={getLangPath(`/products?category=${cat.id}`)}
-                  className="cat-card group relative rounded-2xl overflow-hidden shadow-card"
-                  style={{ minHeight: 240 }}
-                >
-                  {cat.heroImage ? (
-                    <div className="absolute inset-0">
-                      <img src={cat.heroImage} alt={getCategoryName(cat, lang)} className="cat-card-img w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/92 via-brand-navy/45 to-transparent" />
+          {loadingCategories && categories.length === 0 ? (
+            <div className="py-12 flex justify-center">
+              <LoadingSpinner message={lang === 'hi' ? 'श्रेणियाँ लोड हो रही हैं...' : 'Loading categories...'} size="md" />
+            </div>
+          ) : categoriesError && categories.length === 0 ? (
+            <div className="max-w-md mx-auto my-6 p-6 bg-red-50/60 border border-red-200 rounded-2xl text-center space-y-3">
+              <p className="text-sm font-bold text-brand-navy">
+                {lang === 'hi' ? 'श्रेणियाँ लोड नहीं हो सकीं' : 'Unable to load categories'}
+              </p>
+              <button
+                type="button"
+                onClick={refetchCategories}
+                className="px-4 py-2 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light"
+              >
+                🔄 {lang === 'hi' ? 'पुनः प्रयास' : 'Retry'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+              {categories.map(cat => {
+                const catKey = cat.slug || cat.id;
+                const accent = catAccents[catKey] || { from: '#D8E9F4', to: '#E8DDF7', label: '#19345A' };
+                const catName = getCategoryName(cat, lang);
+                return (
+                  <Link
+                    key={cat.id}
+                    to={getLangPath(`/products?category=${cat.slug || cat.id}`)}
+                    className="cat-card group relative rounded-2xl overflow-hidden shadow-card"
+                    style={{ minHeight: 240 }}
+                  >
+                    {cat.heroImage ? (
+                      <div className="absolute inset-0">
+                        <img src={cat.heroImage} alt={catName} className="cat-card-img w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/92 via-brand-navy/45 to-transparent" />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }} />
+                    )}
+                    <div className="relative h-full flex flex-col justify-end p-5" style={{ minHeight: 240 }}>
+                      <h3 className="font-bold text-white text-base leading-tight mb-1.5">{catName}</h3>
+                      <p className="text-white/65 text-xs leading-relaxed line-clamp-2">
+                        {cat.description || t(`categories.${cat.id}Desc`)}
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-1 text-brand-amber text-xs font-semibold">
+                        {lang === 'hi' ? 'देखें' : 'Explore'}
+                        <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </span>
                     </div>
-                  ) : (
-                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }} />
-                  )}
-                  <div className="relative h-full flex flex-col justify-end p-5" style={{ minHeight: 240 }}>
-                    <h3 className="font-bold text-white text-base leading-tight mb-1.5">{getCategoryName(cat, lang)}</h3>
-                    <p className="text-white/65 text-xs leading-relaxed line-clamp-2">{t(`categories.${cat.id}Desc`)}</p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-brand-amber text-xs font-semibold">
-                      {lang === 'hi' ? 'देखें' : 'Explore'}
-                      <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -379,7 +455,6 @@ export default function Home() {
       </section>
 
       {/* ── WHOLESALE CTA ────────────────────────────────────────────────────── */}
-      {/* NOTE: ref goes on the content div (not the section) so reveal animation works */}
       <section
         className="py-16 md:py-20 relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #19345A 0%, #142A48 50%, #263449 100%)' }}
@@ -391,7 +466,6 @@ export default function Home() {
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-brand-amber/60 to-transparent" />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          {/* Fix: ref directly on the reveal div */}
           <div ref={wholesaleRef} className="reveal">
             <span className="text-xs font-bold uppercase tracking-widest text-brand-amber/80 mb-4 block">
               {lang === 'hi' ? 'थोक सप्लाई' : 'Wholesale Supply'}
@@ -454,7 +528,7 @@ export default function Home() {
       </section>
 
     </div>
-  )
+  );
 }
 
 function WaIconSm() {
@@ -463,5 +537,5 @@ function WaIconSm() {
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.75.75 0 00.917.918l4.462-1.494A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.24 0-4.31-.726-5.993-1.957l-.418-.306-2.65.887.886-2.648-.335-.433A9.96 9.96 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z" />
     </svg>
-  )
+  );
 }

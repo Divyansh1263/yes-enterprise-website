@@ -1,0 +1,18 @@
+# Local Development Environment Variables Template (Cloudflare Pages Functions / Wrangler)
+# Copy this file to .dev.vars for local testing. Never commit .dev.vars to Git.
+
+ENVIRONMENT=development
+CF_ACCESS_TEAM_NAME=your-team-name
+CF_ACCESS_AUD=your-application-aud-tag
+ADMIN_EMAILS=admin@yourdomain.in
+
+# Development Admin Bypass (Safe on localhost only with explicit header 'x-dev-admin-bypass: true')
+ENABLE_DEV_ADMIN_BYPASS=false
+DEV_BYPASS_EMAIL=admin@yourdomain.in
+
+# Cloudflare R2 S3-Compatible API Credentials (for presigned URL generation via aws4fetch)
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=yes-enterprises-public-images
+R2_PUBLIC_URL=https://images.yourdomain.in

@@ -1,4 +1,4 @@
-import siteConfig from '../config/site.config'
+import siteConfig from '../config/site.config.js';
 
 /**
  * Build a WhatsApp click-to-chat URL with a wholesale-oriented pre-filled message.

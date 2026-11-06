@@ -1,16 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLanguage } from '../../i18n'
 
-export default function SearchBar({ onSearch, initialValue = '' }) {
+export default function SearchBar({ onSearch, onChange, initialValue = '', value, placeholder }) {
   const { t } = useLanguage()
-  const [query, setQuery] = useState(initialValue)
+  const [query, setQuery] = useState(value !== undefined ? value : initialValue)
   const debounce = useRef(null)
 
   useEffect(() => {
-    clearTimeout(debounce.current)
-    debounce.current = setTimeout(() => onSearch(query), 280)
-    return () => clearTimeout(debounce.current)
-  }, [query, onSearch])
+    if (value !== undefined && value !== query) {
+      setQuery(value)
+    }
+  }, [value])
+
+  const handler = onSearch || onChange
+
+  useEffect(() => {
+    if (typeof handler === 'function') {
+      clearTimeout(debounce.current)
+      debounce.current = setTimeout(() => handler(query), 280)
+      return () => clearTimeout(debounce.current)
+    }
+  }, [query, handler])
 
   return (
     <div className="relative">
@@ -23,9 +33,9 @@ export default function SearchBar({ onSearch, initialValue = '' }) {
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
-        placeholder={t('products.searchPlaceholder')}
+        placeholder={placeholder || t('products.searchPlaceholder')}
         className="w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/15 focus:border-brand-navy transition-colors"
-        aria-label={t('products.searchPlaceholder')}
+        aria-label={placeholder || t('products.searchPlaceholder')}
       />
       {query && (
         <button

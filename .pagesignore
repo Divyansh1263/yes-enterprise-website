@@ -1,0 +1,12 @@
+# Cloudflare Pages Ignore
+# Exclude private PDFs and legal documents
+assets/*.pdf
+*.pdf
+
+# Exclude internal metadata and test files
+assets/*.csv
+visual-review/
+backups/
+temp_restore.db*
+.wrangler/
+

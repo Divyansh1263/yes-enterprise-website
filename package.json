@@ -7,7 +7,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "d1:migrate:local": "wrangler d1 migrations apply yes_enterprises_db --local",
+    "test:phase1": "node scripts/test-phase1-schema.mjs",
+    "test:phase2": "node scripts/test-phase2-api.mjs",
+    "test:phase2:http": "node scripts/test-phase2-runtime-http.mjs",
+    "test:phase3": "node scripts/test-phase3-admin.mjs",
+    "test:phase3:http": "node scripts/test-phase3-runtime-http.mjs",
+    "test:phase4": "node scripts/test-phase4-frontend.mjs",
+    "pages:dev": "wrangler pages dev dist"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -16,10 +24,11 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0",
-    "tailwindcss": "^3.4.16",
+    "autoprefixer": "^10.4.20",
+    "aws4fetch": "^1.0.20",
     "postcss": "^8.4.49",
-    "autoprefixer": "^10.4.20"
+    "tailwindcss": "^3.4.16",
+    "vite": "^6.0.0",
+    "wrangler": "^4.158.0"
   }
 }
-
