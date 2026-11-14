@@ -10,6 +10,13 @@
 let jwksCache = null;
 const JWKS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
+// Permitted complete production origins (exact scheme + hostname + default port)
+const ALLOWED_PRODUCTION_ORIGINS = new Set([
+  'https://yesenterprises.net.in',
+  'https://www.yesenterprises.net.in',
+  'https://yes-enterprise-website.pages.dev'
+]);
+
 /**
  * Base64URL decode helper using standard Web APIs.
  *
@@ -335,14 +342,14 @@ export async function validateAdminSession(context, fetchFn = fetch) {
 
     try {
       const originUrl = new URL(origin);
-      const host = originUrl.hostname.toLowerCase();
+      const isDev = env?.ENVIRONMENT === 'development';
+      const isLocal =
+        isDev &&
+        (originUrl.protocol === 'http:' || originUrl.protocol === 'https:') &&
+        (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1');
+
       const isAllowedOrigin =
-        host === 'yesenterprises.net.in' ||
-        host === 'www.yesenterprises.net.in' ||
-        host === 'yes-enterprises.pages.dev' ||
-        host.endsWith('.yes-enterprises.pages.dev') ||
-        host === 'localhost' ||
-        host === '127.0.0.1';
+        ALLOWED_PRODUCTION_ORIGINS.has(originUrl.origin) || isLocal;
 
       if (!isAllowedOrigin) {
         return {

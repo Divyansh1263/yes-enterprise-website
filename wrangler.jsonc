@@ -15,10 +15,7 @@
     {
       "binding": "DB",
       "database_name": "yes_enterprises_db",
-      // NOTE: "local-d1-yes-enterprises-db" is an intentional local development placeholder.
-      // In production Phase 5.2, after running `wrangler d1 create yes_enterprises_db`,
-      // replace this placeholder with the generated remote database UUID.
-      "database_id": "local-d1-yes-enterprises-db"
+      "database_id": "54c9ce5b-377e-4788-9899-43f71addf8a9"
     }
   ],
   "r2_buckets": [

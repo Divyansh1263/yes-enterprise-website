@@ -159,34 +159,56 @@ console.log('\n--- 2. Production Security: Bypass Strictly Blocked ---');
   assert(isPermitted === false, 'isLocalDevBypassPermitted strictly false on non-localhost remote host');
 }
 
-// ── 4. CSRF ALLOWED AND REJECTED ORIGINS ────────────────────────────────────
+// ── 4. CSRF ALLOWED AND REJECTED ORIGINS (PROD & DEV MATRICES) ─────────────
 console.log('\n--- 3. CSRF Allowed and Rejected Origins Verification ---');
 
-const allowedOrigins = [
+const DEV_ENV = {
+  ENVIRONMENT: 'development',
+  CF_ACCESS_TEAM_NAME: 'yes-enterprises-test',
+  CF_ACCESS_AUD: 'test-aud-tag-phase5',
+  ADMIN_EMAILS: 'admin@yesenterprises.net.in',
+  ENABLE_DEV_ADMIN_BYPASS: 'false'
+};
+
+// 3a. Production Environment Matrix
+console.log('--- 3a. Production CSRF Matrix (Exact origin & port security, localhost rejected in prod) ---');
+const prodAllowedOrigins = [
   'https://yesenterprises.net.in',
+  'https://yesenterprises.net.in:443', // normalized as same default port origin
   'https://www.yesenterprises.net.in',
-  'https://yes-enterprises.pages.dev',
-  'https://preview-123.yes-enterprises.pages.dev',
-  'http://localhost:5173',
-  'http://127.0.0.1:8788'
+  'https://yes-enterprise-website.pages.dev'
 ];
 
-for (const origin of allowedOrigins) {
-  const req = new Request('http://localhost:8788/api/admin/products', {
+for (const origin of prodAllowedOrigins) {
+  const req = new Request('https://yesenterprises.net.in/api/admin/products', {
     method: 'POST',
     headers: {
-      'host': 'localhost:8788',
+      'host': 'yesenterprises.net.in',
       'cookie': 'CF_Authorization=dummy.token.here',
       'origin': origin
     }
   });
 
   const result = await validateAdminSession({ request: req, env: PROD_ENV }, mockJwksFetch);
-  assert(result.code !== 'CSRF_REJECTED', `Origin allowed (not rejected by CSRF): ${origin}`);
+  assert(result.code !== 'CSRF_REJECTED', `[PROD] Origin allowed: ${origin}`);
 }
 
-const rejectedOrigins = [
-  'https://yesenterprises.in', // legacy unowned domain must be rejected
+const prodRejectedOrigins = [
+  'https://yesenterprises.net.in:8443', // non-default port on production domain strictly rejected
+  'https://www.yesenterprises.net.in:8443', // non-default port on www strictly rejected
+  'https://yes-enterprise-website.pages.dev:8443', // non-default port on pages.dev strictly rejected
+  'http://yesenterprises.net.in:8080', // non-default port and HTTP strictly rejected
+  'http://localhost:5173', // localhost HTTP rejected in prod
+  'http://127.0.0.1:8788', // 127.0.0.1 HTTP rejected in prod
+  'https://localhost',     // localhost HTTPS rejected in prod
+  'https://127.0.0.1',     // 127.0.0.1 HTTPS rejected in prod
+  'https://yesenterprises.in', // legacy unowned domain rejected
+  'https://yes-enterprises.pages.dev', // obsolete hostname rejected
+  'https://preview-123.yes-enterprises.pages.dev', // obsolete preview rejected
+  'https://preview-123.yes-enterprise-website.pages.dev', // arbitrary subdomains rejected
+  'https://attacker.yesenterprises.net.in', // arbitrary subdomains rejected
+  'http://yesenterprises.net.in', // HTTP origin in prod rejected
+  'http://yes-enterprise-website.pages.dev', // HTTP origin in prod rejected
   'https://evil-attacker.com',
   'https://notyesenterprises.net.in',
   'https://evil-yes-enterprises.pages.dev',
@@ -194,7 +216,33 @@ const rejectedOrigins = [
   'invalid-url-string'
 ];
 
-for (const origin of rejectedOrigins) {
+for (const origin of prodRejectedOrigins) {
+  const req = new Request('https://yesenterprises.net.in/api/admin/products', {
+    method: 'POST',
+    headers: {
+      'host': 'yesenterprises.net.in',
+      'cookie': 'CF_Authorization=dummy.token.here',
+      'origin': origin
+    }
+  });
+
+  const result = await validateAdminSession({ request: req, env: PROD_ENV }, mockJwksFetch);
+  assert(result.ok === false && result.code === 'CSRF_REJECTED', `[PROD] Origin rejected with CSRF_REJECTED: ${origin}`);
+}
+
+// 3b. Development Environment Matrix
+console.log('--- 3b. Development CSRF Matrix (Localhost accepted in dev) ---');
+const devAllowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:8788',
+  'https://localhost',
+  'https://127.0.0.1',
+  'https://yesenterprises.net.in',
+  'https://www.yesenterprises.net.in',
+  'https://yes-enterprise-website.pages.dev'
+];
+
+for (const origin of devAllowedOrigins) {
   const req = new Request('http://localhost:8788/api/admin/products', {
     method: 'POST',
     headers: {
@@ -204,8 +252,29 @@ for (const origin of rejectedOrigins) {
     }
   });
 
-  const result = await validateAdminSession({ request: req, env: PROD_ENV }, mockJwksFetch);
-  assert(result.ok === false && result.code === 'CSRF_REJECTED', `Origin rejected with CSRF_REJECTED: ${origin}`);
+  const result = await validateAdminSession({ request: req, env: DEV_ENV }, mockJwksFetch);
+  assert(result.code !== 'CSRF_REJECTED', `[DEV] Origin allowed: ${origin}`);
+}
+
+const devRejectedOrigins = [
+  'https://evil-attacker.com',
+  'https://yes-enterprises.pages.dev',
+  'http://yesenterprises.net.in',
+  'invalid-url-string'
+];
+
+for (const origin of devRejectedOrigins) {
+  const req = new Request('http://localhost:8788/api/admin/products', {
+    method: 'POST',
+    headers: {
+      'host': 'localhost:8788',
+      'cookie': 'CF_Authorization=dummy.token.here',
+      'origin': origin
+    }
+  });
+
+  const result = await validateAdminSession({ request: req, env: DEV_ENV }, mockJwksFetch);
+  assert(result.ok === false && result.code === 'CSRF_REJECTED', `[DEV] Origin rejected with CSRF_REJECTED: ${origin}`);
 }
 
 // Missing Origin header on state-changing cookie-authenticated request must be rejected
