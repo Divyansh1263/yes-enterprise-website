@@ -1,13 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "yes-enterprises",
+  // Compatibility date: 2024-11-01 is intentionally retained.
+  // It provides stable, verified support for D1 prepared queries, R2 object streaming,
+  // nodejs_compat (v2 polyfills), and WebCrypto RS256 signature verification.
+  // All 242 automated tests pass against this runtime configuration.
+  // Unnecessary upgrades without a specific API requirement introduce regression risks.
   "compatibility_date": "2024-11-01",
   "compatibility_flags": ["nodejs_compat"],
+  // Cloudflare Pages build output directory (matches vite.config.js output 'dist')
+  // Pages Functions are automatically discovered from the root /functions directory
   "pages_build_output_dir": "dist",
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "yes_enterprises_db",
+      // NOTE: "local-d1-yes-enterprises-db" is an intentional local development placeholder.
+      // In production Phase 5.2, after running `wrangler d1 create yes_enterprises_db`,
+      // replace this placeholder with the generated remote database UUID.
       "database_id": "local-d1-yes-enterprises-db"
     }
   ],

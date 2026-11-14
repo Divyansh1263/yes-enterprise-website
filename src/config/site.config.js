@@ -79,8 +79,8 @@ const siteConfig = {
   instagram: '',
   facebook: '',
 
-  // ⚠ TODO: Live website domain once published
-  siteUrl: '',
+  // ✅ CONFIRMED — Live production website domain (purchased & active)
+  siteUrl: 'https://yesenterprises.net.in',
 
   // ── Product / Specification Claims ─────────────────────────────────────────
   // These control which specification badges appear site-wide.

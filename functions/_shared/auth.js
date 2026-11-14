@@ -257,7 +257,7 @@ export async function validateAdminSession(context, fetchFn = fetch) {
 
   // 1. Check development bypass safety
   if (isLocalDevBypassPermitted(request, env)) {
-    const devEmail = env?.DEV_BYPASS_EMAIL || 'admin@yesenterprises.in';
+    const devEmail = env?.DEV_BYPASS_EMAIL || 'admin@yesenterprises.net.in';
     
     // Enforce allowlist in dev bypass
     const allowlist = (env?.ADMIN_EMAILS || '')
@@ -286,16 +286,19 @@ export async function validateAdminSession(context, fetchFn = fetch) {
   }
 
   // 2. Extract Cloudflare Access token from header or cookie
-  let token = request.headers.get('CF_Authorization') || request.headers.get('cf-access-jwt-assertion');
+  // Prefer the official signed assertion header injected by Cloudflare Access at the edge
+  let token = request.headers.get('cf-access-jwt-assertion') || request.headers.get('CF_Authorization');
   let isCookieAuth = false;
 
   if (!token) {
     const cookieHeader = request.headers.get('cookie') || '';
     const match = cookieHeader.match(/CF_Authorization=([^;]+)/);
     if (match) {
-      token = match[1];
+      token = match[1].trim();
       isCookieAuth = true;
     }
+  } else {
+    token = token.trim();
   }
 
   if (!token) {
@@ -321,32 +324,41 @@ export async function validateAdminSession(context, fetchFn = fetch) {
     }
 
     const origin = request.headers.get('origin');
-    if (origin) {
-      try {
-        const originUrl = new URL(origin);
-        const host = originUrl.hostname.toLowerCase();
-        const isAllowedOrigin =
-          host === 'yesenterprises.in' ||
-          host.endsWith('.yes-enterprises.pages.dev') ||
-          host === 'localhost' ||
-          host === '127.0.0.1';
+    if (!origin) {
+      return {
+        ok: false,
+        status: 403,
+        code: 'CSRF_REJECTED',
+        message: 'Missing Origin header on cookie-authenticated write request.'
+      };
+    }
 
-        if (!isAllowedOrigin) {
-          return {
-            ok: false,
-            status: 403,
-            code: 'CSRF_REJECTED',
-            message: 'Untrusted origin blocked by CSRF protection.'
-          };
-        }
-      } catch {
+    try {
+      const originUrl = new URL(origin);
+      const host = originUrl.hostname.toLowerCase();
+      const isAllowedOrigin =
+        host === 'yesenterprises.net.in' ||
+        host === 'www.yesenterprises.net.in' ||
+        host === 'yes-enterprises.pages.dev' ||
+        host.endsWith('.yes-enterprises.pages.dev') ||
+        host === 'localhost' ||
+        host === '127.0.0.1';
+
+      if (!isAllowedOrigin) {
         return {
           ok: false,
           status: 403,
           code: 'CSRF_REJECTED',
-          message: 'Malformed origin header.'
+          message: 'Untrusted origin blocked by CSRF protection.'
         };
       }
+    } catch {
+      return {
+        ok: false,
+        status: 403,
+        code: 'CSRF_REJECTED',
+        message: 'Malformed origin header.'
+      };
     }
   }
 

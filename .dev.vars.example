@@ -4,15 +4,20 @@
 ENVIRONMENT=development
 CF_ACCESS_TEAM_NAME=your-team-name
 CF_ACCESS_AUD=your-application-aud-tag
-ADMIN_EMAILS=admin@yourdomain.in
+ADMIN_EMAILS=admin@yesenterprises.net.in,owner@yesenterprises.net.in
 
 # Development Admin Bypass (Safe on localhost only with explicit header 'x-dev-admin-bypass: true')
 ENABLE_DEV_ADMIN_BYPASS=false
-DEV_BYPASS_EMAIL=admin@yourdomain.in
+DEV_BYPASS_EMAIL=admin@yesenterprises.net.in
 
 # Cloudflare R2 S3-Compatible API Credentials (for presigned URL generation via aws4fetch)
 R2_ACCOUNT_ID=your-cloudflare-account-id
 R2_ACCESS_KEY_ID=your-r2-access-key-id
 R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
 R2_BUCKET_NAME=yes-enterprises-public-images
-R2_PUBLIC_URL=https://images.yourdomain.in
+
+# ARCHITECTURE NOTE: R2_PUBLIC_URL is NOT required or used by this project.
+# Product images are delivered from the private R2 bucket via the Pages Function /uploads/ route
+# (which handles authentication for draft/archived items and public caching for active items).
+# No public R2 bucket URL or custom 'images' subdomain needs to be configured in DNS.
+# R2_PUBLIC_URL=https://images.yesenterprises.net.in  # INACTIVE / OPTIONAL (leave unset in production)
