@@ -49,16 +49,17 @@ const siteConfig = {
   whatsappNumber: '917454848548',
 
   // ── Contact / Primary Representative ───────────────────────────────────────
-  // ✅ CONFIRMED
+  // ✅ CONFIRMED & APPROVED
+  ownerName: 'Uvais Ali',
+  ownerDesignation: 'Partner',
+  ownerDesignation_hi: 'पार्टनर',
   ownerPhone: '7454848548',
   ownerPhoneDisplay: '+91 74548 48548',
   ownerPhoneTel: 'tel:+917454848548',
   ownerWhatsApp: 'https://wa.me/917454848548',
 
-  // ⚠ PENDING CONFIRMATION:
-  // Partner photograph provided, but whose photo it is and approval to publish
-  // must be confirmed before public display. Left blank to use company logo fallback.
-  ownerPhotoPath: '',
+  // ✅ CONFIRMED & APPROVED: Uvais Ali personal photograph (public/assets/owner photo.jpeg)
+  ownerPhotoPath: '/assets/owner%20photo.jpeg',
 
   // ── Business Contact Details ───────────────────────────────────────────────
   // ✅ CONFIRMED

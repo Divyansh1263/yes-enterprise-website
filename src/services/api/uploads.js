@@ -6,17 +6,36 @@
 import { apiFetch, ApiError } from './client.js';
 
 /**
+ * Safely encodes a URI path, ensuring spaces and special characters are percent-encoded
+ * without double-encoding already percent-encoded sequences (%20, etc.).
+ * @param {string} uri
+ * @returns {string}
+ */
+export function safeEncodeURI(uri) {
+  if (!uri) return '';
+  try {
+    return encodeURI(decodeURI(uri));
+  } catch {
+    return encodeURI(uri);
+  }
+}
+
+/**
  * Resolves a storage image key or URL into a browser-loadable image URL.
  * Supports relative asset paths, Cloudflare R2 object keys, and absolute CDN URLs.
+ * Automatically applies safe URI percent-encoding for paths containing spaces and parentheses.
  * @param {string} [imageKey]
  * @returns {string}
  */
 export function getR2ImageUrl(imageKey) {
   if (!imageKey) return '';
-  if (imageKey.startsWith('http://') || imageKey.startsWith('https://') || imageKey.startsWith('/')) {
+  if (imageKey.startsWith('http://') || imageKey.startsWith('https://')) {
     return imageKey;
   }
-  return `/uploads/${imageKey}`;
+  if (imageKey.startsWith('/')) {
+    return safeEncodeURI(imageKey);
+  }
+  return `/uploads/${safeEncodeURI(imageKey)}`;
 }
 
 /**

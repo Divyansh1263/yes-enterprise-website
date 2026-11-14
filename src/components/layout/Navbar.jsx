@@ -57,7 +57,7 @@ export default function Navbar() {
           <Link to={getLangPath('/')} className="flex items-center gap-3 shrink-0 group">
             <div className="relative">
               <img
-                src="/assets/logo.jpeg"
+                src={siteConfig.logoPath || '/assets/logo.jpeg'}
                 alt="YES ENTERPRISES"
                 className="h-10 w-11 rounded-xl object-contain bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/20 transition-transform group-hover:scale-105"
               />

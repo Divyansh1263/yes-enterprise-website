@@ -11,6 +11,7 @@ import {
 import { useProducts } from '../hooks/useProducts';
 import { useCategories } from '../hooks/useCategories';
 import ProductCard from '../components/ui/ProductCard';
+import { getR2ImageUrl } from '../services/api/uploads.js';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
@@ -188,7 +189,7 @@ export default function Home() {
                   className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/40 ${i % 2 === 1 ? 'mt-10' : ''}`}
                   style={{ aspectRatio: '3/4' }}
                 >
-                  <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                  <img src={getR2ImageUrl(img.src)} alt={img.alt} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -338,7 +339,7 @@ export default function Home() {
                   >
                     {cat.heroImage ? (
                       <div className="absolute inset-0">
-                        <img src={cat.heroImage} alt={catName} className="cat-card-img w-full h-full object-cover" />
+                        <img src={getR2ImageUrl(cat.heroImage)} alt={catName} className="cat-card-img w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/92 via-brand-navy/45 to-transparent" />
                       </div>
                     ) : (
@@ -411,17 +412,24 @@ export default function Home() {
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
                   style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)', transform: 'translate(30%, -30%)' }} />
                 <div className="relative p-8 lg:p-10 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-7">
-                  <div className="shrink-0">
-                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-white p-3 flex items-center justify-center shadow-lg ring-1 ring-white/20">
-                      <img src="/assets/logo.jpeg" alt="YES ENTERPRISES" className="w-full h-full object-contain" />
+                  <div className="shrink-0 flex flex-col items-center">
+                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl overflow-hidden bg-brand-navy-light shadow-lg ring-2 ring-brand-amber/30">
+                      <img
+                        src="/assets/owner%20photo.jpeg"
+                        alt="Uvais Ali — Partner, YES ENTERPRISES"
+                        className="w-full h-full object-cover object-top"
+                      />
                     </div>
                   </div>
                   <div className="text-center sm:text-left lg:text-center xl:text-left">
-                    <div className="flex items-center gap-2 mb-1 justify-center sm:justify-start lg:justify-center xl:justify-start">
-                      <p className="text-white font-bold text-xl">{siteConfig.companyName}</p>
+                    <div className="flex items-center gap-2 mb-0.5 justify-center sm:justify-start lg:justify-center xl:justify-start">
+                      <p className="text-white font-bold text-xl">Uvais Ali</p>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-brand-amber/20 text-brand-amber font-semibold">
+                        {lang === 'hi' ? 'पार्टनर' : 'Partner'}
+                      </span>
                     </div>
                     <p className="text-brand-amber font-medium text-xs tracking-wide uppercase mb-1">
-                      {lang === 'hi' ? 'निर्माता एवं सप्लायर' : 'Manufacturers & Suppliers'}
+                      {siteConfig.companyName}
                     </p>
                     <p className="text-white/60 text-xs mb-4 max-w-sm">
                       {lang === 'hi' ? 'फीडिंग बोतलें, पानी की बोतलें और स्टेनलेस स्टील प्रोडक्ट्स' : 'Feeding bottles, water bottles and stainless-steel products'}

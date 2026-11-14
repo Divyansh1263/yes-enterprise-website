@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminProducts, duplicateProduct, deleteProduct } from '../../services/api/products.js';
 import { getPublicCategories } from '../../services/api/categories.js';
+import { getR2ImageUrl } from '../../services/api/uploads.js';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import ConfirmModal from '../../components/admin/ConfirmModal.jsx';
 import { formatInr } from '../../utils/currency.js';
@@ -277,7 +278,7 @@ export default function AdminProductList() {
                           <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
                             {prod.primary_image_key ? (
                               <img
-                                src={`/assets/${prod.primary_image_key.split('/').pop()}`}
+                                src={getR2ImageUrl(prod.primary_image_key)}
                                 alt={prod.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.style.display = 'none'; }}

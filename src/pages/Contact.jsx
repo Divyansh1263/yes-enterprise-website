@@ -70,15 +70,18 @@ export default function Contact() {
             <div className="rounded-2xl p-7 flex flex-col"
               style={{ background: 'linear-gradient(135deg, #D8E9F4, #E8DDF7)', border: '1.5px solid #D8E9F4' }}>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-sm shrink-0 flex items-center justify-center">
-                  <img src="/assets/logo.jpeg" alt="YES ENTERPRISES"
-                    className="w-full h-full object-contain" />
+                <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm shrink-0 ring-1 ring-brand-navy/10 bg-white">
+                  <img src="/assets/owner%20photo.jpeg" alt="Uvais Ali — Partner, YES ENTERPRISES"
+                    className="w-full h-full object-cover object-top" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-brand-amber uppercase tracking-wide mb-0.5">
                     {lang === 'hi' ? 'सीधे संपर्क करें' : 'Direct Contact'}
                   </p>
-                  <h2 className="text-lg font-bold text-brand-navy">{t('contactPage.ownerTitle')}</h2>
+                  <h2 className="text-lg font-bold text-brand-navy">Uvais Ali</h2>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {lang === 'hi' ? 'पार्टनर, YES ENTERPRISES' : 'Partner, YES ENTERPRISES'}
+                  </p>
                 </div>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-5 flex-1">{t('contactPage.ownerSub')}</p>

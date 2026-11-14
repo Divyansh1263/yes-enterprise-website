@@ -24,7 +24,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to={getLangPath('/')} className="flex items-center gap-2.5 mb-4">
-              <img src="/assets/logo.jpeg" alt="YES ENTERPRISES logo"
+              <img src={siteConfig.logoPath || '/assets/logo.jpeg'} alt="YES ENTERPRISES logo"
                 className="h-10 w-11 rounded-lg object-contain bg-white p-0.5 shrink-0" />
               <div className="leading-tight">
                 <span className="text-base font-bold text-white block">{siteConfig.companyName}</span>

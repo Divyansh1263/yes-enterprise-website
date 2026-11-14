@@ -3,6 +3,7 @@ import siteConfig from '../config/site.config'
 import { useLanguage } from '../i18n'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { buildWhatsAppContactUrl } from '../lib/whatsapp'
+import { getR2ImageUrl } from '../services/api/uploads.js'
 
 export default function About() {
   const { t, lang, getLangPath } = useLanguage()
@@ -176,7 +177,7 @@ export default function About() {
                 <div key={i}
                   className={`rounded-xl overflow-hidden shadow-sm ${i % 2 === 1 ? 'mt-4' : ''}`}
                   style={{ aspectRatio: '3/4' }}>
-                  <img src={src} alt="YE product" className="w-full h-full object-cover" />
+                  <img src={getR2ImageUrl(src)} alt="YE product" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
@@ -199,22 +200,25 @@ export default function About() {
 
             <div className="bg-white rounded-3xl shadow-card-hover overflow-hidden">
               <div className="md:grid md:grid-cols-2">
-                {/* Official logo emblem */}
+                {/* Approved Owner Photograph Card */}
                 <div className="relative bg-brand-navy overflow-hidden flex items-center justify-center p-8" style={{ minHeight: 260 }}>
                   <div className="absolute inset-0 opacity-15"
                     style={{ background: 'radial-gradient(circle at 30% 70%, #E9B956, transparent 65%)' }} />
                   <div className="relative text-center flex flex-col items-center">
-                    <div className="w-28 h-24 rounded-2xl bg-white p-3 shadow-xl ring-2 ring-brand-amber/30 flex items-center justify-center mb-3">
+                    <div className="w-32 h-36 rounded-2xl overflow-hidden shadow-xl ring-2 ring-brand-amber/40 flex items-center justify-center mb-3 bg-brand-navy-light">
                       <img
-                        src="/assets/logo.jpeg"
-                        alt="YES ENTERPRISES"
-                        className="w-full h-full object-contain"
+                        src="/assets/owner%20photo.jpeg"
+                        alt="Uvais Ali — Partner, YES ENTERPRISES"
+                        className="w-full h-full object-cover object-top"
                       />
                     </div>
-                    <span className="text-brand-amber font-bold text-sm tracking-wider uppercase block">
-                      {siteConfig.monogram || 'YE'} Monogram
+                    <span className="text-white font-bold text-lg block">
+                      Uvais Ali
                     </span>
-                    <span className="text-white/60 text-xs mt-0.5">
+                    <span className="text-brand-amber font-semibold text-xs tracking-wider uppercase mt-0.5 block">
+                      {lang === 'hi' ? 'पार्टनर' : 'Partner'}
+                    </span>
+                    <span className="text-white/60 text-xs mt-0.5 block">
                       {siteConfig.companyName}
                     </span>
                   </div>
@@ -227,9 +231,11 @@ export default function About() {
                       {lang === 'hi' ? 'पार्टनरशिप फ़र्म' : 'Partnership Business'}
                     </p>
                     <h3 className="text-xl font-bold text-brand-navy mb-1">
-                      {siteConfig.companyName}
+                      Uvais Ali
                     </h3>
-                    <p className="text-gray-500 text-sm">{t('aboutPage.ownerDesignationDefault')}</p>
+                    <p className="text-gray-500 text-sm font-medium">
+                      {lang === 'hi' ? 'पार्टनर, YES ENTERPRISES' : 'Partner, YES ENTERPRISES'}
+                    </p>
                     <p className="mt-3 text-sm text-gray-400 italic">
                       {lang === 'hi'
                         ? 'फीडिंग बोतलें, पानी की बोतलें और स्टेनलेस स्टील प्रोडक्ट्स के लिए सीधे संपर्क करें।'

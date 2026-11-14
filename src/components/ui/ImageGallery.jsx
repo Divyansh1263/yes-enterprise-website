@@ -16,7 +16,8 @@ export default function ImageGallery({ images = [], productName = 'Product' }) {
 
   const resolveUrl = (img) => {
     if (!img) return '';
-    return img.src || img.url || (img.image_key ? getR2ImageUrl(img.image_key) : '');
+    const raw = img.image_key || img.src || img.url || (typeof img === 'string' ? img : '');
+    return getR2ImageUrl(raw);
   };
 
   const activeImg = images[active] || images[0];

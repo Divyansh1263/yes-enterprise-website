@@ -19,10 +19,11 @@ export default function ProductCard({ product }) {
       : product.material);
 
   // Robust image source resolution across fixtures, R2 keys, and direct URLs
-  const imageSrc = primary?.src
-    || primary?.url
-    || (primary?.image_key ? getR2ImageUrl(primary.image_key) : null)
-    || (product.primary_image_key ? getR2ImageUrl(product.primary_image_key) : null);
+  const rawImage = primary?.image_key
+    || product.primary_image_key
+    || primary?.src
+    || primary?.url;
+  const imageSrc = rawImage ? getR2ImageUrl(rawImage) : null;
 
   const imageAlt = primary?.alt || primary?.alt_text || name;
 
