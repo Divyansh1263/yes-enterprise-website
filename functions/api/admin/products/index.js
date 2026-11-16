@@ -71,6 +71,8 @@ export async function onRequestGet(context) {
         p.has_variants,
         p.base_price_paise,
         p.compare_at_price_paise,
+        p.expected_price_per_100_paise,
+        p.min_order_quantity,
         p.sku,
         p.stock_quantity,
         p.low_stock_threshold,
@@ -84,9 +86,11 @@ export async function onRequestGet(context) {
         c.slug as category_slug,
         (SELECT COUNT(*) FROM product_variants pv WHERE pv.product_id = p.id) as variant_count,
         (SELECT COALESCE(SUM(pv.stock_quantity), 0) FROM product_variants pv WHERE pv.product_id = p.id) as variants_stock,
+        (SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = p.id) as image_count,
         (
           SELECT pi.image_key FROM product_images pi
-          WHERE pi.product_id = p.id AND pi.is_primary = 1 AND pi.variant_id IS NULL
+          WHERE pi.product_id = p.id AND pi.variant_id IS NULL
+          ORDER BY pi.is_primary DESC, pi.sort_order ASC
           LIMIT 1
         ) as primary_image_key
       FROM products p
@@ -106,6 +110,7 @@ export async function onRequestGet(context) {
         name: row.name,
         name_hi: row.name_hi,
         slug: row.slug,
+        category_id: row.category_id,
         category: row.category_id ? {
           id: row.category_id,
           name: row.category_name,
@@ -114,7 +119,10 @@ export async function onRequestGet(context) {
         } : null,
         has_variants: hasVariants,
         price_paise: hasVariants ? null : row.base_price_paise,
+        base_price_paise: hasVariants ? null : row.base_price_paise,
         compare_at_price_paise: hasVariants ? null : row.compare_at_price_paise,
+        expected_price_per_100_paise: row.expected_price_per_100_paise,
+        min_order_quantity: row.min_order_quantity ?? null,
         sku: hasVariants ? null : row.sku,
         stock_quantity: hasVariants ? row.variants_stock : row.stock_quantity,
         variant_count: row.variant_count,
@@ -122,6 +130,7 @@ export async function onRequestGet(context) {
         status: row.status,
         is_featured: Boolean(row.is_featured),
         sort_order: row.sort_order,
+        image_count: row.image_count || 0,
         primary_image_key: row.primary_image_key,
         created_at: row.created_at,
         updated_at: row.updated_at
@@ -171,10 +180,17 @@ export async function onRequestPost(context) {
       return errorResponse(`Category "${prod.category_id}" does not exist.`, 400, 'CATEGORY_NOT_FOUND');
     }
 
-    // Verify slug uniqueness
-    const slugExists = await db.prepare('SELECT id FROM products WHERE slug = ?').bind(prod.slug).first();
+    // Verify slug uniqueness & auto-resolve collision safely (e.g. -2, -3)
+    let candidateSlug = prod.slug;
+    let slugExists = await db.prepare('SELECT id FROM products WHERE slug = ?').bind(candidateSlug).first();
     if (slugExists) {
-      return errorResponse(`Product slug "${prod.slug}" is already in use.`, 409, 'SLUG_ALREADY_EXISTS');
+      let counter = 2;
+      while (slugExists) {
+        candidateSlug = `${prod.slug}-${counter}`;
+        slugExists = await db.prepare('SELECT id FROM products WHERE slug = ?').bind(candidateSlug).first();
+        counter++;
+      }
+      prod.slug = candidateSlug;
     }
 
     const productId = crypto.randomUUID();
@@ -186,12 +202,14 @@ export async function onRequestPost(context) {
         INSERT INTO products (
           id, name, name_hi, slug, category_id, description, description_hi,
           material, brand, has_variants, base_price_paise, compare_at_price_paise,
+          expected_price_per_100_paise, min_order_quantity,
           sku, stock_quantity, low_stock_threshold, specifications_json,
           variant_attributes_schema_json, status, is_featured, sort_order, notes,
           created_at, updated_at
         ) VALUES (
           ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
+          ?, ?,
           ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
           CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -199,6 +217,7 @@ export async function onRequestPost(context) {
       `).bind(
         productId, prod.name, prod.name_hi, prod.slug, prod.category_id, prod.description, prod.description_hi,
         prod.material, prod.brand, prod.has_variants, prod.base_price_paise, prod.compare_at_price_paise,
+        prod.expected_price_per_100_paise, prod.min_order_quantity,
         prod.sku, prod.stock_quantity, prod.low_stock_threshold, prod.specifications_json,
         prod.variant_attributes_schema_json, prod.status, prod.is_featured, prod.sort_order, prod.notes
       )
@@ -223,17 +242,17 @@ export async function onRequestPost(context) {
           db.prepare(`
             INSERT INTO product_variants (
               id, product_id, sku, title, title_hi, attributes_json,
-              price_paise, compare_at_price_paise, stock_quantity, low_stock_threshold,
-              status, sort_order, created_at, updated_at
+              price_paise, compare_at_price_paise, expected_price_per_100_paise, min_order_quantity,
+              stock_quantity, low_stock_threshold, status, sort_order, created_at, updated_at
             ) VALUES (
               ?, ?, ?, ?, ?, ?,
               ?, ?, ?, ?,
-              ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             )
           `).bind(
             variantId, productId, v.sku, v.title, v.title_hi, v.attributes_json,
-            v.price_paise, v.compare_at_price_paise, v.stock_quantity, v.low_stock_threshold,
-            v.status, v.sort_order
+            v.price_paise, v.compare_at_price_paise, v.expected_price_per_100_paise ?? null, v.min_order_quantity ?? null,
+            v.stock_quantity, v.low_stock_threshold, v.status || 'active', v.sort_order
           )
         );
 

@@ -2,7 +2,7 @@
  * Validation rules and normalization helpers for products, variants, categories and SKUs.
  */
 
-import { validateSlug } from './validation.js';
+import { validateSlug, slugify } from './validation.js';
 
 const VALID_STATUSES = ['active', 'draft', 'archived'];
 const VALID_VARIANT_STATUSES = ['active', 'archived'];
@@ -121,6 +121,8 @@ export function validateVariantInput(variant) {
     attributes,
     price_paise,
     compare_at_price_paise,
+    expected_price_per_100_paise,
+    min_order_quantity,
     stock_quantity,
     low_stock_threshold,
     status,
@@ -130,8 +132,14 @@ export function validateVariantInput(variant) {
   if (!title || typeof title !== 'string' || title.trim().length === 0) {
     return { valid: false, error: 'Variant title (English) is required.' };
   }
+  if (title.trim().length > 100) {
+    return { valid: false, error: 'Variant title (English) cannot exceed 100 characters.' };
+  }
   if (!title_hi || typeof title_hi !== 'string' || title_hi.trim().length === 0) {
     return { valid: false, error: 'Variant Hindi title (title_hi) is required.' };
+  }
+  if (title_hi.trim().length > 100) {
+    return { valid: false, error: 'Variant Hindi title (title_hi) cannot exceed 100 characters.' };
   }
 
   const normalizedSku = normalizeSku(sku);
@@ -146,12 +154,41 @@ export function validateVariantInput(variant) {
     if (!Number.isInteger(price_paise) || price_paise < 0) {
       return { valid: false, error: `Variant "${title}": price_paise must be a non-negative integer or null.` };
     }
+    if (price_paise > 100000000) {
+      return { valid: false, error: `Variant "${title}": price_paise cannot exceed 100,000,000 paise (₹10,00,000).` };
+    }
   }
 
   if (compare_at_price_paise !== undefined && compare_at_price_paise !== null) {
     if (!Number.isInteger(compare_at_price_paise) || compare_at_price_paise < 0) {
       return { valid: false, error: `Variant "${title}": compare_at_price_paise must be a non-negative integer or null.` };
     }
+    if (compare_at_price_paise > 100000000) {
+      return { valid: false, error: `Variant "${title}": compare_at_price_paise cannot exceed 100,000,000 paise (₹10,00,000).` };
+    }
+  }
+
+  let expectedP100 = null;
+  if (expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== '') {
+    if (!Number.isInteger(expected_price_per_100_paise) || expected_price_per_100_paise < 0) {
+      return { valid: false, error: `Variant "${title}": expected_price_per_100_paise must be a non-negative integer or null.` };
+    }
+    if (expected_price_per_100_paise > 500000000) {
+      return { valid: false, error: `Variant "${title}": expected_price_per_100_paise cannot exceed 500,000,000 paise (₹50,00,000).` };
+    }
+    expectedP100 = expected_price_per_100_paise;
+  }
+
+  let moq = null;
+  if (min_order_quantity !== undefined && min_order_quantity !== null && min_order_quantity !== '') {
+    const moqNum = Number(min_order_quantity);
+    if (!Number.isInteger(moqNum) || moqNum <= 0) {
+      return { valid: false, error: `Variant "${title}": min_order_quantity must be a positive integer (>= 1) or null.` };
+    }
+    if (moqNum > 1000000) {
+      return { valid: false, error: `Variant "${title}": min_order_quantity cannot exceed 1,000,000.` };
+    }
+    moq = moqNum;
   }
 
   let stock = 0;
@@ -205,6 +242,8 @@ export function validateVariantInput(variant) {
       attributes_json: attrsJson,
       price_paise: price_paise ?? null,
       compare_at_price_paise: compare_at_price_paise ?? null,
+      expected_price_per_100_paise: expectedP100,
+      min_order_quantity: moq,
       stock_quantity: stock,
       low_stock_threshold: lowStock,
       status: variantStatus,
@@ -237,6 +276,8 @@ export function validateProductInput(body, isUpdate = false) {
     has_variants,
     base_price_paise,
     compare_at_price_paise,
+    expected_price_per_100_paise,
+    min_order_quantity,
     sku,
     stock_quantity,
     low_stock_threshold,
@@ -258,17 +299,24 @@ export function validateProductInput(body, isUpdate = false) {
     }
   }
 
-  if (!isUpdate || name_hi !== undefined) {
-    if (!name_hi || typeof name_hi !== 'string' || name_hi.trim().length === 0) {
-      return { valid: false, error: 'Product Hindi name (name_hi) is required.' };
+  if (name_hi !== undefined && name_hi !== null && name_hi !== '') {
+    if (typeof name_hi !== 'string') {
+      return { valid: false, error: 'Product Hindi name (name_hi) must be a string.' };
     }
     if (name_hi.trim().length > 200) {
       return { valid: false, error: 'Product Hindi name cannot exceed 200 characters.' };
     }
   }
 
-  if (!isUpdate || slug !== undefined) {
-    const slugCheck = validateSlug(slug);
+  let finalSlug = slug;
+  if (!isUpdate && (!finalSlug || (typeof finalSlug === 'string' && finalSlug.trim().length === 0))) {
+    if (name && typeof name === 'string') {
+      finalSlug = slugify(name);
+    }
+  }
+
+  if (finalSlug !== undefined) {
+    const slugCheck = validateSlug(finalSlug);
     if (!slugCheck.valid) {
       return { valid: false, error: slugCheck.error };
     }
@@ -288,7 +336,9 @@ export function validateProductInput(body, isUpdate = false) {
     prodStatus = status;
   }
 
-  const hasVars = Boolean(has_variants);
+  const hasVars = has_variants !== undefined
+    ? Boolean(has_variants)
+    : (Array.isArray(variants) && variants.length > 0);
 
   // Simple Product Price & Stock Validation
   let normSku = null;
@@ -310,6 +360,19 @@ export function validateProductInput(body, isUpdate = false) {
     if (compare_at_price_paise !== undefined && compare_at_price_paise !== null) {
       if (!Number.isInteger(compare_at_price_paise) || compare_at_price_paise < 0) {
         return { valid: false, error: 'compare_at_price_paise must be a non-negative integer or null.' };
+      }
+    }
+
+    if (expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== '') {
+      if (!Number.isInteger(expected_price_per_100_paise) || expected_price_per_100_paise < 0) {
+        return { valid: false, error: 'expected_price_per_100_paise must be a non-negative integer or null.' };
+      }
+    }
+
+    if (min_order_quantity !== undefined && min_order_quantity !== null && min_order_quantity !== '') {
+      const moqNum = Number(min_order_quantity);
+      if (!Number.isInteger(moqNum) || moqNum <= 0) {
+        return { valid: false, error: 'min_order_quantity must be a positive integer or null.' };
       }
     }
 
@@ -384,20 +447,40 @@ export function validateProductInput(body, isUpdate = false) {
   return {
     valid: true,
     data: {
-      name: name?.trim(),
-      name_hi: name_hi?.trim(),
-      slug: slug?.trim().toLowerCase(),
+      name: name !== undefined ? name.trim() : undefined,
+      name_hi: isUpdate
+        ? (name_hi !== undefined ? (typeof name_hi === 'string' ? name_hi.trim() : '') : undefined)
+        : (typeof name_hi === 'string' ? name_hi.trim() : ''),
+      slug: finalSlug !== undefined ? finalSlug.trim().toLowerCase() : undefined,
       category_id: category_id?.trim(),
       description: typeof description === 'string' ? description.trim() : null,
       description_hi: typeof description_hi === 'string' ? description_hi.trim() : null,
       material: typeof material === 'string' ? material.trim() : null,
       brand: typeof brand === 'string' ? brand.trim() : 'YES ENTERPRISES',
-      has_variants: hasVars ? 1 : 0,
-      base_price_paise: hasVars ? null : (base_price_paise ?? null),
-      compare_at_price_paise: hasVars ? null : (compare_at_price_paise ?? null),
-      sku: hasVars ? null : normSku,
-      stock_quantity: hasVars ? 0 : (stock_quantity ?? 0),
-      low_stock_threshold: hasVars ? 5 : (low_stock_threshold ?? 5),
+      has_variants: isUpdate
+        ? (has_variants !== undefined ? (has_variants ? 1 : 0) : (Array.isArray(variants) && variants.length > 0 ? 1 : undefined))
+        : (hasVars ? 1 : 0),
+      base_price_paise: hasVars
+        ? null
+        : (isUpdate && base_price_paise === undefined ? undefined : (base_price_paise ?? null)),
+      compare_at_price_paise: hasVars
+        ? null
+        : (isUpdate && compare_at_price_paise === undefined ? undefined : (compare_at_price_paise ?? null)),
+      expected_price_per_100_paise: expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== ''
+        ? expected_price_per_100_paise
+        : (isUpdate && expected_price_per_100_paise === undefined ? undefined : null),
+      min_order_quantity: min_order_quantity !== undefined && min_order_quantity !== null && min_order_quantity !== ''
+        ? Number(min_order_quantity)
+        : (isUpdate && min_order_quantity === undefined ? undefined : null),
+      sku: hasVars
+        ? null
+        : (isUpdate && sku === undefined ? undefined : normSku),
+      stock_quantity: hasVars
+        ? 0
+        : (isUpdate && stock_quantity === undefined ? undefined : (stock_quantity ?? 0)),
+      low_stock_threshold: hasVars
+        ? 5
+        : (isUpdate && low_stock_threshold === undefined ? undefined : (low_stock_threshold ?? 5)),
       specifications_json: specsJson,
       variant_attributes_schema_json: schemaJson,
       status: prodStatus,

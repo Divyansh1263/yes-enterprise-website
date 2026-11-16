@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   getPublicCategories,
   createCategory,
@@ -106,6 +107,11 @@ export default function AdminCategories() {
       setFormSubmitting(false);
       return;
     }
+    if (!formData.name_hi.trim()) {
+      setFormError('Category name in Hindi is required.');
+      setFormSubmitting(false);
+      return;
+    }
     if (!formData.slug.trim()) {
       setFormError('URL slug is required.');
       setFormSubmitting(false);
@@ -186,16 +192,26 @@ export default function AdminCategories() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* ── Back Navigation ──────────────────────────────────────────────── */}
+      <div>
+        <Link
+          to="/admin/products"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-navy/70 hover:text-brand-navy transition-colors min-h-[36px]"
+        >
+          <span>←</span> Back to Products
+        </Link>
+      </div>
+
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Category Management</h1>
-          <p className="text-sm text-gray-500 mt-1">Organize catalogue categories and manage display ordering.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Category Management</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Organize catalogue categories and manage display ordering.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-navy text-white text-sm font-bold rounded-xl hover:bg-brand-navy-light shadow-sm transition-colors"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-navy text-white text-sm font-bold rounded-xl hover:bg-brand-navy-light shadow-sm transition-colors min-h-[44px]"
         >
           <span>➕</span> Add New Category
         </button>
@@ -203,22 +219,24 @@ export default function AdminCategories() {
 
       {/* ── Alerts ──────────────────────────────────────────────────────── */}
       {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs sm:text-sm font-medium flex items-center justify-between">
           <span>✅ {successMessage}</span>
-          <button onClick={() => setSuccessMessage(null)} className="text-emerald-600 hover:text-emerald-900 font-bold">✕</button>
+          <button onClick={() => setSuccessMessage(null)} className="text-emerald-600 hover:text-emerald-900 font-bold min-h-[44px] min-w-[44px] flex items-center justify-center">✕</button>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium flex items-center justify-between">
+        <div className="p-3.5 sm:p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs sm:text-sm font-medium flex items-center justify-between">
           <span>⚠️ {error}</span>
-          <button onClick={() => setError(null)} className="text-red-600 hover:text-red-900 font-bold">✕</button>
+          <button onClick={() => setError(null)} className="text-red-600 hover:text-red-900 font-bold min-h-[44px] min-w-[44px] flex items-center justify-center">✕</button>
         </div>
       )}
 
-      {/* ── Categories Table ────────────────────────────────────────────── */}
+      {/* ── Categories Display (Desktop Table + Mobile Cards) ────────────── */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        
+        {/* DESKTOP TABLE (Hidden on mobile, preserved on md: and up) */}
+        <div data-desktop-category-table="true" className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50/80 border-b border-gray-200 text-xs uppercase font-bold text-gray-500 tracking-wider">
               <tr>
@@ -247,7 +265,7 @@ export default function AdminCategories() {
                           type="button"
                           onClick={() => handleMoveOrder(index, -1)}
                           disabled={index === 0}
-                          className="p-1 hover:text-gray-700 disabled:opacity-20"
+                          className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
                           title="Move Up"
                         >
                           ▲
@@ -259,7 +277,7 @@ export default function AdminCategories() {
                           type="button"
                           onClick={() => handleMoveOrder(index, 1)}
                           disabled={index === categories.length - 1}
-                          className="p-1 hover:text-gray-700 disabled:opacity-20"
+                          className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
                           title="Move Down"
                         >
                           ▼
@@ -276,7 +294,7 @@ export default function AdminCategories() {
                     </td>
 
                     {/* Hindi Name */}
-                    <td className="px-6 py-4 text-gray-700 font-medium">
+                    <td className="px-6 py-4 text-gray-700 font-medium font-devanagari">
                       {cat.name_hi || <span className="text-gray-300 italic">—</span>}
                     </td>
 
@@ -285,10 +303,10 @@ export default function AdminCategories() {
                       {cat.slug}
                     </td>
 
-                    {/* Product count */}
-                    <td className="px-6 py-4 text-gray-600">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                        {cat.product_count ?? 0} products
+                    {/* Products Count */}
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-soft-blue/30 text-brand-navy">
+                        {cat.product_count ?? 0} active
                       </span>
                     </td>
 
@@ -298,14 +316,14 @@ export default function AdminCategories() {
                         <button
                           type="button"
                           onClick={() => openEditModal(cat)}
-                          className="px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-navy/5 rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-lg transition-colors border border-brand-navy/20 min-h-[36px]"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => openDeleteModal(cat)}
-                          className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-colors border border-red-200 min-h-[36px]"
                         >
                           Delete
                         </button>
@@ -317,29 +335,122 @@ export default function AdminCategories() {
             </tbody>
           </table>
         </div>
+
+        {/* MOBILE CARDS (Visible on < md screens: compact vertical cards) */}
+        <div data-mobile-category-cards="true" className="md:hidden divide-y divide-gray-100">
+          {categories.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 italic text-sm">
+              No categories found. Click "Add New Category" above to create one.
+            </div>
+          ) : (
+            categories.map((cat, index) => (
+              <div key={cat.id} className="p-4 space-y-3">
+                {/* Header: Name, Hindi, and Product Count */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-base leading-tight">
+                      {cat.name}
+                    </h3>
+                    {cat.name_hi && (
+                      <p className="text-xs text-gray-500 font-devanagari mt-0.5">
+                        {cat.name_hi}
+                      </p>
+                    )}
+                    <span className="font-mono text-[11px] text-gray-400 block mt-1">
+                      /{cat.slug}
+                    </span>
+                  </div>
+
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-soft-blue/30 text-brand-navy shrink-0">
+                    {cat.product_count ?? 0} products
+                  </span>
+                </div>
+
+                {cat.description && (
+                  <p className="text-xs text-gray-500 line-clamp-2">
+                    {cat.description}
+                  </p>
+                )}
+
+                {/* Bottom Row: Reordering controls and Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                  {/* Reorder controls */}
+                  <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveOrder(index, -1)}
+                      disabled={index === 0}
+                      className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
+                      title="Move Up"
+                    >
+                      ▲
+                    </button>
+                    <span className="font-mono text-xs font-bold text-gray-700 px-1">
+                      #{cat.sort_order ?? index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveOrder(index, 1)}
+                      disabled={index === categories.length - 1}
+                      className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
+                      title="Move Down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  {/* Actions with >= 44px touch targets */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(cat)}
+                      className="px-3.5 py-2.5 text-xs font-bold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-xl transition-colors border border-brand-navy/20 min-h-[44px] flex items-center justify-center"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openDeleteModal(cat)}
+                      className="px-3.5 py-2.5 text-xs font-bold text-red-600 hover:text-white hover:bg-red-600 rounded-xl transition-colors border border-red-200 min-h-[44px] flex items-center justify-center"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
 
       {/* ── Add / Edit Category Modal ────────────────────────────────────── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => !formSubmitting && setIsModalOpen(false)}
+          />
+
+          <div className="relative bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden z-10">
             <form onSubmit={handleFormSubmit}>
-              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {editingCategory ? `Edit "${editingCategory.name}"` : 'Add New Category'}
+              <div className="bg-brand-navy text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+                <h3 className="font-bold text-base sm:text-lg">
+                  {editingCategory ? 'Edit Category' : 'Add New Category'}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 font-bold"
+                  disabled={formSubmitting}
+                  className="text-white/70 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-lg"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 max-h-[75vh] overflow-y-auto">
                 {formError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium">
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium">
                     {formError}
                   </div>
                 )}
@@ -353,20 +464,21 @@ export default function AdminCategories() {
                     required
                     value={formData.name}
                     onChange={(e) => handleNameChange(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                    className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
                     placeholder="e.g. Glass Feeding Bottles"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Category Name (Hindi)
+                    Category Name (Hindi) *
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.name_hi}
                     onChange={(e) => setFormData(prev => ({ ...prev, name_hi: e.target.value }))}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                    className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 font-devanagari bg-white"
                     placeholder="उदा. कांच की फीडिंग बोतलें"
                   />
                 </div>
@@ -380,7 +492,7 @@ export default function AdminCategories() {
                     required
                     value={formData.slug}
                     onChange={(e) => setFormData(prev => ({ ...prev, slug: slugify(e.target.value) }))}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                    className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
                     placeholder="glass-feeding-bottles"
                   />
                 </div>
@@ -393,7 +505,7 @@ export default function AdminCategories() {
                     rows={2}
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
                     placeholder="Brief description for public catalogue..."
                   />
                 </div>
@@ -406,12 +518,12 @@ export default function AdminCategories() {
                     rows={2}
                     value={formData.description_hi}
                     onChange={(e) => setFormData(prev => ({ ...prev, description_hi: e.target.value }))}
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 font-devanagari bg-white"
                     placeholder="सार्वजनिक कैटलॉग के लिए विवरण..."
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                       Sort Order
@@ -420,12 +532,12 @@ export default function AdminCategories() {
                       type="number"
                       value={formData.sort_order}
                       onChange={(e) => setFormData(prev => ({ ...prev, sort_order: parseInt(e.target.value, 10) || 0 }))}
-                      className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm"
+                      className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white"
                     />
                   </div>
 
-                  <div className="flex items-center pt-5">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700">
+                  <div className="flex items-center pt-1 sm:pt-6">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700 min-h-[44px]">
                       <input
                         type="checkbox"
                         checked={formData.is_active}
@@ -438,19 +550,19 @@ export default function AdminCategories() {
                 </div>
               </div>
 
-              <div className="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-100">
+              <div className="bg-gray-50 px-5 sm:px-6 py-3.5 sm:py-4 flex items-center justify-end gap-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   disabled={formSubmitting}
-                  className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
+                  className="px-4 py-2.5 min-h-[44px] text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-5 py-2 text-sm font-bold text-white bg-brand-navy hover:bg-brand-navy-light rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
+                  className="px-5 py-2.5 min-h-[44px] text-sm font-bold text-white bg-brand-navy hover:bg-brand-navy-light rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   {formSubmitting && (
                     <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -484,4 +596,3 @@ export default function AdminCategories() {
     </div>
   );
 }
-

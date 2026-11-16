@@ -8,11 +8,56 @@ console.log('YES ENTERPRISES — Phase 3 Real HTTP Runtime Integration Tests');
 console.log('Starting Wrangler Pages Dev server and probing over TCP socket');
 console.log('=================================================================\n');
 
+// Mapping of known Cloudflare D1 database IDs to their Miniflare Durable Object storage hashes
+const KNOWN_D1_HASHES = {
+  // Production / active development binding: 54c9ce5b-377e-4788-9899-43f71addf8a9
+  '54c9ce5b-377e-4788-9899-43f71addf8a9': '6a1b3b744fa3757d88c3c37a6e58dbe029fc1f0fedf109567181075521f4e00c'
+};
+
 function locateD1Database() {
+  if (process.env.D1_TEST_DB_PATH && fs.existsSync(process.env.D1_TEST_DB_PATH)) {
+    return process.env.D1_TEST_DB_PATH;
+  }
   const d1Dir = path.resolve('./.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+  if (!fs.existsSync(d1Dir)) {
+    throw new Error(`Local D1 state directory not found at: ${d1Dir}`);
+  }
+
+  // 1. Check wrangler.jsonc to identify active database_id
+  let activeDatabaseId = null;
+  const wranglerConfigPath = path.resolve('wrangler.jsonc');
+  if (fs.existsSync(wranglerConfigPath)) {
+    try {
+      const configRaw = fs.readFileSync(wranglerConfigPath, 'utf8');
+      const cleanJson = configRaw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+      const config = JSON.parse(cleanJson);
+      if (config.d1_databases && config.d1_databases[0] && config.d1_databases[0].database_id) {
+        activeDatabaseId = config.d1_databases[0].database_id;
+      }
+    } catch {}
+  }
+
+  // 2. If active database_id has a known hash, prefer that specific SQLite file
+  if (activeDatabaseId && KNOWN_D1_HASHES[activeDatabaseId]) {
+    const activeFileName = `${KNOWN_D1_HASHES[activeDatabaseId]}.sqlite`;
+    const activePath = path.join(d1Dir, activeFileName);
+    if (fs.existsSync(activePath)) {
+      return activePath;
+    }
+  }
+
   const files = fs.readdirSync(d1Dir).filter(
     f => f.endsWith('.sqlite') && !f.includes('metadata') && !f.includes('-wal') && !f.includes('-shm')
   );
+  files.sort((a, b) => {
+    const aIsActive = a.includes('6a1b3b744fa3757d');
+    const bIsActive = b.includes('6a1b3b744fa3757d');
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+    const aStat = fs.statSync(path.join(d1Dir, a));
+    const bStat = fs.statSync(path.join(d1Dir, b));
+    return bStat.mtimeMs - aStat.mtimeMs;
+  });
   return path.join(d1Dir, files[0]);
 }
 

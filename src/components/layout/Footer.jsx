@@ -88,7 +88,15 @@ export default function Footer() {
               )}
               {siteConfig.address && (
                 <li className="flex items-start gap-2 text-sm">
-                  <PinIcon /><span className="text-white/55">{siteConfig.address}</span>
+                  <PinIcon />
+                  <a
+                    href={siteConfig.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteConfig.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/55 hover:text-white transition-colors"
+                  >
+                    {siteConfig.address}
+                  </a>
                 </li>
               )}
               {!siteConfig.ownerPhone && !siteConfig.email && !siteConfig.address && (
@@ -103,7 +111,13 @@ export default function Footer() {
       <div className="border-t border-white/8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-1.5 text-xs text-white/35">
           <span>&copy; {year} {siteConfig.companyName}. {t('footer.rights')}</span>
-          <span>{t('footer.madeInIndia')}</span>
+          <div className="flex items-center gap-4">
+            <span>{t('footer.madeInIndia')}</span>
+            <span className="text-white/20">|</span>
+            <Link to="/admin" className="text-white/35 hover:text-white/70 transition-colors" title="Admin Portal">
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

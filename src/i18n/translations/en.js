@@ -17,11 +17,13 @@ export const en = {
 
   hero: {
     badge: 'Indian Manufacturer & Supplier',
-    headline1: 'YES ENTERPRISES',
-    headline2: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Products',
-    sub: 'Explore our range of feeding bottles, water bottles, stainless-steel bottles, sippers and tiffin products. We serve retail customers and wholesale buyers with direct business enquiries.',
-    cta1: 'Explore Catalogue',
-    cta2: 'Enquire on WhatsApp',
+    headline1: 'Feeding Bottles, Water Bottles',
+    headline2: '& Stainless Steel Tiffins',
+    sub: 'Direct manufacturing and wholesale supply for retailers, distributors and bulk buyers.',
+    cta1: 'Explore Product Catalogue',
+    cta2: 'WhatsApp Enquiry',
+    popularTitle: 'Popular Categories',
+    viewAll: 'View All',
   },
 
   usp: {
@@ -39,6 +41,17 @@ export const en = {
     title: 'Featured Products',
     subtitle: 'Popular lines from our feeding and steel catalogue.',
     viewAll: 'View Full Catalogue',
+  },
+
+  showcase: {
+    badge: 'Our Wide Range',
+    heading: 'Explore Our Bottle Collection',
+    supporting: 'Discover a variety of feeding bottles, stainless steel bottles and colourful handled designs from YES ENTERPRISES.',
+    exploreBtn: 'Explore Products',
+    allBottlesTag: 'Complete Bottle Range',
+    glassTag: 'Glass Bottles',
+    steelTag: 'Stainless Steel',
+    siliconeTag: 'Silicone Sleeve',
   },
 
   categories: {
@@ -119,8 +132,9 @@ export const en = {
     notFound: 'Product Not Found',
     notFoundSub: "The product you're looking for doesn't exist or may have been removed.",
     browseProducts: '← Browse Catalogue',
-    relatedTitle: 'More from this Category',
-    relatedSub: 'Also available in',
+    relatedTitle: 'Similar Products',
+    relatedSub: 'More products in',
+    expectedPrice100: 'Expected Price per 100 Pieces',
     note: 'Note',
     outOfStock: 'Currently Unavailable',
   },
@@ -174,6 +188,7 @@ export const en = {
     phone: 'Phone / WhatsApp',
     email: 'Email',
     address: 'Address',
+    registeredAddress: 'Registered Business Address',
     businessHours: 'Business Hours',
     pending: 'To be confirmed',
     howToOrder: 'How to Place an Order',
@@ -195,7 +210,7 @@ export const en = {
     contactLabel: 'Contact',
     madeInIndia: 'Made in India',
     rights: 'All rights reserved.',
-    tagline: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Steel Products',
+    tagline: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Tiffins',
     pending: 'Contact details pending confirmation',
     wholesale: 'Business Enquiries',
   },

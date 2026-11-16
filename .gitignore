@@ -37,6 +37,8 @@ npm-debug.log*
 *.tmp
 *.temp
 visual-review/
+.chrome-*/
+
 
 # Private business & registration documents
 *.pdf

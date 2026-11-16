@@ -40,15 +40,15 @@ export default function About() {
         <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-[0.06]"
           style={{ background: 'radial-gradient(circle, #D8E9F4, transparent)' }} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-20 relative">
           <div ref={headRef} className="reveal max-w-2xl">
-            <span className="inline-block text-xs font-bold text-brand-amber uppercase tracking-widest mb-4">
+            <span className="inline-block text-xs font-bold text-brand-amber uppercase tracking-widest mb-2 sm:mb-4">
               {t('about.sectionBadge')}
             </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-4">
               {t('aboutPage.pageTitle')}
             </h1>
-            <p className="text-white/65 text-base sm:text-lg leading-relaxed">
+            <p className="text-white/65 text-sm sm:text-base lg:text-lg leading-relaxed">
               {t('aboutPage.pageSub')}
             </p>
           </div>
@@ -66,14 +66,29 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div ref={whoRef} className="reveal lg:grid lg:grid-cols-2 lg:gap-16 items-start">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy mb-5">{t('aboutPage.whoWeAre')}</h2>
-              <div className="space-y-4 text-gray-600 leading-relaxed">
-                <p>{t('aboutPage.p1')}</p>
-                <p>{t('aboutPage.p2')}</p>
-              </div>
-              <div className="mt-5 p-4 bg-brand-amber/10 border border-brand-amber/30 rounded-xl">
-                <p className="text-sm text-amber-800">
-                  <span className="font-semibold">{t('detail.note')}: </span>{t('aboutPage.provisional')}
+              <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-2 block">
+                {lang === 'hi' ? 'सीधे निर्माता एवं आपूर्तिकर्ता' : 'Direct Manufacturer & Supplier'}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-brand-navy mb-5">
+                {lang === 'hi'
+                  ? 'फीडिंग बोतलें, पानी की बोतलें और स्टेनलेस स्टील उत्पादों के सीधे निर्माता'
+                  : 'Direct Manufacturer of Feeding Bottles, Water Bottles & Stainless Steel Products'}
+              </h2>
+              <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
+                <p>
+                  {lang === 'hi'
+                    ? 'YES ENTERPRISES मुरादाबाद (उत्तर प्रदेश) में स्थित एक स्थापित निर्माण एवं आपूर्ति इकाई है। हम उच्च गुणवत्ता वाली बेबी फीडिंग बोतलें (कांच, BPA-फ्री प्लास्टिक, सिलिकॉन स्लीव एवं SS 304 स्टेनलेस स्टील), टिकाऊ पानी की बोतलें, सिपर और स्टेनलेस स्टील टिफिन बॉक्स का प्रत्यक्ष निर्माण करते हैं।'
+                    : 'YES ENTERPRISES is an established Indian manufacturing and direct supply facility based in Moradabad, Uttar Pradesh. We manufacture premium baby feeding bottles (glass, BPA-free plastic, silicone sleeve, and food-grade SS 304 stainless steel), durable water bottles, kids sippers, and high-finish stainless steel tiffin boxes.'}
+                </p>
+                <p>
+                  {lang === 'hi'
+                    ? 'सीधे निर्माता से जुड़ने का सबसे बड़ा लाभ यह है कि बीच में कोई बिचौलिया या कमीशन नहीं होता। इससे खुदरा विक्रेताओं, थोक खरीदारों और वितरकों को सीधे सर्वोत्तम फैक्ट्री मूल्य, अनुकूलित मात्रा (MOQ) और त्वरित डिलीवरी की सुविधा मिलती है।'
+                    : 'By sourcing directly from our Moradabad manufacturing plant, retailers, bulk buyers, and distributors eliminate intermediary markups, securing competitive factory pricing, verified product quality, and customized bulk packaging.'}
+                </p>
+                <p>
+                  {lang === 'hi'
+                    ? 'चाहे आपको खुदरा परीक्षण के लिए कम मात्रा चाहिए या थोक व्यवसाय के लिए बड़े कंटेनर ऑर्डर, हमारी टीम सीधी और पारदर्शी बातचीत के लिए हमेशा उपलब्ध है।'
+                    : 'Whether you require minimum order quantities (MOQ) for retail distribution or high-volume wholesale shipments across India, our team ensures direct, transparent communication and reliable logistics.'}
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap gap-4">
@@ -258,6 +273,41 @@ export default function About() {
                         </a>
                       </div>
                     </div>
+
+                    {siteConfig.email && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-brand-ivory flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-brand-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">{t('contact.email')}</p>
+                          <a href={`mailto:${siteConfig.email}`}
+                            className="font-semibold text-brand-navy hover:underline text-sm">
+                            {siteConfig.email}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {siteConfig.address && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-brand-ivory flex items-center justify-center shrink-0 mt-0.5">
+                          <svg className="w-4 h-4 text-brand-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">{lang === 'hi' ? 'पंजीकृत व्यापार पता' : 'Registered Business Address'}</p>
+                          <a href={siteConfig.mapsUrl} target="_blank" rel="noopener noreferrer"
+                            className="font-semibold text-brand-navy hover:underline text-xs leading-relaxed block">
+                            {siteConfig.address}
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">

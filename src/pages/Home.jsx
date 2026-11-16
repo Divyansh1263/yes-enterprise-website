@@ -18,20 +18,19 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 const fallbackFeatured = getFeaturedProducts();
 const fallbackCategories = getAllCategories();
 
-const heroImages = [
-  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (1).jpeg', alt: 'SS 304 stainless steel feeding bottle with YE logo' },
-  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM (2).jpeg', alt: 'Silicone sleeve feeding bottles pair' },
-  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (2).jpeg', alt: 'Stainless steel tiffin box set' },
-  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.54 PM.jpeg',     alt: 'Glass feeding bottle red cap' },
+const heroSupportingImages = [
+  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (1).jpeg', alt: 'SS 304 Stainless Steel Feeding Bottle' },
+  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM (2).jpeg', alt: 'Silicone Sleeve Feeding Bottles Pair' },
+  { src: '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (2).jpeg', alt: 'Stainless Steel Tiffin Box Set' },
 ];
 
-const catAccents = {
-  'glass-bottles':   { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
-  'plastic-bottles': { from: '#D8E9F4', to: '#BDE5D8', label: '#1B4A36' },
-  'silicone-sleeve': { from: '#B9D9CE', to: '#BDE5D8', label: '#1B4D3E' },
-  'ss-bottles':      { from: '#D8E9F4', to: '#B9D9CE', label: '#19345A' },
-  'ss-sippers':      { from: '#D8E9F4', to: '#E8DDF7', label: '#1B3D6E' },
-  'ss-tiffin':       { from: '#F8DFD1', to: '#F8E9B7', label: '#7C4A1A' },
+const CATEGORY_IMAGE_MAP = {
+  'glass-bottles': '/assets/WhatsApp Image 2026-11-02 at 1.08.54 PM.jpeg',
+  'plastic-bottles': '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM.jpeg',
+  'silicone-sleeve': '/assets/WhatsApp Image 2026-11-02 at 1.08.52 PM (2).jpeg',
+  'ss-bottles': '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (1).jpeg',
+  'ss-sippers': '/assets/WhatsApp Image 2026-11-02 at 1.08.58 PM.jpeg',
+  'ss-tiffin': '/assets/WhatsApp Image 2026-11-02 at 1.08.57 PM (2).jpeg',
 };
 
 const USP_ITEMS = [
@@ -82,8 +81,8 @@ export default function Home() {
 
   const heroRef      = useScrollReveal();
   const uspRef       = useScrollReveal();
-  const featuredRef  = useScrollReveal();
   const catRef       = useScrollReveal();
+  const featuredRef  = useScrollReveal();
   const aboutRef     = useScrollReveal();
   const wholesaleRef = useScrollReveal();
 
@@ -106,7 +105,7 @@ export default function Home() {
     <div className="overflow-x-hidden">
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="relative bg-grad-hero min-h-[92vh] lg:min-h-screen flex items-center overflow-hidden">
+      <section className="relative bg-grad-hero pt-3 pb-12 sm:pt-8 sm:pb-16 lg:py-0 lg:min-h-screen flex items-center overflow-hidden">
 
         {/* Decorative — corners only */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -124,35 +123,35 @@ export default function Home() {
           </svg>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-20 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-10 lg:py-24 w-full">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-16 xl:gap-20 items-center">
 
             {/* Left: text */}
             <div ref={heroRef} className="reveal">
               <span
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-7"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-3 sm:mb-4"
                 style={{ background: 'rgba(233,185,86,0.15)', color: '#E9B956', border: '1px solid rgba(233,185,86,0.30)' }}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-amber animate-pulse-soft inline-block" />
                 {t('hero.badge')}
               </span>
 
-              <h1 className="text-4xl sm:text-5xl xl:text-[3.6rem] 2xl:text-6xl font-bold text-white leading-[1.12] mb-6">
-                {t('hero.headline1')}<br />
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-2.5 sm:mb-4 tracking-tight">
+                {t('hero.headline1')}{' '}
                 <span className="text-brand-amber">{t('hero.headline2')}</span>
               </h1>
 
-              <p className="text-white/65 text-base sm:text-lg leading-relaxed max-w-[30rem] mb-10">
+              <p className="text-white/80 text-xs sm:text-base lg:text-lg leading-relaxed max-w-xl mb-5 sm:mb-7">
                 {t('hero.sub')}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4">
                 <Link
                   to={getLangPath('/products')}
-                  className="btn-shine inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-brand-amber text-brand-navy font-bold rounded-2xl hover:bg-yellow-400 transition-colors shadow-lg shadow-brand-amber/30 text-[15px]"
+                  className="btn-shine inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 min-h-[44px] bg-brand-amber text-brand-navy font-bold rounded-xl sm:rounded-2xl hover:bg-yellow-400 transition-colors shadow-lg shadow-brand-amber/25 text-sm sm:text-base text-center"
                 >
-                  {t('hero.cta1')}
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <span>{t('hero.cta1')}</span>
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
@@ -160,38 +159,66 @@ export default function Home() {
                   href={buildWholesaleEnquiryUrl(lang)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2.5 px-8 py-4 border-2 border-white/25 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-white/40 transition-all text-[15px]"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-3.5 min-h-[44px] border border-white/25 bg-white/5 text-white/90 hover:text-white hover:bg-white/10 hover:border-white/40 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold transition-all text-center"
                 >
                   <WaIconSm />
-                  {t('hero.cta2')}
+                  <span>{t('hero.cta2')}</span>
                 </a>
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-4">
+              {/* Mobile Prominent Product Lineup Showcase */}
+              <div className="lg:hidden hero-mobile-lineup mt-4 sm:mt-5 rounded-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/20 bg-[#072B4F] p-1.5 sm:p-2">
+                <img
+                  src="/assets/premium-feeding-bottles-lineup.png"
+                  alt={lang === 'hi' ? 'YES ENTERPRISES स्टेनलेस स्टील उत्पाद एवं प्रीमियम लाइनअप' : 'YES ENTERPRISES Stainless Steel Products & Premium Lineup'}
+                  className="w-full h-auto object-contain rounded-xl block"
+                  loading="eager"
+                />
+              </div>
+
+              {/* Trust indicators — compact & visually subordinate */}
+              <div className="mt-3.5 sm:mt-5 flex flex-wrap items-center gap-2.5 sm:gap-4">
                 {[
                   lang === 'hi' ? 'भारत में निर्मित' : 'Made in India',
                   lang === 'hi' ? 'थोक सप्लाई' : 'Wholesale Supply',
                   lang === 'hi' ? 'फ़ैक्ट्री सीधा' : 'Direct Factory',
-                ].map(txt => (
-                  <span key={txt} className="inline-flex items-center gap-1.5 text-xs text-white/55 font-medium">
-                    <span className="w-1 h-1 rounded-full bg-brand-amber/70 inline-block" />
+                ].map((txt) => (
+                  <span key={txt} className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs text-white/70 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-amber inline-block" />
                     {txt}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Right: product image collage */}
-            <div className="hidden lg:grid grid-cols-2 gap-4 hero-img-grid mt-0">
-              {heroImages.map((img, i) => (
-                <div
-                  key={i}
-                  className={`rounded-2xl overflow-hidden shadow-2xl shadow-black/40 ${i % 2 === 1 ? 'mt-10' : ''}`}
-                  style={{ aspectRatio: '3/4' }}
-                >
-                  <img src={getR2ImageUrl(img.src)} alt={img.alt} className="w-full h-full object-cover" />
-                </div>
-              ))}
+            {/* Right: product image composition (desktop) */}
+            <div className="hidden lg:flex flex-col gap-3.5 xl:gap-4 hero-img-grid mt-0">
+              {/* Prominent main image: New YES ENTERPRISES product lineup */}
+              <div className="hero-desktop-lineup rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-white/20 bg-[#072B4F] p-1.5 sm:p-2 group">
+                <img
+                  src="/assets/premium-feeding-bottles-lineup.png"
+                  alt={lang === 'hi' ? 'YES ENTERPRISES स्टेनलेस स्टील उत्पाद एवं प्रीमियम लाइनअप' : 'YES ENTERPRISES Stainless Steel Products & Premium Lineup'}
+                  className="w-full h-auto object-contain rounded-xl block group-hover:scale-[1.01] transition-transform duration-500 ease-out"
+                  loading="eager"
+                />
+              </div>
+
+              {/* Supporting product close-ups: Exactly 3 panels in a single horizontal row */}
+              <div className="grid grid-cols-3 gap-3 xl:gap-4">
+                {heroSupportingImages.map((img, i) => (
+                  <div
+                    key={i}
+                    className="hero-supporting-card rounded-xl xl:rounded-2xl overflow-hidden shadow-lg shadow-black/40 border border-white/15 bg-[#F7F5EF] p-2 sm:p-2.5 flex items-center justify-center aspect-[4/3] group transition-all hover:border-brand-amber/40"
+                  >
+                    <img
+                      src={getR2ImageUrl(img.src)}
+                      alt={img.alt}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -205,17 +232,23 @@ export default function Home() {
       </section>
 
       {/* ── USP STRIP ────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-10 border-b border-gray-100">
+      <section className="bg-white py-6 sm:py-8 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div ref={uspRef} className="reveal grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div ref={uspRef} className="reveal grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6">
             {USP_ITEMS.map(({ key, color, icon }) => (
-              <div key={key} className="flex items-start gap-4 p-4 lg:p-5 rounded-2xl hover:bg-brand-ivory transition-colors">
-                <div className="usp-icon-wrap shrink-0" style={{ background: color }}>
-                  <span className="text-brand-navy">{icon}</span>
+              <div
+                key={key}
+                className="flex items-start gap-2.5 sm:gap-3.5 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl bg-white border border-gray-100 shadow-xs hover:bg-brand-ivory/60 transition-colors"
+              >
+                <div
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
+                  style={{ background: color }}
+                >
+                  <span className="text-brand-navy scale-90 sm:scale-100">{icon}</span>
                 </div>
-                <div>
-                  <p className="font-bold text-brand-navy text-sm">{t(`usp.${key}`)}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{t(`usp.${key}Desc`)}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-brand-navy text-xs sm:text-sm leading-tight">{t(`usp.${key}`)}</p>
+                  <p className="text-[11px] sm:text-xs text-gray-500 mt-1 leading-normal line-clamp-3 sm:line-clamp-none">{t(`usp.${key}Desc`)}</p>
                 </div>
               </div>
             ))}
@@ -223,23 +256,106 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* ── PRODUCT CATEGORIES ────────────────────────────────────────────────── */}
+      <section className="py-10 sm:py-14 md:py-20" style={{ background: 'linear-gradient(180deg, #F7F5EF 0%, #ffffff 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div ref={featuredRef} className="reveal text-center mb-14">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
+          <div ref={catRef} className="reveal text-center mb-6 sm:mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-2 block">
+              {lang === 'hi' ? 'श्रेणियाँ' : 'Categories'}
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-navy mb-2 sm:mb-3">
+              {t('categories.title')}
+            </h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed">
+              {t('categories.subtitle')}
+            </p>
+          </div>
+
+          {loadingCategories && categories.length === 0 ? (
+            <div className="py-8 flex justify-center">
+              <LoadingSpinner message={lang === 'hi' ? 'श्रेणियाँ लोड हो रही हैं...' : 'Loading categories...'} size="md" />
+            </div>
+          ) : categoriesError && categories.length === 0 ? (
+            <div className="max-w-md mx-auto my-6 p-6 bg-red-50/60 border border-red-200 rounded-2xl text-center space-y-3">
+              <p className="text-sm font-bold text-brand-navy">
+                {lang === 'hi' ? 'श्रेणियाँ लोड नहीं हो सकीं' : 'Unable to load categories'}
+              </p>
+              <button
+                type="button"
+                onClick={refetchCategories}
+                className="px-4 py-2 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light"
+              >
+                🔄 {lang === 'hi' ? 'पुनः प्रयास' : 'Retry'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+              {categories.map(cat => {
+                const catKey = cat.slug || cat.id;
+                const catName = getCategoryName(cat, lang);
+                const imageSrc = cat.primary_image_key 
+                  ? getR2ImageUrl(cat.primary_image_key) 
+                  : (cat.heroImage ? getR2ImageUrl(cat.heroImage) : (CATEGORY_IMAGE_MAP[catKey] || '/assets/logo.jpeg'));
+
+                return (
+                  <Link
+                    key={cat.id}
+                    to={getLangPath(`/products?category=${cat.slug || cat.id}`)}
+                    className="cat-card group relative rounded-xl sm:rounded-2xl overflow-hidden shadow-card hover:shadow-xl transition-all duration-300 min-h-[150px] sm:min-h-[220px] md:min-h-[260px] flex flex-col justify-end p-3 sm:p-5 border border-brand-navy/10"
+                  >
+                    <div className="absolute inset-0">
+                      <img
+                        src={imageSrc}
+                        alt={catName}
+                        className="cat-card-img w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        onError={(e) => {
+                          if (CATEGORY_IMAGE_MAP[catKey] && e.target.src !== CATEGORY_IMAGE_MAP[catKey]) {
+                            e.target.src = CATEGORY_IMAGE_MAP[catKey];
+                          }
+                        }}
+                      />
+                      {/* Dark overlay ensuring high contrast for white text */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/95 via-brand-navy/65 to-brand-navy/20" />
+                    </div>
+                    <div className="relative z-10">
+                      <h3 className="font-bold text-white text-xs sm:text-base md:text-xl leading-tight mb-1 drop-shadow-sm line-clamp-3">
+                        {catName}
+                      </h3>
+                      <p className="hidden sm:block text-white/80 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-2">
+                        {cat.description || t(`categories.${cat.id}Desc`)}
+                      </p>
+                      <span className="inline-flex items-center gap-1 text-brand-amber font-semibold text-[10px] sm:text-xs group-hover:text-yellow-300 transition-colors">
+                        <span>{lang === 'hi' ? 'कैटलॉग देखें' : 'Explore'}</span>
+                        <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── FEATURED PRODUCTS ─────────────────────────────────────────────────── */}
+      <section className="py-10 sm:py-14 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div ref={featuredRef} className="reveal text-center mb-6 sm:mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-2 block">
               {lang === 'hi' ? 'चुनिंदा प्रोडक्ट' : 'Featured'}
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold text-brand-navy mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-navy mb-2 sm:mb-3">
               {t('featured.title')}
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto text-base leading-relaxed">
+            <p className="text-gray-500 max-w-xl mx-auto text-xs sm:text-sm md:text-base leading-relaxed">
               {t('featured.subtitle')}
             </p>
           </div>
 
           {loadingProducts && featuredProducts.length === 0 ? (
-            <div className="py-12 flex justify-center">
+            <div className="py-8 flex justify-center">
               <LoadingSpinner message={lang === 'hi' ? 'चुनिंदा उत्पाद लोड हो रहे हैं...' : 'Loading featured products...'} size="md" />
             </div>
           ) : productsError && featuredProducts.length === 0 ? (
@@ -271,17 +387,17 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {featuredProducts.slice(0, 4).map(product => (
                 <ProductCard key={product.id} product={product} lang={lang} />
               ))}
             </div>
           )}
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 sm:mt-10">
             <Link
               to={getLangPath('/products')}
-              className="inline-flex items-center gap-2.5 px-8 py-3.5 bg-brand-navy text-white font-semibold rounded-2xl hover:bg-brand-navy-light transition-colors shadow-md text-[15px]"
+              className="inline-flex items-center gap-2.5 px-7 py-3 sm:py-3.5 min-h-[44px] bg-brand-navy text-white font-semibold rounded-2xl hover:bg-brand-navy-light transition-colors shadow-md text-sm sm:text-[15px]"
             >
               {t('featured.viewAll')}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,97 +408,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PRODUCT CATEGORIES ────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-24" style={{ background: 'linear-gradient(180deg, #F7F5EF 0%, #ffffff 100%)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div ref={catRef} className="reveal text-center mb-14">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
-              {lang === 'hi' ? 'श्रेणियाँ' : 'Categories'}
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold text-brand-navy mb-4">
-              {t('categories.title')}
-            </h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-base leading-relaxed">
-              {t('categories.subtitle')}
-            </p>
-          </div>
-
-          {loadingCategories && categories.length === 0 ? (
-            <div className="py-12 flex justify-center">
-              <LoadingSpinner message={lang === 'hi' ? 'श्रेणियाँ लोड हो रही हैं...' : 'Loading categories...'} size="md" />
-            </div>
-          ) : categoriesError && categories.length === 0 ? (
-            <div className="max-w-md mx-auto my-6 p-6 bg-red-50/60 border border-red-200 rounded-2xl text-center space-y-3">
-              <p className="text-sm font-bold text-brand-navy">
-                {lang === 'hi' ? 'श्रेणियाँ लोड नहीं हो सकीं' : 'Unable to load categories'}
-              </p>
-              <button
-                type="button"
-                onClick={refetchCategories}
-                className="px-4 py-2 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light"
-              >
-                🔄 {lang === 'hi' ? 'पुनः प्रयास' : 'Retry'}
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-              {categories.map(cat => {
-                const catKey = cat.slug || cat.id;
-                const accent = catAccents[catKey] || { from: '#D8E9F4', to: '#E8DDF7', label: '#19345A' };
-                const catName = getCategoryName(cat, lang);
-                return (
-                  <Link
-                    key={cat.id}
-                    to={getLangPath(`/products?category=${cat.slug || cat.id}`)}
-                    className="cat-card group relative rounded-2xl overflow-hidden shadow-card"
-                    style={{ minHeight: 240 }}
-                  >
-                    {cat.heroImage ? (
-                      <div className="absolute inset-0">
-                        <img src={getR2ImageUrl(cat.heroImage)} alt={catName} className="cat-card-img w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/92 via-brand-navy/45 to-transparent" />
-                      </div>
-                    ) : (
-                      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }} />
-                    )}
-                    <div className="relative h-full flex flex-col justify-end p-5" style={{ minHeight: 240 }}>
-                      <h3 className="font-bold text-white text-base leading-tight mb-1.5">{catName}</h3>
-                      <p className="text-white/65 text-xs leading-relaxed line-clamp-2">
-                        {cat.description || t(`categories.${cat.id}Desc`)}
-                      </p>
-                      <span className="mt-3 inline-flex items-center gap-1 text-brand-amber text-xs font-semibold">
-                        {lang === 'hi' ? 'देखें' : 'Explore'}
-                        <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* ── ABOUT / MANUFACTURER STRIP ───────────────────────────────────────── */}
-      <section className="py-16 md:py-24 bg-white border-t border-gray-100">
+      <section className="py-10 sm:py-14 md:py-20 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
             <div ref={aboutRef} className="reveal">
-              <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-3 block">
+              <span className="text-xs font-bold uppercase tracking-widest text-brand-amber mb-2 sm:mb-3 block">
                 {t('about.sectionBadge')}
               </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-[2.4rem] font-bold text-brand-navy mb-6">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-navy mb-4 sm:mb-6">
                 {t('about.title')}
               </h2>
-              <div className="space-y-4 text-gray-600 leading-relaxed text-base">
+              <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
                 <p>{t('about.p1')}</p>
                 <p>{t('about.p2')}</p>
               </div>
               <ul className="mt-6 space-y-2.5">
                 {Array.isArray(t('about.reasons')) && t('about.reasons').map((r, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                  <li key={i} className="flex items-center gap-3 text-xs sm:text-sm text-gray-700">
                     <span className="w-5 h-5 rounded-full bg-brand-teal/40 flex items-center justify-center shrink-0">
                       <svg className="w-3 h-3 text-brand-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -392,10 +435,10 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-8">
+              <div className="mt-6 sm:mt-8">
                 <Link
                   to={getLangPath('/about')}
-                  className="inline-flex items-center gap-2 text-brand-navy font-semibold hover:gap-3 transition-all text-sm"
+                  className="inline-flex items-center gap-2 text-brand-navy font-semibold hover:gap-3 transition-all text-xs sm:text-sm"
                 >
                   {t('about.learnMore')}
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -406,14 +449,14 @@ export default function Home() {
             </div>
 
             {/* Owner card */}
-            <div className="mt-12 lg:mt-0">
+            <div className="mt-10 lg:mt-0">
               <div className="rounded-3xl overflow-hidden relative"
                 style={{ background: 'linear-gradient(135deg, #19345A 0%, #263449 60%, #142A48 100%)' }}>
                 <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
                   style={{ background: 'radial-gradient(circle, #E9B956, transparent 70%)', transform: 'translate(30%, -30%)' }} />
-                <div className="relative p-8 lg:p-10 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-7">
+                <div className="relative p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-6 sm:gap-7">
                   <div className="shrink-0 flex flex-col items-center">
-                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl overflow-hidden bg-brand-navy-light shadow-lg ring-2 ring-brand-amber/30">
+                    <div className="h-24 w-24 sm:h-28 sm:w-28 lg:h-32 lg:w-32 rounded-2xl overflow-hidden bg-brand-navy-light shadow-lg ring-2 ring-brand-amber/30">
                       <img
                         src="/assets/owner%20photo.jpeg"
                         alt="Uvais Ali — Partner, YES ENTERPRISES"
@@ -464,7 +507,7 @@ export default function Home() {
 
       {/* ── WHOLESALE CTA ────────────────────────────────────────────────────── */}
       <section
-        className="py-16 md:py-20 relative overflow-hidden"
+        className="py-10 sm:py-14 md:py-20 relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #19345A 0%, #142A48 50%, #263449 100%)' }}
       >
         <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-[0.07]"
@@ -475,28 +518,28 @@ export default function Home() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <div ref={wholesaleRef} className="reveal">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber/80 mb-4 block">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-amber/80 mb-2 sm:mb-3 block">
               {lang === 'hi' ? 'थोक सप्लाई' : 'Wholesale Supply'}
             </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-5">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
               {t('wholesale.title')}
             </h2>
-            <p className="text-white/60 text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-white/60 text-xs sm:text-base lg:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
               {t('wholesale.sub')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a
                 href={buildWholesaleEnquiryUrl(lang)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-shine inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-brand-amber text-brand-navy font-bold rounded-2xl hover:bg-yellow-400 transition-colors shadow-lg shadow-brand-amber/20 text-[15px]"
+                className="btn-shine inline-flex items-center justify-center gap-2.5 px-7 py-3.5 min-h-[44px] bg-brand-amber text-brand-navy font-bold rounded-2xl hover:bg-yellow-400 transition-colors shadow-lg shadow-brand-amber/20 text-sm sm:text-[15px]"
               >
                 <WaIconSm />
                 {t('wholesale.cta1')}
               </a>
               <Link
                 to={getLangPath('/contact')}
-                className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/20 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-white/35 transition-all text-[15px]"
+                className="inline-flex items-center justify-center px-7 py-3.5 min-h-[44px] border-2 border-white/20 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-white/35 transition-all text-sm sm:text-[15px]"
               >
                 {t('wholesale.cta2')}
               </Link>

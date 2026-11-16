@@ -34,16 +34,22 @@ export default function AdminInventory() {
     setProductsError(null);
 
     const params = { limit: 100 };
-    if (stockFilter !== 'all') {
-      params.stock_status = stockFilter;
-    }
     if (searchQuery.trim()) {
-      params.q = searchQuery.trim();
+      params.search = searchQuery.trim();
     }
 
     getAdminProducts(params)
       .then((res) => {
-        setProducts(res.data || []);
+        let items = res.data || [];
+        if (stockFilter === 'out_of_stock') {
+          items = items.filter(p => (p.stock_quantity ?? 0) === 0);
+        } else if (stockFilter === 'low_stock') {
+          items = items.filter(p => {
+            const s = p.stock_quantity ?? 0;
+            return s > 0 && s <= (p.low_stock_threshold || 5);
+          });
+        }
+        setProducts(items);
         setLoadingProducts(false);
       })
       .catch((err) => {
@@ -59,7 +65,7 @@ export default function AdminInventory() {
     getInventoryLogs({ limit: 20, offset })
       .then((res) => {
         setLogs(res.data || []);
-        setLogsPagination(res.pagination);
+        setLogsPagination(res.pagination || { total: (res.data || []).length, limit: 20, offset, has_more: false });
         setLoadingLogs(false);
       })
       .catch((err) => {
@@ -80,6 +86,31 @@ export default function AdminInventory() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadProducts();
+  };
+
+  // Export inventory to CSV
+  const exportCsv = () => {
+    if (products.length === 0) return;
+    const headers = ['Product Name', 'Hindi Name', 'Type', 'SKU', 'Category', 'Stock Quantity', 'Low Stock Threshold', 'Status'];
+    const rows = products.map(p => [
+      `"${(p.name || '').replace(/"/g, '""')}"`,
+      `"${(p.name_hi || '').replace(/"/g, '""')}"`,
+      p.has_variants ? 'Variable' : 'Simple',
+      `"${(p.sku || '').replace(/"/g, '""')}"`,
+      `"${(p.category_name || p.category?.name || '').replace(/"/g, '""')}"`,
+      p.stock_quantity ?? 0,
+      p.low_stock_threshold ?? 5,
+      p.status || 'active'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `yes_enterprises_inventory_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Open modal for a product or variant
@@ -134,7 +165,7 @@ export default function AdminInventory() {
         reason: reason.trim()
       });
 
-      setSuccessToast(`Stock updated for ${selectedItem.name} (${selectedItem.current_stock} → ${parsedQty})`);
+      setSuccessToast(`Stock updated for "${selectedItem.name}" (${selectedItem.current_stock} → ${parsedQty})`);
       setSelectedItem(null);
       loadProducts();
       // Auto-clear toast
@@ -145,6 +176,13 @@ export default function AdminInventory() {
       setIsSubmitting(false);
     }
   };
+
+  // Calculate alert counts
+  const lowStockCount = products.filter(p => {
+    const s = p.stock_quantity ?? 0;
+    return s > 0 && s <= (p.low_stock_threshold || 5);
+  }).length;
+  const outOfStockCount = products.filter(p => (p.stock_quantity ?? 0) === 0).length;
 
   return (
     <div className="space-y-6">
@@ -157,34 +195,44 @@ export default function AdminInventory() {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+        {/* Tab Switcher & Export */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setActiveTab('stock')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'stock'
-                ? 'bg-white text-brand-navy shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            onClick={exportCsv}
+            disabled={products.length === 0}
+            className="px-3.5 py-2 bg-white border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-1.5 disabled:opacity-40"
+            title="Download inventory as CSV spreadsheet"
           >
-            📦 Stock Levels
+            <span>📥</span> Export CSV
           </button>
-          <button
-            onClick={() => setActiveTab('logs')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'logs'
-                ? 'bg-white text-brand-navy shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            📜 Audit Trail
-          </button>
+          <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab('stock')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                activeTab === 'stock'
+                  ? 'bg-white text-brand-navy shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📦 Stock Levels
+            </button>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                activeTab === 'logs'
+                  ? 'bg-white text-brand-navy shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📜 Audit Trail
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Success Notification */}
       {successToast && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center justify-between animate-fade-in">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span>✅</span>
             <span>{successToast}</span>
@@ -196,21 +244,55 @@ export default function AdminInventory() {
       {/* ── TAB 1: STOCK LEVELS ─────────────────────────────────────────── */}
       {activeTab === 'stock' && (
         <div className="space-y-4">
+          {/* Low / Out of stock alert banner */}
+          {(outOfStockCount > 0 || lowStockCount > 0) && stockFilter === 'all' && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-800">Inventory Notice</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    <strong>{outOfStockCount}</strong> items are out of stock (0 units) and{' '}
+                    <strong>{lowStockCount}</strong> items are at or below reorder threshold.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {outOfStockCount > 0 && (
+                  <button
+                    onClick={() => setStockFilter('out_of_stock')}
+                    className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    View Out of Stock ({outOfStockCount})
+                  </button>
+                )}
+                {lowStockCount > 0 && (
+                  <button
+                    onClick={() => setStockFilter('low_stock')}
+                    className="px-3 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    View Low Stock ({lowStockCount})
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Controls Bar */}
           <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
             {/* Filter pills */}
             <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
               {[
                 { id: 'all', label: 'All Items' },
-                { id: 'low_stock', label: '⚠️ Low Stock' },
-                { id: 'out_of_stock', label: '🚫 Out of Stock' }
+                { id: 'low_stock', label: `⚠️ Low Stock (${lowStockCount})` },
+                { id: 'out_of_stock', label: `🚫 Out of Stock (${outOfStockCount})` }
               ].map(f => (
                 <button
                   key={f.id}
                   onClick={() => setStockFilter(f.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
                     stockFilter === f.id
-                      ? 'bg-brand-navy text-white'
+                      ? 'bg-brand-navy text-white shadow-sm'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -226,11 +308,11 @@ export default function AdminInventory() {
                 placeholder="Search by product name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3.5 py-1.5 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-brand-navy"
+                className="w-full px-3.5 py-1.5 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
               />
               <button
                 type="submit"
-                className="px-3 py-1.5 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light shrink-0"
+                className="px-3.5 py-1.5 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy-light shrink-0"
               >
                 Search
               </button>
@@ -262,14 +344,14 @@ export default function AdminInventory() {
                       <th className="px-4 py-3">Type / SKU</th>
                       <th className="px-4 py-3">Category</th>
                       <th className="px-4 py-3">Stock Level</th>
-                      <th className="px-4 py-3">Low-Stock Alert</th>
+                      <th className="px-4 py-3">Reorder Alert</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {products.map((p) => {
                       const isLowStock = p.stock_quantity > 0 && p.stock_quantity <= (p.low_stock_threshold ?? 5);
-                      const isOutOfStock = p.stock_quantity <= 0;
+                      const isOutOfStock = (p.stock_quantity ?? 0) <= 0;
 
                       return (
                         <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
@@ -292,8 +374,8 @@ export default function AdminInventory() {
                             )}
                           </td>
 
-                          <td className="px-4 py-3.5 text-gray-600">
-                            {p.category_name || 'Uncategorized'}
+                          <td className="px-4 py-3.5 text-gray-600 font-medium">
+                            {p.category_name || p.category?.name || 'Uncategorized'}
                           </td>
 
                           <td className="px-4 py-3.5">
@@ -302,7 +384,7 @@ export default function AdminInventory() {
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-sm text-gray-900">
-                                  {p.stock_quantity}
+                                  {p.stock_quantity ?? 0}
                                 </span>
                                 {isOutOfStock ? (
                                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">
@@ -325,7 +407,7 @@ export default function AdminInventory() {
                             {p.has_variants ? '—' : `≤ ${p.low_stock_threshold ?? 5} units`}
                           </td>
 
-                          <td className="px-4 py-3.5 text-right">
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             {p.has_variants ? (
                               <a
                                 href={`/admin/products/${p.id}/edit`}
@@ -397,7 +479,7 @@ export default function AdminInventory() {
                           </td>
 
                           <td className="px-4 py-3 font-sans">
-                            <span className="font-bold text-gray-900 block">{log.product_name || 'Unknown'}</span>
+                            <span className="font-bold text-gray-900 block">{log.product_name || 'Product'}</span>
                             {log.variant_title && (
                               <span className="text-[11px] text-gray-500 block">
                                 Variant: {log.variant_title} ({log.variant_sku})
@@ -466,8 +548,8 @@ export default function AdminInventory() {
 
       {/* ── STOCK ADJUSTMENT MODAL ───────────────────────────────────────── */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
               <h3 className="text-base font-bold text-brand-navy">
                 Adjust Inventory Level
@@ -499,15 +581,40 @@ export default function AdminInventory() {
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   New Stock Quantity *
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={newQuantity}
-                  onChange={(e) => setNewQuantity(e.target.value)}
-                  placeholder="Enter exact count"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={newQuantity}
+                    onChange={(e) => setNewQuantity(e.target.value)}
+                    placeholder="Enter exact count"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                  />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setNewQuantity(String(Math.max(0, (parseInt(newQuantity, 10) || 0) + 1)))}
+                      className="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-bold"
+                    >
+                      +1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewQuantity(String(Math.max(0, (parseInt(newQuantity, 10) || 0) + 10)))}
+                      className="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-bold"
+                    >
+                      +10
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewQuantity(String(Math.max(0, (parseInt(newQuantity, 10) || 0) + 50)))}
+                      className="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-bold"
+                    >
+                      +50
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -519,9 +626,27 @@ export default function AdminInventory() {
                   required
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g. Warehouse receipt, Physical stock audit, Damaged write-off"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+                  placeholder="e.g. Warehouse receipt, Physical stock audit"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 mb-2"
                 />
+                {/* Reason presets */}
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'Warehouse shipment receipt',
+                    'Physical stock audit',
+                    'Damaged write-off',
+                    'Sold offline'
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setReason(preset)}
+                      className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-[10px] font-medium transition-colors"
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -550,4 +675,3 @@ export default function AdminInventory() {
     </div>
   );
 }
-

@@ -7,6 +7,12 @@ console.log('YES ENTERPRISES — Phase 1 D1 Schema & Integrity Test Suite');
 console.log('Testing against local Cloudflare D1 emulator database');
 console.log('=================================================================\n');
 
+// Mapping of known Cloudflare D1 database IDs to their Miniflare Durable Object storage hashes
+const KNOWN_D1_HASHES = {
+  // Production / active development binding: 54c9ce5b-377e-4788-9899-43f71addf8a9
+  '54c9ce5b-377e-4788-9899-43f71addf8a9': '6a1b3b744fa3757d88c3c37a6e58dbe029fc1f0fedf109567181075521f4e00c'
+};
+
 // ── 1. DETERMINISTIC INTENDED D1 DATABASE LOCATOR ────────────────────────────
 function locateIntendedD1Database() {
   if (process.env.D1_TEST_DB_PATH && fs.existsSync(process.env.D1_TEST_DB_PATH)) {
@@ -14,16 +20,18 @@ function locateIntendedD1Database() {
     return process.env.D1_TEST_DB_PATH;
   }
 
-  // Parse wrangler.jsonc to identify target database name
+  // Parse wrangler.jsonc to identify target database name and database_id
   let targetDbName = 'yes_enterprises_db';
+  let activeDatabaseId = null;
   const wranglerConfigPath = path.resolve('wrangler.jsonc');
   if (fs.existsSync(wranglerConfigPath)) {
     try {
       const configRaw = fs.readFileSync(wranglerConfigPath, 'utf8');
       const cleanJson = configRaw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
       const config = JSON.parse(cleanJson);
-      if (config.d1_databases && config.d1_databases[0] && config.d1_databases[0].database_name) {
-        targetDbName = config.d1_databases[0].database_name;
+      if (config.d1_databases && config.d1_databases[0]) {
+        if (config.d1_databases[0].database_name) targetDbName = config.d1_databases[0].database_name;
+        if (config.d1_databases[0].database_id) activeDatabaseId = config.d1_databases[0].database_id;
       }
     } catch {
       // fallback to default
@@ -35,6 +43,15 @@ function locateIntendedD1Database() {
     throw new Error(`Local D1 state directory not found at: ${d1Dir}\nRun "npm run d1:migrate:local" first.`);
   }
 
+  // If active database_id has a known hash, prefer that specific SQLite file
+  if (activeDatabaseId && KNOWN_D1_HASHES[activeDatabaseId]) {
+    const activeFileName = `${KNOWN_D1_HASHES[activeDatabaseId]}.sqlite`;
+    const activePath = path.join(d1Dir, activeFileName);
+    if (fs.existsSync(activePath)) {
+      return activePath;
+    }
+  }
+
   const candidateFiles = fs.readdirSync(d1Dir).filter(
     f => f.endsWith('.sqlite') && !f.includes('metadata') && !f.includes('-wal') && !f.includes('-shm')
   );
@@ -42,6 +59,16 @@ function locateIntendedD1Database() {
   if (candidateFiles.length === 0) {
     throw new Error(`No SQLite database files found in ${d1Dir}. Run migrations first.`);
   }
+
+  candidateFiles.sort((a, b) => {
+    const aIsActive = a.includes('6a1b3b744fa3757d');
+    const bIsActive = b.includes('6a1b3b744fa3757d');
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+    const aStat = fs.statSync(path.join(d1Dir, a));
+    const bStat = fs.statSync(path.join(d1Dir, b));
+    return bStat.mtimeMs - aStat.mtimeMs;
+  });
 
   const requiredTables = [
     'categories',

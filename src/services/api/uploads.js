@@ -35,6 +35,9 @@ export function getR2ImageUrl(imageKey) {
   if (imageKey.startsWith('/')) {
     return safeEncodeURI(imageKey);
   }
+  if (imageKey.startsWith('assets/') || imageKey.startsWith('uploads/')) {
+    return safeEncodeURI(`/${imageKey}`);
+  }
   return `/uploads/${safeEncodeURI(imageKey)}`;
 }
 

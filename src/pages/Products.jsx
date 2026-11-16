@@ -85,6 +85,8 @@ export default function Products() {
     ? getCategoryName(activeCategoryObj, lang)
     : null;
 
+  const totalProductCount = categories.reduce((sum, c) => sum + (c.product_count || 0), 0) || (products ? products.length : 0);
+
   const handleRetryAll = () => {
     refetchCategories();
     refetchProducts();
@@ -97,12 +99,12 @@ export default function Products() {
     <div className="min-h-screen bg-white">
       {/* ── Page header ── */}
       <div className="bg-brand-ivory border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-10">
           <div ref={headerRef} className="reveal">
-            <h1 className="text-2xl sm:text-3xl font-bold text-brand-navy mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-navy mb-1 sm:mb-2">
               {t('products.pageTitle')}
             </h1>
-            <p className="text-gray-500 text-sm sm:text-base">
+            <p className="text-gray-500 text-xs sm:text-sm md:text-base">
               {activeCategoryName
                 ? activeCategoryName
                 : t('products.pageSubDefault')}
@@ -111,9 +113,9 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* ── Search bar (full width) ── */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -123,9 +125,9 @@ export default function Products() {
 
         {/* ── Active filter tag ── */}
         {(activeCategory !== 'all' || searchQuery.trim()) && (
-          <div className="flex items-center gap-2 mb-5 flex-wrap">
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
             {activeCategory !== 'all' && activeCategoryName && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-navy/10 text-brand-navy text-sm font-medium rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-navy/10 text-brand-navy text-xs sm:text-sm font-medium rounded-full">
                 {t('products.activeFilter')} {activeCategoryName}
                 <button
                   onClick={() => setActiveCategory('all')}
@@ -137,7 +139,7 @@ export default function Products() {
               </span>
             )}
             {searchQuery.trim() && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-amber/20 text-amber-800 text-sm font-medium rounded-full">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-amber/20 text-amber-800 text-xs sm:text-sm font-medium rounded-full">
                 "{searchQuery}"
                 <button
                   onClick={() => setSearchQuery('')}
@@ -157,6 +159,23 @@ export default function Products() {
           </div>
         )}
 
+        {/* ── Category load warning if products succeeded but categories failed ── */}
+        {categoriesError && categories.length === 0 && !hasError && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-800">
+            <span>
+              {lang === 'hi'
+                ? 'श्रेणी फ़िल्टर लोड नहीं हो सके। सभी उपलब्ध उत्पाद नीचे प्रदर्शित हैं।'
+                : 'Category filters could not be loaded. Displaying all products below.'}
+            </span>
+            <button
+              onClick={refetchCategories}
+              className="font-bold underline underline-offset-2 ml-3 hover:text-amber-950"
+            >
+              {lang === 'hi' ? 'पुनः प्रयास करें' : 'Retry'}
+            </button>
+          </div>
+        )}
+
         {/* ── Error / Offline State ── */}
         {hasError ? (
           <div className="max-w-2xl mx-auto my-12 p-8 bg-red-50/60 border border-red-200 rounded-3xl text-center space-y-4">
@@ -164,13 +183,20 @@ export default function Products() {
               📡
             </div>
             <h2 className="text-xl font-bold text-brand-navy">
-              {lang === 'hi' ? 'कैटलॉग सेवा वर्तमान में अनुपलब्ध है' : 'Catalogue Service Temporarily Offline'}
+              {productsError?.toLowerCase().includes('connect') || productsError?.toLowerCase().includes('network') || productsError?.includes('504') || productsError?.includes('502')
+                ? (lang === 'hi' ? 'कैटलॉग सेवा से संपर्क नहीं हो पा रहा है' : 'Unable to Connect to Catalogue Service')
+                : (lang === 'hi' ? 'कैटलॉग सेवा वर्तमान में अनुपलब्ध है' : 'Catalogue Service Temporarily Offline')}
             </h2>
             <p className="text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
               {lang === 'hi'
                 ? 'हम इन्वेंटरी डेटाबेस से संपर्क करने में असमर्थ हैं। वर्तमान कीमतें और स्टॉक उपलब्धता प्रदर्शित नहीं की जा सकतीं।'
                 : 'Unable to connect to the live product database. Real-time prices and stock availability cannot be verified right now.'}
             </p>
+            {productsError && (
+              <div className="text-xs font-mono text-red-700 bg-red-100/70 border border-red-200/80 rounded-xl px-3 py-2 max-w-md mx-auto truncate" title={productsError}>
+                {productsError}
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <button
@@ -203,52 +229,84 @@ export default function Products() {
                   categories={categories}
                   activeCategory={activeCategory}
                   onCategoryChange={handleCategoryChange}
+                  totalCount={totalProductCount}
                   lang={lang}
                 />
               </div>
             </aside>
 
-            {/* ── Mobile filter toggle ── */}
-            <div className="lg:hidden mb-5">
-              <button
-                onClick={() => setMobileFiltersOpen(prev => !prev)}
-                className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-brand-navy bg-white shadow-sm hover:border-brand-navy/40 transition-colors"
-              >
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M3 4a1 1 0 011-1h16a1 1 0 010 2H4a1 1 0 01-1-1zm3 8a1 1 0 011-1h10a1 1 0 010 2H7a1 1 0 01-1-1zm4 8a1 1 0 011-1h2a1 1 0 010 2h-2a1 1 0 01-1-1z" />
-                  </svg>
-                  {activeCategoryName
-                    ? `${lang === 'hi' ? 'श्रेणी' : 'Category'}: ${activeCategoryName}`
-                    : (lang === 'hi' ? 'श्रेणी फ़िल्टर करें' : 'Filter by Category')}
-                </span>
-                <svg
-                  className={`w-4 h-4 transition-transform duration-200 ${mobileFiltersOpen ? 'rotate-180' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {mobileFiltersOpen && (
-                <div className="mt-2 p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
-                  <CategoryFilter
-                    categories={categories}
-                    activeCategory={activeCategory}
-                    onCategoryChange={handleCategoryChange}
-                    lang={lang}
-                  />
+            {/* ── Mobile vertical category filter (zero horizontal scroll) ── */}
+            <div className="lg:hidden mb-6 mobile-category-filter">
+              <div className="bg-brand-ivory/60 border border-brand-navy/10 rounded-2xl p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-2.5 px-1">
+                  <span className="text-xs font-bold text-brand-navy uppercase tracking-wider">
+                    {lang === 'hi' ? 'श्रेणी अनुसार उत्पाद' : 'Browse by Category'}
+                  </span>
+                  {activeCategory !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryChange('all')}
+                      className="text-xs font-semibold text-brand-navy hover:underline"
+                    >
+                      {lang === 'hi' ? 'सभी देखें' : 'View All'}
+                    </button>
+                  )}
                 </div>
-              )}
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCategoryChange('all')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
+                      activeCategory === 'all'
+                        ? 'bg-brand-navy text-white shadow-sm ring-1 ring-brand-navy'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/80'
+                    }`}
+                  >
+                    <span>{lang === 'hi' ? 'सभी उत्पाद' : 'All Products'}</span>
+                    {totalProductCount > 0 && (
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        activeCategory === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {totalProductCount}
+                      </span>
+                    )}
+                  </button>
+                  {categories.map((c) => {
+                    const cName = getCategoryName(c, lang);
+                    const isSelected = activeCategory === c.id || activeCategory === c.slug;
+                    const pCount = c.product_count != null ? c.product_count : null;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleCategoryChange(c.slug || c.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] ${
+                          isSelected
+                            ? 'bg-brand-navy text-white shadow-sm ring-1 ring-brand-navy'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200/80'
+                        }`}
+                      >
+                        <span className="text-left leading-snug">{cName}</span>
+                        {pCount != null && (
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${
+                            isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {pCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* ── Product grid ── */}
             <div className="lg:col-span-3">
               {/* Result count */}
-              <div className="flex items-center justify-between mb-5">
-                <p className="text-sm text-gray-500">
-                  <span className="font-semibold text-brand-navy">{products.length}</span>{' '}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs sm:text-sm text-gray-500 font-medium">
+                  <span className="font-bold text-brand-navy">{products.length}</span>{' '}
                   {products.length === 1 ? t('products.result') : t('products.results')}
                   {activeCategoryName ? ` — ${activeCategoryName}` : ''}
                 </p>

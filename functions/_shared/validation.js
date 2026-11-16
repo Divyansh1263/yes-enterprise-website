@@ -44,6 +44,22 @@ export function parsePagination(url, defaultLimit = 20, maxLimit = 50) {
 }
 
 /**
+ * Generates a URL slug from text.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function slugify(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100);
+}
+
+/**
  * Validates a product or category slug.
  *
  * @param {string} slug - The slug string to check.

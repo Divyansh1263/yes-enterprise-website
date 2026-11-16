@@ -4,6 +4,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './hooks/useAuth';
 import LoadingSpinner from './components/ui/LoadingSpinner.jsx';
 import AccessDenied from './components/admin/AccessDenied.jsx';
+import AdminErrorBoundary from './components/admin/AdminErrorBoundary.jsx';
 
 // Layouts
 import Layout from './components/layout/Layout';
@@ -80,9 +81,18 @@ export default function App() {
         {/* ── Admin login — standalone ── */}
         <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* ── Admin routes — sidebar layout ── */}
-        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        {/* ── Admin routes — simplified catalogue layout ── */}
+        <Route
+          path="/admin"
+          element={
+            <AdminErrorBoundary>
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            </AdminErrorBoundary>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="products" element={<AdminProductList />} />
           <Route path="products/new" element={<AdminProductNew />} />

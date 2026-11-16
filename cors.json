@@ -1,0 +1,15 @@
+﻿{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://yesenterprises.net.in",
+          "https://yes-enterprise-website.pages.dev"
+        ],
+        "methods": ["PUT"],
+        "headers": ["Content-Type"]
+      },
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

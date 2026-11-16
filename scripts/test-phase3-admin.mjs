@@ -32,6 +32,12 @@ console.log('NOTE: Handler-level tests with local D1 emulator and simulated R2')
 console.log('=================================================================\n');
 
 // ── 1. DETERMINISTIC INTENDED D1 DATABASE LOCATOR ────────────────────────────
+// Mapping of known Cloudflare D1 database IDs to their Miniflare Durable Object storage hashes
+const KNOWN_D1_HASHES = {
+  // Production / active development binding: 54c9ce5b-377e-4788-9899-43f71addf8a9
+  '54c9ce5b-377e-4788-9899-43f71addf8a9': '6a1b3b744fa3757d88c3c37a6e58dbe029fc1f0fedf109567181075521f4e00c'
+};
+
 function locateIntendedD1Database() {
   if (process.env.D1_TEST_DB_PATH && fs.existsSync(process.env.D1_TEST_DB_PATH)) {
     return process.env.D1_TEST_DB_PATH;
@@ -42,6 +48,30 @@ function locateIntendedD1Database() {
     throw new Error(`Local D1 state directory not found at: ${d1Dir}\nRun "npm run d1:migrate:local" first.`);
   }
 
+  // 1. Check wrangler.jsonc to identify active database_id
+  let activeDatabaseId = null;
+  const wranglerConfigPath = path.resolve('wrangler.jsonc');
+  if (fs.existsSync(wranglerConfigPath)) {
+    try {
+      const configRaw = fs.readFileSync(wranglerConfigPath, 'utf8');
+      const cleanJson = configRaw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+      const config = JSON.parse(cleanJson);
+      if (config.d1_databases && config.d1_databases[0] && config.d1_databases[0].database_id) {
+        activeDatabaseId = config.d1_databases[0].database_id;
+      }
+    } catch {}
+  }
+
+  // 2. If active database_id has a known hash, prefer that specific SQLite file
+  if (activeDatabaseId && KNOWN_D1_HASHES[activeDatabaseId]) {
+    const activeFileName = `${KNOWN_D1_HASHES[activeDatabaseId]}.sqlite`;
+    const activePath = path.join(d1Dir, activeFileName);
+    if (fs.existsSync(activePath)) {
+      return activePath;
+    }
+  }
+
+  // 3. Fallback: filter candidates, prioritizing active database over legacy database
   const candidateFiles = fs.readdirSync(d1Dir).filter(
     f => f.endsWith('.sqlite') && !f.includes('metadata') && !f.includes('-wal') && !f.includes('-shm')
   );
@@ -49,6 +79,16 @@ function locateIntendedD1Database() {
   if (candidateFiles.length === 0) {
     throw new Error(`No SQLite database files found in ${d1Dir}. Run migrations first.`);
   }
+
+  candidateFiles.sort((a, b) => {
+    const aIsActive = a.includes('6a1b3b744fa3757d');
+    const bIsActive = b.includes('6a1b3b744fa3757d');
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+    const aStat = fs.statSync(path.join(d1Dir, a));
+    const bStat = fs.statSync(path.join(d1Dir, b));
+    return bStat.mtimeMs - aStat.mtimeMs;
+  });
 
   for (const file of candidateFiles) {
     const candidatePath = path.join(d1Dir, file);

@@ -125,10 +125,35 @@ export async function onRequestPut(context) {
     const updatedNotes = prod.notes !== undefined ? prod.notes : existing.notes;
     const updatedSpecs = prod.specifications_json !== undefined ? prod.specifications_json : existing.specifications_json;
     const updatedSchema = prod.variant_attributes_schema_json !== undefined ? prod.variant_attributes_schema_json : existing.variant_attributes_schema_json;
+    const updatedExpectedPrice100 = prod.expected_price_per_100_paise !== undefined ? prod.expected_price_per_100_paise : existing.expected_price_per_100_paise;
+    const updatedMoq = prod.min_order_quantity !== undefined ? prod.min_order_quantity : existing.min_order_quantity;
 
-    const hasVariants = Boolean(existing.has_variants);
+    const willHaveVariants = prod.has_variants !== undefined ? Boolean(prod.has_variants) : Boolean(existing.has_variants);
+    const isConvertingToVariable = !Boolean(existing.has_variants) && willHaveVariants;
+    const isConvertingToSimple = Boolean(existing.has_variants) && !willHaveVariants;
 
-    if (!hasVariants) {
+    // Snapshot on conversion from simple to variable
+    if (isConvertingToVariable) {
+      const existingImages = (await db.prepare('SELECT id, image_key, variant_id, is_primary, sort_order FROM product_images WHERE product_id = ?').bind(productId).all()).results;
+      const snapshotId = crypto.randomUUID();
+      statements.push(
+        db.prepare(`
+          INSERT INTO product_conversion_snapshots (
+            id, product_id, snapshot_timestamp, converted_by,
+            baseline_base_price_paise, baseline_compare_at_price_paise,
+            baseline_expected_price_per_100_paise, baseline_min_order_quantity,
+            baseline_sku, baseline_has_variants, baseline_images_json, status
+          ) VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, 0, ?, 'active')
+        `).bind(
+          snapshotId, productId, auth.user.email,
+          existing.base_price_paise, existing.compare_at_price_paise,
+          existing.expected_price_per_100_paise ?? null, existing.min_order_quantity ?? null,
+          existing.sku, JSON.stringify(existingImages || [])
+        )
+      );
+    }
+
+    if (!willHaveVariants) {
       const updatedPrice = prod.base_price_paise !== undefined ? prod.base_price_paise : existing.base_price_paise;
       const updatedComparePrice = prod.compare_at_price_paise !== undefined ? prod.compare_at_price_paise : existing.compare_at_price_paise;
       const updatedSku = prod.sku !== undefined ? prod.sku : existing.sku;
@@ -151,29 +176,50 @@ export async function onRequestPut(context) {
         db.prepare(`
           UPDATE products SET
             name = ?, name_hi = ?, slug = ?, category_id = ?, description = ?, description_hi = ?,
-            material = ?, brand = ?, base_price_paise = ?, compare_at_price_paise = ?,
+            material = ?, brand = ?, has_variants = 0, base_price_paise = ?, compare_at_price_paise = ?,
+            expected_price_per_100_paise = ?, min_order_quantity = ?,
             sku = ?, stock_quantity = ?, low_stock_threshold = ?, specifications_json = ?,
             status = ?, is_featured = ?, sort_order = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `).bind(
           updatedName, updatedNameHi, updatedSlug, updatedCatId, updatedDesc, updatedDescHi,
           updatedMat, updatedBrand, updatedPrice, updatedComparePrice,
+          updatedExpectedPrice100, updatedMoq,
           updatedSku, updatedStock, updatedLowStock, updatedSpecs,
           updatedStatus, updatedFeatured, updatedSort, updatedNotes, productId
         )
       );
+
+      // If converting variable to simple, soft-archive all child variants and mark active snapshot as restored
+      if (isConvertingToSimple) {
+        statements.push(
+          db.prepare(`
+            UPDATE product_variants 
+            SET status = 'archived', updated_at = CURRENT_TIMESTAMP 
+            WHERE product_id = ?
+          `).bind(productId)
+        );
+        statements.push(
+          db.prepare(`
+            UPDATE product_conversion_snapshots 
+            SET status = 'restored' 
+            WHERE product_id = ? AND status = 'active'
+          `).bind(productId)
+        );
+      }
     } else {
       // Variable product update
       statements.push(
         db.prepare(`
           UPDATE products SET
             name = ?, name_hi = ?, slug = ?, category_id = ?, description = ?, description_hi = ?,
-            material = ?, brand = ?, specifications_json = ?, variant_attributes_schema_json = ?,
+            material = ?, brand = ?, has_variants = 1, base_price_paise = NULL, compare_at_price_paise = NULL,
+            expected_price_per_100_paise = ?, min_order_quantity = ?, specifications_json = ?, variant_attributes_schema_json = ?,
             status = ?, is_featured = ?, sort_order = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `).bind(
           updatedName, updatedNameHi, updatedSlug, updatedCatId, updatedDesc, updatedDescHi,
-          updatedMat, updatedBrand, updatedSpecs, updatedSchema,
+          updatedMat, updatedBrand, updatedExpectedPrice100, updatedMoq, updatedSpecs, updatedSchema,
           updatedStatus, updatedFeatured, updatedSort, updatedNotes, productId
         )
       );
@@ -182,6 +228,20 @@ export async function onRequestPut(context) {
       if (body.variants && Array.isArray(body.variants)) {
         const existingVariants = (await db.prepare('SELECT * FROM product_variants WHERE product_id = ?').bind(productId).all()).results;
         const existingMap = new Map(existingVariants.map(v => [v.id, v]));
+        const incomingIds = new Set(prod.variants.map(v => v.id).filter(Boolean));
+
+        // Soft-archive any existing variants omitted from incoming payload
+        for (const ev of existingVariants) {
+          if (!incomingIds.has(ev.id) && ev.status !== 'archived') {
+            statements.push(
+              db.prepare(`
+                UPDATE product_variants 
+                SET status = 'archived', updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+              `).bind(ev.id)
+            );
+          }
+        }
 
         for (const v of prod.variants) {
           if (v.id && existingMap.has(v.id)) {
@@ -199,18 +259,21 @@ export async function onRequestPut(context) {
               );
             }
 
-            // Note: product_id is NOT updated to preserve immutable trigger trg_variant_product_id_immutable
             statements.push(
               db.prepare(`
                 UPDATE product_variants SET
                   sku = ?, title = ?, title_hi = ?, attributes_json = ?,
-                  price_paise = ?, compare_at_price_paise = ?, stock_quantity = ?,
-                  low_stock_threshold = ?, status = ?, sort_order = ?, updated_at = CURRENT_TIMESTAMP
+                  price_paise = ?, compare_at_price_paise = ?,
+                  expected_price_per_100_paise = ?, min_order_quantity = ?,
+                  stock_quantity = ?, low_stock_threshold = ?, status = ?,
+                  sort_order = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
               `).bind(
                 v.sku, v.title, v.title_hi, v.attributes_json,
-                v.price_paise, v.compare_at_price_paise, v.stock_quantity,
-                v.low_stock_threshold, v.status, v.sort_order, v.id
+                v.price_paise, v.compare_at_price_paise,
+                v.expected_price_per_100_paise ?? null, v.min_order_quantity ?? null,
+                v.stock_quantity, v.low_stock_threshold, v.status || 'active',
+                v.sort_order, v.id
               )
             );
           } else {
@@ -220,17 +283,18 @@ export async function onRequestPut(context) {
               db.prepare(`
                 INSERT INTO product_variants (
                   id, product_id, sku, title, title_hi, attributes_json,
-                  price_paise, compare_at_price_paise, stock_quantity, low_stock_threshold,
-                  status, sort_order, created_at, updated_at
+                  price_paise, compare_at_price_paise, expected_price_per_100_paise, min_order_quantity,
+                  stock_quantity, low_stock_threshold, status, sort_order, created_at, updated_at
                 ) VALUES (
                   ?, ?, ?, ?, ?, ?,
                   ?, ?, ?, ?,
-                  ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                  ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                 )
               `).bind(
                 newVarId, productId, v.sku, v.title, v.title_hi, v.attributes_json,
-                v.price_paise, v.compare_at_price_paise, v.stock_quantity,
-                v.low_stock_threshold, v.status, v.sort_order
+                v.price_paise, v.compare_at_price_paise,
+                v.expected_price_per_100_paise ?? null, v.min_order_quantity ?? null,
+                v.stock_quantity, v.low_stock_threshold, v.status || 'active', v.sort_order
               )
             );
 

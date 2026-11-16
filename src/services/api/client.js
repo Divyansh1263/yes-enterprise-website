@@ -33,6 +33,11 @@ export function isProductionMode() {
  * Always returns false in production builds (isProductionMode() === true),
  * ensuring that production traffic can NEVER activate local development bypasses.
  *
+ * In development builds (!isProductionMode()):
+ * Recognizes localhost, loopback, mDNS (.local), and RFC 1918 private LAN IP ranges
+ * (192.168.x.x, 10.x.x.x, 172.16-31.x.x) so testing from a mobile phone on local Wi-Fi
+ * functions seamlessly with development features.
+ *
  * @returns {boolean}
  */
 export function isLocalEnvironment() {
@@ -48,7 +53,15 @@ export function isLocalEnvironment() {
   }
 
   const host = window.location.hostname;
-  return host === 'localhost' || host === '127.0.0.1';
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
+    host.endsWith('.local') ||
+    /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host)
+  );
 }
 
 /**

@@ -20,7 +20,15 @@ export async function onRequestGet(context) {
         c.description,
         c.description_hi,
         c.sort_order,
-        COUNT(p.id) as product_count
+        COUNT(p.id) as product_count,
+        (
+          SELECT pi.image_key
+          FROM product_images pi
+          JOIN products p2 ON pi.product_id = p2.id
+          WHERE p2.category_id = c.id AND p2.status = 'active' AND pi.variant_id IS NULL
+          ORDER BY p2.sort_order ASC, pi.is_primary DESC, pi.sort_order ASC
+          LIMIT 1
+        ) as primary_image_key
       FROM categories c
       LEFT JOIN products p 
         ON p.category_id = c.id AND p.status = 'active'

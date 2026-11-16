@@ -46,6 +46,8 @@ export async function onRequestGet(context) {
         p.has_variants,
         p.base_price_paise,
         p.compare_at_price_paise,
+        p.expected_price_per_100_paise,
+        p.min_order_quantity,
         p.sku,
         p.stock_quantity,
         p.low_stock_threshold,
@@ -80,13 +82,15 @@ export async function onRequestGet(context) {
           attributes_json,
           price_paise,
           compare_at_price_paise,
+          expected_price_per_100_paise,
+          min_order_quantity,
           stock_quantity,
           low_stock_threshold,
           status,
           sort_order
         FROM product_variants
         WHERE product_id = ? AND status = 'active'
-        ORDER BY sort_order ASC, title ASC;
+        ORDER BY sort_order ASC, price_paise ASC, id ASC;
       `).bind(product.id).all(),
 
       db.prepare(`
@@ -118,12 +122,17 @@ export async function onRequestGet(context) {
       attributes: parseJsonSafe(v.attributes_json, {}),
       price_paise: v.price_paise,
       compare_at_price_paise: v.compare_at_price_paise,
+      expected_price_per_100_paise: v.expected_price_per_100_paise ?? null,
+      min_order_quantity: v.min_order_quantity ?? null,
       stock_quantity: v.stock_quantity,
       low_stock_threshold: v.low_stock_threshold,
+      status: v.status,
       sort_order: v.sort_order
     }));
 
-    const formattedImages = (imagesResult?.results || []).map(img => ({
+    const isVariable = formattedVariants.length > 0;
+
+    const allImages = (imagesResult?.results || []).map(img => ({
       id: img.id,
       product_id: img.product_id,
       variant_id: img.variant_id,
@@ -137,6 +146,13 @@ export async function onRequestGet(context) {
       is_primary: Boolean(img.is_primary),
       sort_order: img.sort_order
     }));
+
+    // If simple product, only expose parent/shared images where variant_id IS NULL
+    const formattedImages = isVariable
+      ? allImages
+      : (allImages.some(img => img.variant_id === null)
+          ? allImages.filter(img => img.variant_id === null)
+          : allImages);
 
     const responseData = {
       id: product.id,
@@ -156,6 +172,8 @@ export async function onRequestGet(context) {
       has_variants: Boolean(product.has_variants),
       base_price_paise: product.base_price_paise,
       compare_at_price_paise: product.compare_at_price_paise,
+      expected_price_per_100_paise: product.expected_price_per_100_paise ?? null,
+      min_order_quantity: product.min_order_quantity ?? null,
       sku: product.sku,
       stock_quantity: product.stock_quantity,
       low_stock_threshold: product.low_stock_threshold,

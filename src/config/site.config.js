@@ -31,8 +31,8 @@ const siteConfig = {
   companyName: 'YES ENTERPRISES',
   brandName: 'YES ENTERPRISES',
   monogram: 'YE',
-  descriptor: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles and Stainless Steel Products',
-  tagline: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Products',
+  descriptor: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Tiffins',
+  tagline: 'Manufacturers & Suppliers of Feeding Bottles, Water Bottles & Stainless Steel Tiffins',
 
   // Constitution: Partnership firm (Uvais Ali & Rukhsar)
   constitution: 'Partnership',
@@ -66,11 +66,13 @@ const siteConfig = {
   phone: '7454848548',
   phoneDisplay: '+91 74548 48548',
 
-  // ⚠ TODO: Public-facing business email address
-  email: '',
+  // ✅ CONFIRMED: Public-facing business email address
+  email: 'uvaisalikhan0143@gmail.com',
 
-  // ⚠ TODO: Public-facing contact address (keep separate from GST registered address until confirmed)
-  address: '',
+  // ✅ CONFIRMED: Registered Business Address (GST registered location)
+  address: '98, Village Tewar Patti Urf Kazipura, Kundarki, Tehsil Bilari, District Moradabad, Uttar Pradesh – 244413, India',
+  registeredAddress: '98, Village Tewar Patti Urf Kazipura, Kundarki, Tehsil Bilari, District Moradabad, Uttar Pradesh – 244413, India',
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=98%2C+Village+Tewar+Patti+Urf+Kazipura%2C+Kundarki%2C+Tehsil+Bilari%2C+District+Moradabad%2C+Uttar+Pradesh+244413',
 
   // ⚠ TODO: Business hours (e.g. 'Mon–Sat, 9 AM – 6 PM IST')
   businessHours: '',

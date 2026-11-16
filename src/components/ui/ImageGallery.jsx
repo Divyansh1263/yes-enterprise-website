@@ -26,18 +26,18 @@ export default function ImageGallery({ images = [], productName = 'Product' }) {
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="aspect-square bg-brand-ivory rounded-2xl overflow-hidden border border-gray-100">
+      <div className="w-full max-h-[320px] sm:max-h-[440px] aspect-square bg-[#F7F5EF] rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center p-2 sm:p-4">
         <img
           key={active}
           src={activeUrl}
           alt={activeImg?.alt || activeImg?.alt_text || `${productName} — view ${active + 1}`}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-contain transition-opacity duration-300"
         />
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails row (horizontally scrollable on mobile) */}
       {images.length > 1 && (
-        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(images.length, 5)}, 1fr)` }}>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
           {images.map((img, i) => {
             const thumbUrl = resolveUrl(img);
             return (
@@ -45,17 +45,17 @@ export default function ImageGallery({ images = [], productName = 'Product' }) {
                 key={i}
                 type="button"
                 onClick={() => setActive(i)}
-                className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 shrink-0 aspect-square rounded-xl overflow-hidden border-2 bg-white p-1 transition-all ${
                   i === active
-                    ? 'border-brand-navy ring-2 ring-brand-navy/10'
-                    : 'border-gray-100 hover:border-gray-300'
+                    ? 'border-brand-navy ring-2 ring-brand-navy/30 scale-105'
+                    : 'border-gray-200 hover:border-gray-400 opacity-70 hover:opacity-100'
                 }`}
                 aria-label={`View image ${i + 1}`}
               >
                 <img
                   src={thumbUrl}
                   alt={img.alt || img.alt_text || `${productName} thumbnail ${i + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   loading="lazy"
                 />
               </button>

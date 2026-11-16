@@ -1,0 +1,1023 @@
+{
+  "metadata": {
+    "generated_at": "2026-11-16T12:00:00+05:30",
+    "phase": "11.4A",
+    "mode": "read_only_catalogue_preparation_and_correction",
+    "description": "Verified catalogue import preview structured for the Phase 11.3 Variant Engine and D1 schema",
+    "total_whatsapp_source_items": 19,
+    "variant_families_count": 3,
+    "total_variants_count": 9,
+    "standalone_public_products_count": 7,
+    "active_public_catalogue_cards_count": 10,
+    "unassigned_hidden_accessories_count": 3,
+    "total_photographs_mapped": 36,
+    "pricing_rule_confirmed": "Single-piece price from original WhatsApp price; Expected price per 100 from discounted price * 100; Special exception for Glass Sipper with Handle (₹275 MRP / ₹11,000 per 100); MOQ null unless explicitly specified."
+  },
+  "owner_decisions_applied": {
+    "categories_rule": "Preserve 6 existing categories strictly. Do not create 7th category. Accessories remain unassigned and hidden from public catalogue until approved.",
+    "variant_engine_rule": "Group related capacities as variants under family parent cards using Phase 11.3 variant engine (dual pricing in paise, active variant filtering, image fallback).",
+    "glass_sipper_exception": "Item 4 (Glass Sipper with Handle 250ml) single price set to printed retail box MRP ₹275 (27,500 paise) instead of WhatsApp ₹299. Wholesale 100pcs remains ₹11,000 (1,100,000 paise).",
+    "prod_16_category_discrepancy": "Documented: In local D1, prod-16 is erroneously set to 'glass-bottles'. In remote production backup, prod-16 is correctly set to 'ss-sippers'. Intended category is 'ss-sippers'. Neither database modified.",
+    "claims_verification_rule": "Clearly distinguish manufacturer-stated claims (e.g. 24h thermal performance, BPA-free) from independently verified physical evidence (e.g. engraved 'YE SS 304', printed box MRP). Mark unsupported claims for owner confirmation."
+  },
+  "variant_families": [
+    {
+      "family_id": "prod-14",
+      "family_name": "SS 304 Stainless Steel Feeding Bottle Family",
+      "family_name_hi": "SS 304 स्टेनलेस स्टील फीडिंग बोतल फैमिली",
+      "slug": "stainless-steel-feeding-bottle-ss304",
+      "category_id": "ss-bottles",
+      "category_name": "Stainless Steel Feeding Bottles",
+      "classification": "existing_product_variant_conversion",
+      "has_variants": true,
+      "material": "SS 304 Food Grade Stainless Steel",
+      "brand": "YE",
+      "status": "active",
+      "starting_price_inr": 350,
+      "starting_price_paise": 35000,
+      "starting_expected_price_100_inr": 13500,
+      "starting_expected_price_100_paise": 1350000,
+      "available_capacities": [
+        "150 ml",
+        "200 ml",
+        "250 ml",
+        "300 ml"
+      ],
+      "descriptions": {
+        "en": "Premium SS 304 food-grade stainless steel feeding bottle with straight cylindrical body, laser-engraved YE branding, clear embossed capacity markings, and protective steel cap. Designed for hygiene and daily use.",
+        "hi": "सीधे बेलनाकार आकार, लेजर-एन्ग्रेव्ड YE ब्रांडिंग, स्पष्ट उभरे हुए मापन चिह्नों और सुरक्षात्मक स्टील कैप के साथ प्रीमियम SS 304 फूड-ग्रेड स्टेनलेस स्टील फीडिंग बोतल।"
+      },
+      "specifications": [
+        {
+          "key": "Material",
+          "value": "SS 304 Food Grade Stainless Steel"
+        },
+        {
+          "key": "Capacities Available",
+          "value": "150 ml, 200 ml, 250 ml, 300 ml"
+        },
+        {
+          "key": "Bottle Shape",
+          "value": "Straight Cylindrical Profile"
+        },
+        {
+          "key": "Neck Type",
+          "value": "Standard Neck"
+        },
+        {
+          "key": "Teat Included",
+          "value": "Food-Grade Silicone Teat (Manufacturer-Stated BPA-Free)"
+        }
+      ],
+      "claims_verification": {
+        "material_claim": "Verified: Body physically laser-engraved 'YE SS 304' (visible in WhatsApp Image 2026-11-16 at 9.28.42 AM.jpeg).",
+        "capacity_claim": "Verified: Etched graduation scale physically marks 50 ml to 300 ml Aprox (visible in WhatsApp Image 2026-11-16 at 9.28.41 AM (2).jpeg).",
+        "bpa_free_claim": "Manufacturer-Stated: Industry standard for food-grade silicone teats. Physical packaging text unverified in photos; requires owner confirmation for packaging claim."
+      },
+      "family_images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.42 AM.jpeg",
+          "role": "shared_family_primary",
+          "is_primary": true,
+          "sort_order": 1,
+          "variant_association": null,
+          "description": "Clear front view showing laser-engraved 'YE SS 304' branding, steel collar, and protective cap."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.41 AM (2).jpeg",
+          "role": "variant_specific",
+          "is_primary": false,
+          "sort_order": 2,
+          "variant_association": "300 ml",
+          "description": "Straight cylindrical bottle showing etched graduation scale up to 300 ml Aprox."
+        }
+      ],
+      "variants": [
+        {
+          "variant_id": "var-prod-14-150",
+          "title": "150 ml",
+          "title_hi": "150 ml",
+          "sku": "YE-SS-STR-150",
+          "attributes": {
+            "capacity": "150 ml"
+          },
+          "whatsapp_original_price_inr": 350,
+          "whatsapp_discounted_price_inr": 135,
+          "price_paise": 35000,
+          "expected_price_per_100_paise": 1350000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 0,
+          "source_whatsapp_item": 19,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.42 AM.jpeg"
+        },
+        {
+          "variant_id": "var-prod-14-200",
+          "title": "200 ml",
+          "title_hi": "200 ml",
+          "sku": "YE-SS-STR-200",
+          "attributes": {
+            "capacity": "200 ml"
+          },
+          "whatsapp_original_price_inr": 399,
+          "whatsapp_discounted_price_inr": 145,
+          "price_paise": 39900,
+          "expected_price_per_100_paise": 1450000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 1,
+          "source_whatsapp_item": 18,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.42 AM.jpeg"
+        },
+        {
+          "variant_id": "var-prod-14-250",
+          "title": "250 ml",
+          "title_hi": "250 ml",
+          "sku": "YE-SS-STR-250",
+          "attributes": {
+            "capacity": "250 ml"
+          },
+          "whatsapp_original_price_inr": 449,
+          "whatsapp_discounted_price_inr": 155,
+          "price_paise": 44900,
+          "expected_price_per_100_paise": 1550000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 2,
+          "source_whatsapp_item": 17,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.42 AM.jpeg"
+        },
+        {
+          "variant_id": "var-prod-14-300",
+          "title": "300 ml",
+          "title_hi": "300 ml",
+          "sku": "YE-SS-STR-300",
+          "attributes": {
+            "capacity": "300 ml"
+          },
+          "whatsapp_original_price_inr": 499,
+          "whatsapp_discounted_price_inr": 165,
+          "price_paise": 49900,
+          "expected_price_per_100_paise": 1650000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 3,
+          "source_whatsapp_item": 16,
+          "photo_dedicated": "WhatsApp Image 2026-11-16 at 9.28.41 AM (2).jpeg"
+        }
+      ]
+    },
+    {
+      "family_id": "prod-19",
+      "family_name": "YE Premium Stainless Steel Feeding Bottle Family",
+      "family_name_hi": "YE प्रीमियम स्टेनलेस स्टील फीडिंग बोतल फैमिली",
+      "slug": "ye-premium-stainless-steel-feeding-bottle-200ml",
+      "category_id": "ss-bottles",
+      "category_name": "Stainless Steel Feeding Bottles",
+      "classification": "existing_product_variant_conversion",
+      "has_variants": true,
+      "material": "SS 304 Food Grade Stainless Steel",
+      "brand": "YE",
+      "status": "active",
+      "starting_price_inr": 549,
+      "starting_price_paise": 54900,
+      "starting_expected_price_100_inr": 19000,
+      "starting_expected_price_100_paise": 1900000,
+      "available_capacities": [
+        "200 ml",
+        "250 ml"
+      ],
+      "descriptions": {
+        "en": "Ergonomically contoured wide-neck premium SS 304 stainless steel feeding bottle with laser-engraved YE branding, anti-colic silicone teat, and crystal-clear dome cap. Packaged in individual retail display boxes.",
+        "hi": "सुविधाजनक घुमावदार चौड़े मुंह वाली प्रीमियम SS 304 स्टेनलेस स्टील फीडिंग बोतल, लेजर-एन्ग्रेव्ड YE ब्रांडिंग और एंटी-कोलिक सिलिकॉन निप्पल के साथ।"
+      },
+      "specifications": [
+        {
+          "key": "Material",
+          "value": "SS 304 Food Grade Stainless Steel"
+        },
+        {
+          "key": "Capacities Available",
+          "value": "200 ml, 250 ml"
+        },
+        {
+          "key": "Bottle Shape",
+          "value": "Ergonomic Contoured Waist"
+        },
+        {
+          "key": "Neck Type",
+          "value": "Wide Neck"
+        },
+        {
+          "key": "Retail Packaging",
+          "value": "Individual color-printed box with EAN barcode"
+        }
+      ],
+      "claims_verification": {
+        "material_claim": "Verified: Body physically laser-engraved 'YE SS 304' (visible in WhatsApp Image 2026-11-16 at 9.28.25 AM (3).jpeg).",
+        "packaging_and_barcode_claim": "Verified: Retail boxes physically photographed showing printed MRP ₹549 / Barcode 8909639003258 (200ml) and MRP ₹599 / Barcode 8909639003227 (250ml).",
+        "anti_colic_claim": "Manufacturer-Stated: Wide-neck teat features anti-colic base ventilation ribs; physical design feature, not laboratory certified."
+      },
+      "family_images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.25 AM (3).jpeg",
+          "role": "variant_specific_primary",
+          "is_primary": true,
+          "sort_order": 1,
+          "variant_association": "200 ml",
+          "description": "Clear front angle of 200 ml contoured bottle showing laser-engraved YE SS 304 branding."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.24 AM (2).jpeg",
+          "role": "variant_specific_primary",
+          "is_primary": false,
+          "sort_order": 2,
+          "variant_association": "250 ml",
+          "description": "Assembled contoured wide-neck 250 ml stainless steel feeding bottle."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.25 AM.jpeg",
+          "role": "variant_specific_gallery",
+          "is_primary": false,
+          "sort_order": 3,
+          "variant_association": "250 ml",
+          "description": "250 ml bottle alongside retail box displaying printed MRP ₹599 and Barcode 8909639003227."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.25 AM (1).jpeg",
+          "role": "variant_specific_gallery",
+          "is_primary": false,
+          "sort_order": 4,
+          "variant_association": "200 ml",
+          "description": "200 ml bottle with dome cap removed alongside retail packaging box showing printed MRP ₹549."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.26 AM.jpeg",
+          "role": "variant_specific_gallery",
+          "is_primary": false,
+          "sort_order": 5,
+          "variant_association": "200 ml",
+          "description": "200 ml bottle fully assembled standing alongside retail packaging box."
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.26 AM (1).jpeg",
+          "role": "variant_specific_gallery",
+          "is_primary": false,
+          "sort_order": 6,
+          "variant_association": "200 ml",
+          "description": "Side view of 200 ml retail box showing barcode 8909639003258 and feature highlights."
+        }
+      ],
+      "variants": [
+        {
+          "variant_id": "var-prod-19-200",
+          "title": "200 ml",
+          "title_hi": "200 ml",
+          "sku": "YE-SS-PRM-200",
+          "attributes": {
+            "capacity": "200 ml"
+          },
+          "whatsapp_original_price_inr": 549,
+          "whatsapp_discounted_price_inr": 190,
+          "price_paise": 54900,
+          "expected_price_per_100_paise": 1900000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 0,
+          "source_whatsapp_item": 3,
+          "barcode": "8909639003258",
+          "photo_dedicated": "WhatsApp Image 2026-11-16 at 9.28.25 AM (3).jpeg"
+        },
+        {
+          "variant_id": "var-prod-19-250",
+          "title": "250 ml",
+          "title_hi": "250 ml",
+          "sku": "YE-SS-PRM-250",
+          "attributes": {
+            "capacity": "250 ml"
+          },
+          "whatsapp_original_price_inr": 599,
+          "whatsapp_discounted_price_inr": 199,
+          "price_paise": 59900,
+          "expected_price_per_100_paise": 1990000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 1,
+          "source_whatsapp_item": 2,
+          "barcode": "8909639003227",
+          "photo_dedicated": "WhatsApp Image 2026-11-16 at 9.28.24 AM (2).jpeg"
+        }
+      ]
+    },
+    {
+      "family_id": "prod-16",
+      "family_name": "Stainless Steel Vacuum Cola Water Bottle Family",
+      "family_name_hi": "स्टेनलेस स्टील वैक्यूम कोला पानी की बोतल फैमिली",
+      "slug": "stainless-steel-vacuum-sipper",
+      "category_id": "ss-sippers",
+      "category_name": "Stainless Steel Sippers and Water Bottles",
+      "classification": "existing_product_variant_conversion",
+      "has_variants": true,
+      "material": "Double-Wall Vacuum Insulated Stainless Steel",
+      "brand": "YE",
+      "status": "active",
+      "starting_price_inr": 599,
+      "starting_price_paise": 59900,
+      "starting_expected_price_100_inr": 34900,
+      "starting_expected_price_100_paise": 3490000,
+      "available_capacities": [
+        "500 ml",
+        "750 ml",
+        "1 Litre"
+      ],
+      "category_discrepancy_note": "Database category check: Local D1 currently records category_id='glass-bottles'. Remote production backup records category_id='ss-sippers'. Intended verified category is 'ss-sippers'.",
+      "descriptions": {
+        "en": "Double-wall vacuum insulated stainless steel water bottle in classic cola contour. Jointless design with threaded stainless screw cap. Manufacturer states up to 24 hours thermal retention for hot and cold beverages.",
+        "hi": "क्लासिक कोला आकार में डबल-वॉल वैक्यूम इंसुलेटेड स्टेनलेस स्टील पानी की बोतल। 24 घंटे गर्म और ठंडा रखने की निर्माता द्वारा बताई गई क्षमता।"
+      },
+      "specifications": [
+        {
+          "key": "Material",
+          "value": "Double-Wall Insulated Stainless Steel"
+        },
+        {
+          "key": "Capacities Available",
+          "value": "500 ml, 750 ml, 1 Litre"
+        },
+        {
+          "key": "Thermal Performance",
+          "value": "Up to 24 Hours Hot & Cold (Manufacturer-Stated)"
+        },
+        {
+          "key": "Finish",
+          "value": "Brushed Silver Stainless Steel"
+        },
+        {
+          "key": "Cap Type",
+          "value": "Threaded Stainless Steel Cap with Silicone Seal"
+        }
+      ],
+      "claims_verification": {
+        "thermal_claim_24h": "Manufacturer-Stated: WhatsApp screenshot text explicitly claims 'Keeps 24 Hours Hot & Cold'. Independent laboratory thermal decay tests have not been performed; documented as manufacturer-stated claim.",
+        "jointless_claim": "Manufacturer-Stated: WhatsApp listing text states 'Jointless construction'; physical interior inspection confirms smooth deep-drawn stainless steel wall.",
+        "leakproof_claim": "Design Feature: Threaded stainless screw cap with internal silicone O-ring gasket provides spill prevention."
+      },
+      "family_images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.39 AM.jpeg",
+          "role": "shared_family_primary",
+          "is_primary": true,
+          "sort_order": 1,
+          "variant_association": null,
+          "description": "Brushed silver stainless steel cola-profile vacuum water bottle with stainless screw cap (Shared across 500ml, 750ml, 1L)."
+        }
+      ],
+      "variants": [
+        {
+          "variant_id": "var-prod-16-500",
+          "title": "500 ml",
+          "title_hi": "500 ml",
+          "sku": "YE-COLA-500",
+          "attributes": {
+            "capacity": "500 ml"
+          },
+          "whatsapp_original_price_inr": 599,
+          "whatsapp_discounted_price_inr": 349,
+          "price_paise": 59900,
+          "expected_price_per_100_paise": 3490000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 0,
+          "source_whatsapp_item": 12,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.39 AM.jpeg"
+        },
+        {
+          "variant_id": "var-prod-16-750",
+          "title": "750 ml",
+          "title_hi": "750 ml",
+          "sku": "YE-COLA-750",
+          "attributes": {
+            "capacity": "750 ml"
+          },
+          "whatsapp_original_price_inr": 649,
+          "whatsapp_discounted_price_inr": 365,
+          "price_paise": 64900,
+          "expected_price_per_100_paise": 3650000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 1,
+          "source_whatsapp_item": 13,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.39 AM.jpeg"
+        },
+        {
+          "variant_id": "var-prod-16-1000",
+          "title": "1 Litre",
+          "title_hi": "1 लीटर",
+          "sku": "YE-COLA-1000",
+          "attributes": {
+            "capacity": "1 Litre"
+          },
+          "whatsapp_original_price_inr": 799,
+          "whatsapp_discounted_price_inr": 399,
+          "price_paise": 79900,
+          "expected_price_per_100_paise": 3990000,
+          "min_order_quantity": null,
+          "status": "active",
+          "sort_order": 2,
+          "source_whatsapp_item": 14,
+          "photo_fallback": "WhatsApp Image 2026-11-16 at 9.28.39 AM.jpeg"
+        }
+      ]
+    }
+  ],
+  "standalone_simple_products": [
+    {
+      "item_number": 1,
+      "product_id": "prod-17",
+      "name": "YE Stainless Steel Feeding Bottle with Handles — 250 ml",
+      "name_hi": "YE हैंडल वाली स्टेनलेस स्टील फीडिंग बोतल — 250 ml",
+      "slug": "ye-stainless-steel-feeding-bottle-handles-250ml",
+      "category_id": "ss-bottles",
+      "category_name": "Stainless Steel Feeding Bottles",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "SS 304 Stainless Steel",
+      "brand": "YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 249,
+        "whatsapp_discounted_price_inr": 150,
+        "website_single_price_inr": 249,
+        "base_price_paise": 24900,
+        "expected_price_per_100_inr": 15000,
+        "expected_price_per_100_paise": 1500000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "250 ml",
+        "material": "SS 304 Stainless Steel",
+        "brand": "YE",
+        "colours": "Silver body with pink collar and twin grip handles",
+        "features": "Twin grip handles, protective transparent cap, etched graduation scale (50-250 ml)"
+      },
+      "claims_verification": {
+        "material_claim": "Verified: Body physically laser-engraved 'YE SS 304' (visible in WhatsApp Image 2026-11-16 at 9.28.23 AM (2).jpeg).",
+        "capacity_claim": "Verified: Body physically stamped with etched graduation scale 50 ml to 250 ml (visible in WhatsApp Image 2026-11-16 at 9.28.23 AM (1).jpeg)."
+      },
+      "descriptions": {
+        "en": "Stainless steel feeding bottle with twin grip handles, embossed graduation markings up to 250 ml, and protective cap. Made from SS 304 grade stainless steel.",
+        "hi": "ट्विन ग्रिप हैंडल, 250 ml तक उभरे हुए मापन चिह्नों और सुरक्षात्मक कैप के साथ स्टेनलेस स्टील फीडिंग बोतल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.23 AM (3).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.23 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.23 AM (1).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 3
+        }
+      ]
+    },
+    {
+      "item_number": 4,
+      "product_id": null,
+      "provisional_id": "prod-new-glass-sipper-handle-250",
+      "name": "YE Glass Sipper with Handle — 250 ml",
+      "name_hi": "YE हैंडल वाला ग्लास सिपर — 250 ml",
+      "slug": "ye-glass-sipper-handle-250ml",
+      "category_id": "silicone-sleeve",
+      "category_name": "Silicone Sleeve Feeding Bottles",
+      "classification": "new_product",
+      "has_variants": false,
+      "material": "Glass with Protective Silicone Star Sleeve",
+      "brand": "YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 299,
+        "box_printed_mrp_inr": 275,
+        "whatsapp_discounted_price_inr": 110,
+        "website_single_price_inr": 275,
+        "base_price_paise": 27500,
+        "expected_price_per_100_inr": 11000,
+        "expected_price_per_100_paise": 1100000,
+        "min_order_quantity": null,
+        "owner_override_applied": "Single-piece price set to ₹275 (printed retail box MRP) instead of ₹299."
+      },
+      "specifications": {
+        "capacity": "250 ml",
+        "material": "Glass bottle with protective silicone star sleeve and twin training handles",
+        "brand": "YE",
+        "colours": "Turquoise sleeve with matching handles and collar ring"
+      },
+      "claims_verification": {
+        "pricing_claim": "Verified: Physical packaging box front panel explicitly printed with 'MRP ₹275' (visible in WhatsApp Image 2026-11-16 at 9.28.27 AM.jpeg).",
+        "thermal_shock_claim": "Manufacturer-Stated: Characteristic of borosilicate glass bottles, but not explicitly printed on box front panel; owner confirmation recommended."
+      },
+      "descriptions": {
+        "en": "Glass sipper bottle encased in protective shock-absorbing star-cutout silicone sleeve with twin easy-grip training handles and hygiene dome cap.",
+        "hi": "ग्लास सिपर बोतल, शॉक-एब्जॉर्बिंग स्टार-कटआउट सिलिकॉन स्लीव और ट्विन ट्रेनिंग हैंडल के साथ।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.28 AM (1).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.27 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.27 AM (1).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 3
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.27 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 4
+        }
+      ]
+    },
+    {
+      "item_number": 5,
+      "product_id": "prod-05",
+      "name": "Silicone Sleeve Feeding Bottle — 250 ml",
+      "name_hi": "सिलिकॉन स्लीव फीडिंग बोतल — 250 ml",
+      "slug": "silicone-sleeve-feeding-bottle-250ml",
+      "category_id": "silicone-sleeve",
+      "category_name": "Silicone Sleeve Feeding Bottles",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "Glass Bottle with Food-Grade Silicone Star Sleeve",
+      "brand": "YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 275,
+        "whatsapp_discounted_price_inr": 99,
+        "website_single_price_inr": 275,
+        "base_price_paise": 27500,
+        "expected_price_per_100_inr": 9900,
+        "expected_price_per_100_paise": 990000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "250 ml",
+        "material": "Glass bottle with food-grade silicone star sleeve (handle-less)",
+        "brand": "YE",
+        "colours": "Royal blue star-cutout sleeve with blue collar ring"
+      },
+      "claims_verification": {
+        "pricing_and_capacity_claim": "Verified: Physical packaging box explicitly printed with 'Glass Sipper Premium 250 ml. Capacity' and 'MRP ₹275' (visible in WhatsApp Image 2026-11-16 at 9.28.28 AM (3).jpeg)."
+      },
+      "descriptions": {
+        "en": "Glass feeding bottle with protective star-cutout silicone sleeve, anti-slip grip, and durable hygiene dome cap.",
+        "hi": "सुरक्षात्मक स्टार-कटआउट सिलिकॉन स्लीव और एंटी-स्लिप ग्रिप के साथ ग्लास फीडिंग बोतल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.29 AM (1).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.29 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.28 AM (3).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 3
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.28 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 4
+        }
+      ]
+    },
+    {
+      "item_number": 6,
+      "product_id": "prod-07",
+      "name": "Silicone Sleeve Feeding Bottle — 120 ml",
+      "name_hi": "सिलिकॉन स्लीव फीडिंग बोतल — 120 ml",
+      "slug": "silicone-sleeve-feeding-bottle-120ml",
+      "category_id": "silicone-sleeve",
+      "category_name": "Silicone Sleeve Feeding Bottles",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "Glass Bottle with Food-Grade Silicone Star Sleeve",
+      "brand": "YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 249,
+        "whatsapp_discounted_price_inr": 95,
+        "website_single_price_inr": 249,
+        "base_price_paise": 24900,
+        "expected_price_per_100_inr": 9500,
+        "expected_price_per_100_paise": 950000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "120 ml",
+        "material": "Glass bottle with protective silicone sleeve",
+        "brand": "YE",
+        "colours": "Royal blue star sleeve"
+      },
+      "claims_verification": {
+        "capacity_claim": "Verified: Physical packaging box explicitly printed with 'Glass Sipper Premium 120 ml. Capacity' (visible in WhatsApp Image 2026-11-16 at 9.28.31 AM.jpeg)."
+      },
+      "descriptions": {
+        "en": "Compact 120 ml glass feeding bottle encased in shock-resistant star silicone sleeve, ideal for newborns and infant feeding.",
+        "hi": "नवजात शिशुओं के लिए आदर्श, शॉक-रेसिस्टेंट स्टार सिलिकॉन स्लीव में 120 ml ग्लास फीडिंग बोतल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.30 AM (2).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.31 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.31 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 3
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.32 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 4
+        }
+      ]
+    },
+    {
+      "item_number": 7,
+      "product_id": "prod-02",
+      "name": "Glass Feeding Bottle — 60 ml (Pink)",
+      "name_hi": "कांच की फीडिंग बोतल — 60 ml (गुलाबी)",
+      "slug": "glass-feeding-bottle-60ml-pink",
+      "category_id": "glass-bottles",
+      "category_name": "Glass Feeding Bottles",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "Glass with durable screen print",
+      "brand": "Moon Baby / YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 149,
+        "whatsapp_discounted_price_inr": 65,
+        "website_single_price_inr": 149,
+        "base_price_paise": 14900,
+        "expected_price_per_100_inr": 6500,
+        "expected_price_per_100_paise": 650000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "60 ml",
+        "material": "Clear glass body with food-grade plastic collar and silicone teat",
+        "brand": "Moon Baby",
+        "colours": "Pink collar ring and matching cartoon print"
+      },
+      "claims_verification": {
+        "pricing_distinction": "Verified: Retail box shows 'Special Offer ₹160/-'; WhatsApp original price of ₹149 is applied as single price per standard pricing rule."
+      },
+      "descriptions": {
+        "en": "Small 60 ml clear glass newborn bottle with durable cartoon print, pink threaded collar, silicone teat, and clear cap.",
+        "hi": "टिकाऊ कार्टून प्रिंट, गुलाबी थ्रेडेड कॉलर, सिलिकॉन निप्पल और पारदर्शी कैप के साथ 60 ml कांच की बोतल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.33 AM (1).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.33 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        }
+      ]
+    },
+    {
+      "item_number": 8,
+      "product_id": "prod-01",
+      "name": "Glass Feeding Bottle — 250 ml (Blue)",
+      "name_hi": "कांच की फीडिंग बोतल — 250 ml (नीली)",
+      "slug": "glass-feeding-bottle-250ml-blue",
+      "category_id": "glass-bottles",
+      "category_name": "Glass Feeding Bottles",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "Clear Glass with screen print and etched scale",
+      "brand": "Moon Baby / YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 240,
+        "whatsapp_discounted_price_inr": 85,
+        "website_single_price_inr": 240,
+        "base_price_paise": 24000,
+        "expected_price_per_100_inr": 8500,
+        "expected_price_per_100_paise": 850000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "250 ml",
+        "material": "Clear glass body with blue collar ring",
+        "brand": "Moon Baby",
+        "colours": "Blue collar ring with blue cartoon graphics"
+      },
+      "claims_verification": {
+        "capacity_claim": "Verified: Glass bottle physically printed with 250 ml capacity and volume scale (visible in WhatsApp Image 2026-11-16 at 9.28.34 AM (1).jpeg)."
+      },
+      "descriptions": {
+        "en": "250 ml clear glass bottle with blue threaded collar ring, printed cartoon animals, embossed graduation scale, and clear dome cap.",
+        "hi": "नीले थ्रेडेड कॉलर रिंग, प्रिंटेड कार्टून और उभरे हुए मापन चिह्नों के साथ 250 ml कांच की बोतल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.34 AM (1).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.34 AM (2).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        }
+      ]
+    },
+    {
+      "item_number": 15,
+      "product_id": "prod-15",
+      "name": "Stainless Steel Tiffin Box Set",
+      "name_hi": "स्टेनलेस स्टील टिफिन बॉक्स सेट",
+      "slug": "stainless-steel-tiffin-box-set",
+      "category_id": "ss-tiffin",
+      "category_name": "Stainless Steel Tiffin Boxes",
+      "classification": "existing_product_update",
+      "has_variants": false,
+      "material": "SS 304 Stainless Steel Body with Silicone Gasket Plastic Lid",
+      "brand": "YE",
+      "status": "active",
+      "pricing": {
+        "whatsapp_original_price_inr": 450,
+        "whatsapp_discounted_price_inr": 295,
+        "website_single_price_inr": 450,
+        "base_price_paise": 45000,
+        "expected_price_per_100_inr": 29500,
+        "expected_price_per_100_paise": 2950000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "capacity": "2-piece lunch box set (Main lunch box + mini container with spoon)",
+        "material": "Stainless steel interior with airtight snap-clamp lid and silicone sealing ring",
+        "brand": "YE",
+        "colours": "Silver stainless body with turquoise clip lid"
+      },
+      "claims_verification": {
+        "leakproof_claim": "Design Feature: 4-way snap-clamp lid with silicone perimeter gasket designed for spill prevention (visible in WhatsApp Image 2026-11-16 at 9.28.40 AM (2).jpeg); not certified for submerged immersion."
+      },
+      "descriptions": {
+        "en": "2-piece stainless steel lunch box set featuring spill-resistant silicone-sealed clip lid, nested interior snack box, and stainless spoon.",
+        "hi": "सिलिकॉन-सील्ड क्लिप ढक्कन, छोटे इनर स्नैक बॉक्स और चम्मच के साथ 2-पीस स्टेनलेस स्टील लंच बॉक्स सेट।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.40 AM (2).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.41 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        }
+      ]
+    }
+  ],
+  "unassigned_accessories": [
+    {
+      "item_number": 9,
+      "provisional_id": "acc-bottle-cap-ring-set",
+      "extracted_name": "Bony Cup & Cape",
+      "recommended_name": "Feeding Bottle Replacement Cap & Ring Set",
+      "name_hi": "फीडिंग बोतल रिप्लेसमेंट कैप एवं कॉलर रिंग सेट",
+      "category_id": null,
+      "category_recommendation": "UNASSIGNED — OWNER REVIEW REQUIRED",
+      "classification": "unassigned_accessory",
+      "status": "unassigned",
+      "pricing": {
+        "whatsapp_original_price_inr": 10,
+        "whatsapp_discounted_price_inr": 6.5,
+        "website_single_price_inr": 10,
+        "base_price_paise": 1000,
+        "expected_price_per_100_inr": 650,
+        "expected_price_per_100_paise": 65000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "compatibility": "Standard neck feeding bottles",
+        "material": "Food-grade Polypropylene (PP)",
+        "colours": "Translucent dome cap with blue collar ring"
+      },
+      "claims_verification": {
+        "material_claim": "Manufacturer-Stated: Polypropylene dome cap and collar ring."
+      },
+      "descriptions": {
+        "en": "Replacement protective dome cap and threaded collar ring set compatible with standard neck feeding bottles.",
+        "hi": "मानक नेक वाली फीडिंग बोतलों के लिए रिप्लेसमेंट सुरक्षात्मक कैप एवं थ्रेडेड रिंग सेट।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.35 AM (2).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        }
+      ],
+      "owner_review_note": "Spare replacement part. Do not create 7th category. Awaiting owner category assignment before public display."
+    },
+    {
+      "item_number": 10,
+      "provisional_id": "acc-honey-pacifier-soother",
+      "extracted_name": "Honey Nipple",
+      "recommended_name": "Silicone Honey Pacifier / Soother",
+      "name_hi": "सिलिकॉन हनी पैसिफायर / सूथर",
+      "category_id": null,
+      "category_recommendation": "UNASSIGNED — OWNER REVIEW REQUIRED",
+      "classification": "unassigned_accessory",
+      "status": "unassigned",
+      "pricing": {
+        "whatsapp_original_price_inr": 10,
+        "whatsapp_discounted_price_inr": 6.9,
+        "website_single_price_inr": 10,
+        "base_price_paise": 1000,
+        "expected_price_per_100_inr": 690,
+        "expected_price_per_100_paise": 69000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "type": "Infant honey pacifier / soother",
+        "material": "Food-Grade Soft Silicone",
+        "packaging": "Individually wrapped; wholesale counter display jar of 25+5 NOS (MRP ₹750 on jar)"
+      },
+      "claims_verification": {
+        "packaging_and_pricing_claim": "Verified: Counter display jar explicitly photographed showing '25+5 NOS' and 'MRP ₹750' (visible in WhatsApp Image 2026-11-16 at 9.28.37 AM.jpeg)."
+      },
+      "descriptions": {
+        "en": "Soft food-grade silicone infant honey pacifier / soother designed with safety guard and ergonomic grip ring.",
+        "hi": "सुरक्षा गार्ड और एर्गोनोमिक रिंग के साथ फूड-ग्रेड सिलिकॉन हनी पैसिफायर।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.36 AM (2).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.37 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        }
+      ],
+      "owner_review_note": "Infant soother/pacifier accessory. Do not create 7th category. Awaiting owner category assignment before public display."
+    },
+    {
+      "item_number": 11,
+      "provisional_id": "acc-lsr-silicone-teat",
+      "extracted_name": "Nipple Liquid Silicone Rubber - LSR",
+      "recommended_name": "Liquid Silicone Rubber (LSR) Feeding Nipple / Teat",
+      "name_hi": "लिक्विड सिलिकॉन रबर (LSR) फीडिंग निप्पल / टीट",
+      "category_id": null,
+      "category_recommendation": "UNASSIGNED — OWNER REVIEW REQUIRED",
+      "classification": "unassigned_accessory",
+      "status": "unassigned",
+      "pricing": {
+        "whatsapp_original_price_inr": 10,
+        "whatsapp_discounted_price_inr": 4.6,
+        "website_single_price_inr": 10,
+        "base_price_paise": 1000,
+        "expected_price_per_100_inr": 460,
+        "expected_price_per_100_paise": 46000,
+        "min_order_quantity": null
+      },
+      "specifications": {
+        "type": "Standard neck replacement feeding teat",
+        "material": "Liquid Silicone Rubber (LSR)",
+        "features": "Anti-colic base air valve, soft natural stretch"
+      },
+      "claims_verification": {
+        "material_claim": "Verified: Physical manufacturing mark 'Liquid Silicone Nipple' etched on teat base (visible in WhatsApp Image 2026-11-16 at 9.28.38 AM.jpeg).",
+        "anti_colic_claim": "Design Feature: Base air valve groove physically visible on teat rim."
+      },
+      "descriptions": {
+        "en": "High-transparency Liquid Silicone Rubber (LSR) replacement feeding teat with anti-colic ventilation valve. Fits standard neck bottles.",
+        "hi": "एंटी-कोलिक एयर वाल्व के साथ हाई-ट्रांसपेरेंसी लिक्विड सिलिकॉन रबर (LSR) फीडिंग निप्पल।"
+      },
+      "images": [
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.37 AM (2).jpeg",
+          "role": "primary",
+          "is_primary": true,
+          "sort_order": 1
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.38 AM.jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 2
+        },
+        {
+          "filename": "WhatsApp Image 2026-11-16 at 9.28.38 AM (1).jpeg",
+          "role": "gallery",
+          "is_primary": false,
+          "sort_order": 3
+        }
+      ],
+      "owner_review_note": "Replacement feeding teat. Do not create 7th category. Awaiting owner category assignment before public display."
+    }
+  ],
+  "validation_and_integrity_audit": {
+    "total_whatsapp_items_accounted_for": 19,
+    "breakdown": {
+      "items_in_variant_family_a_straight_ss": [
+        16,
+        17,
+        18,
+        19
+      ],
+      "items_in_variant_family_b_contoured_ss": [
+        2,
+        3
+      ],
+      "items_in_variant_family_c_vacuum_cola": [
+        12,
+        13,
+        14
+      ],
+      "standalone_public_products": [
+        1,
+        4,
+        5,
+        6,
+        7,
+        8,
+        15
+      ],
+      "unassigned_accessories": [
+        9,
+        10,
+        11
+      ]
+    },
+    "counts_reconciliation": {
+      "variant_families": 3,
+      "variants_in_families": 9,
+      "standalone_public_products": 7,
+      "active_public_catalogue_cards": 10,
+      "unassigned_hidden_accessories": 3,
+      "total_whatsapp_items": 19,
+      "total_photographs_mapped": 36
+    },
+    "pricing_integrity_check": "100% of paise values match integer representation. No floats. Expected price per 100 matches discounted * 100. Single price matches original WhatsApp price, except Item 4 which matches verified printed box MRP.",
+    "photo_mapping_integrity_check": "36 out of 36 camera photographs mapped to their exact product groups. 0 orphan photos.",
+    "category_integrity_check": "All active products assigned to confirmed categories (ss-bottles, silicone-sleeve, glass-bottles, ss-tiffin, ss-sippers). 3 accessories strictly unassigned."
+  }
+}

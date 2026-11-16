@@ -7,8 +7,14 @@ export default defineConfig({
     port: 5173,
     open: false,
     proxy: {
-      '/api': 'http://127.0.0.1:8788',
-      '/uploads': 'http://127.0.0.1:8788'
+      '/api': {
+        target: 'http://127.0.0.1:8788',
+        changeOrigin: true
+      },
+      '/uploads': {
+        target: 'http://127.0.0.1:8788',
+        changeOrigin: true
+      }
     }
   },
 })

@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:frontend": "vite --host 0.0.0.0",
+    "dev:backend": "wrangler pages dev public --port 8788 --ip 127.0.0.1",
+    "dev:all": "node scripts/dev-fullstack.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "d1:migrate:local": "wrangler d1 migrations apply yes_enterprises_db --local",
@@ -15,6 +18,8 @@
     "test:phase3": "node scripts/test-phase3-admin.mjs",
     "test:phase3:http": "node scripts/test-phase3-runtime-http.mjs",
     "test:phase4": "node scripts/test-phase4-frontend.mjs",
+    "test:phase6": "node scripts/test-phase6-admin.mjs",
+    "test:phase8": "node scripts/test-phase8-mobile-verification.mjs",
     "pages:dev": "wrangler pages dev dist"
   },
   "engines": {

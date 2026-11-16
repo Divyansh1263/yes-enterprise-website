@@ -33,14 +33,58 @@ if (!fs.existsSync(SCREENSHOTS_DIR)) {
   fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
 }
 
+// Mapping of known Cloudflare D1 database IDs to their Miniflare Durable Object storage hashes
+const KNOWN_D1_HASHES = {
+  // Production / active development binding: 54c9ce5b-377e-4788-9899-43f71addf8a9
+  '54c9ce5b-377e-4788-9899-43f71addf8a9': '6a1b3b744fa3757d88c3c37a6e58dbe029fc1f0fedf109567181075521f4e00c'
+};
+
 function locateIntendedD1Database() {
   if (process.env.D1_TEST_DB_PATH && fs.existsSync(process.env.D1_TEST_DB_PATH)) {
     return process.env.D1_TEST_DB_PATH;
   }
   const d1Dir = path.resolve('./.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+  if (!fs.existsSync(d1Dir)) {
+    throw new Error(`Local D1 state directory not found at: ${d1Dir}\nRun "npm run d1:migrate:local" first.`);
+  }
+
+  // 1. Check wrangler.jsonc to identify active database_id
+  let activeDatabaseId = null;
+  const wranglerConfigPath = path.resolve('wrangler.jsonc');
+  if (fs.existsSync(wranglerConfigPath)) {
+    try {
+      const configRaw = fs.readFileSync(wranglerConfigPath, 'utf8');
+      const cleanJson = configRaw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+      const config = JSON.parse(cleanJson);
+      if (config.d1_databases && config.d1_databases[0] && config.d1_databases[0].database_id) {
+        activeDatabaseId = config.d1_databases[0].database_id;
+      }
+    } catch {}
+  }
+
+  // 2. If active database_id has a known hash, prefer that specific SQLite file
+  if (activeDatabaseId && KNOWN_D1_HASHES[activeDatabaseId]) {
+    const activeFileName = `${KNOWN_D1_HASHES[activeDatabaseId]}.sqlite`;
+    const activePath = path.join(d1Dir, activeFileName);
+    if (fs.existsSync(activePath)) {
+      return activePath;
+    }
+  }
+
+  // 3. Fallback: filter candidates, prioritizing active database over legacy database
   const candidateFiles = fs.readdirSync(d1Dir).filter(
     f => f.endsWith('.sqlite') && !f.includes('metadata') && !f.includes('-wal') && !f.includes('-shm')
   );
+  candidateFiles.sort((a, b) => {
+    const aIsActive = a.includes('6a1b3b744fa3757d');
+    const bIsActive = b.includes('6a1b3b744fa3757d');
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+    const aStat = fs.statSync(path.join(d1Dir, a));
+    const bStat = fs.statSync(path.join(d1Dir, b));
+    return bStat.mtimeMs - aStat.mtimeMs;
+  });
+
   for (const file of candidateFiles) {
     const candidatePath = path.join(d1Dir, file);
     try {
@@ -1019,14 +1063,18 @@ async function runBrowserTests() {
     console.log('\n--- Teardown: Cleaning test fixtures from D1 emulator database ---');
     try {
       if (createdCatId) {
-        const prods = sqliteDb.prepare('SELECT id FROM products WHERE category_id = ?').all(createdCatId);
-        for (const p of prods) {
-          sqliteDb.prepare('DELETE FROM product_images WHERE product_id = ?').run(p.id);
-          sqliteDb.prepare('DELETE FROM product_variants WHERE product_id = ?').run(p.id);
-          sqliteDb.prepare('DELETE FROM inventory_logs WHERE product_id = ?').run(p.id);
-          sqliteDb.prepare('DELETE FROM products WHERE id = ?').run(p.id);
+        // Verify category belongs to this test run before deleting
+        const catRow = sqliteDb.prepare('SELECT slug, name FROM categories WHERE id = ?').get(createdCatId);
+        if (catRow && (catRow.slug.includes(CLEAN_RUN_ID) || catRow.name.includes(CLEAN_RUN_ID))) {
+          const prods = sqliteDb.prepare('SELECT id FROM products WHERE category_id = ?').all(createdCatId);
+          for (const p of prods) {
+            sqliteDb.prepare('DELETE FROM product_images WHERE product_id = ?').run(p.id);
+            sqliteDb.prepare('DELETE FROM product_variants WHERE product_id = ?').run(p.id);
+            sqliteDb.prepare('DELETE FROM inventory_logs WHERE product_id = ?').run(p.id);
+            sqliteDb.prepare('DELETE FROM products WHERE id = ?').run(p.id);
+          }
+          sqliteDb.prepare('DELETE FROM categories WHERE id = ?').run(createdCatId);
         }
-        sqliteDb.prepare('DELETE FROM categories WHERE id = ?').run(createdCatId);
       }
       sqliteDb.prepare('DELETE FROM products WHERE slug LIKE ?').run(`%${CLEAN_RUN_ID}%`);
       sqliteDb.prepare('DELETE FROM categories WHERE slug LIKE ?').run(`%${CLEAN_RUN_ID}%`);

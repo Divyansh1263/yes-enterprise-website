@@ -92,12 +92,14 @@ export async function onRequestPost(context) {
         INSERT INTO products (
           id, name, name_hi, slug, category_id, description, description_hi,
           material, brand, has_variants, base_price_paise, compare_at_price_paise,
+          expected_price_per_100_paise, min_order_quantity,
           sku, stock_quantity, low_stock_threshold, specifications_json,
           variant_attributes_schema_json, status, is_featured, sort_order, notes,
           created_at, updated_at
         ) VALUES (
           ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
+          ?, ?,
           ?, ?, ?, ?,
           ?, 'draft', 0, ?, ?,
           CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -106,6 +108,7 @@ export async function onRequestPost(context) {
         newProductId, newName, newNameHi, candidateSlug, source.category_id,
         source.description, source.description_hi, source.material, source.brand,
         source.has_variants, source.base_price_paise, source.compare_at_price_paise,
+        source.expected_price_per_100_paise, source.min_order_quantity,
         newSku, source.stock_quantity, source.low_stock_threshold, source.specifications_json,
         source.variant_attributes_schema_json, source.sort_order,
         `Duplicated from product ${source.id} (${source.slug})`
@@ -143,17 +146,18 @@ export async function onRequestPost(context) {
         db.prepare(`
           INSERT INTO product_variants (
             id, product_id, sku, title, title_hi, attributes_json,
-            price_paise, compare_at_price_paise, stock_quantity, low_stock_threshold,
-            status, sort_order, created_at, updated_at
+            price_paise, compare_at_price_paise, expected_price_per_100_paise, min_order_quantity,
+            stock_quantity, low_stock_threshold, status, sort_order, created_at, updated_at
           ) VALUES (
             ?, ?, ?, ?, ?, ?,
             ?, ?, ?, ?,
-            'active', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            ?, ?, 'active', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
           )
         `).bind(
           newVarId, newProductId, newVarSku, `${v.title} (Copy)`, `${v.title_hi} (प्रतिलिपि)`,
-          v.attributes_json, v.price_paise, v.compare_at_price_paise, v.stock_quantity,
-          v.low_stock_threshold, v.sort_order
+          v.attributes_json, v.price_paise, v.compare_at_price_paise,
+          v.expected_price_per_100_paise ?? null, v.min_order_quantity ?? null,
+          v.stock_quantity, v.low_stock_threshold, v.sort_order
         )
       );
 
