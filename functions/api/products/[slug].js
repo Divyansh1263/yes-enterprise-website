@@ -61,11 +61,11 @@ export async function onRequestGet(context) {
         p.updated_at
       FROM products p
       JOIN categories c ON c.id = p.category_id
-      WHERE p.slug = ? AND p.status = 'active'
+      WHERE (p.slug = ? OR p.id = ?) AND p.status = 'active'
       LIMIT 1;
     `;
 
-    let product = await db.prepare(productSql).bind(slug).first();
+    let product = await db.prepare(productSql).bind(slug, slug).first();
     let isDraftPreview = false;
 
     // If not found as active, allow authenticated admins to preview draft products
@@ -83,10 +83,10 @@ export async function onRequestGet(context) {
             p.is_featured, p.sort_order, p.created_at, p.updated_at
           FROM products p
           JOIN categories c ON c.id = p.category_id
-          WHERE p.slug = ?
+          WHERE (p.slug = ? OR p.id = ?)
           LIMIT 1;
         `;
-        product = await db.prepare(previewSql).bind(slug).first();
+        product = await db.prepare(previewSql).bind(slug, slug).first();
         if (product) isDraftPreview = true;
       }
     }

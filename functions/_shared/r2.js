@@ -12,7 +12,7 @@ import { AwsClient } from 'aws4fetch';
  * @returns {{ client: AwsClient, accountId: string, bucketName: string } | null}
  */
 export function getR2Client(env) {
-  const accountId = env?.R2_ACCOUNT_ID;
+  const accountId = env?.R2_ACCOUNT_ID || '98fe327a56db792b1d9d04cb65e7f6ee';
   const accessKeyId = env?.R2_ACCESS_KEY_ID;
   const secretAccessKey = env?.R2_SECRET_ACCESS_KEY;
   const bucketName = env?.R2_BUCKET_NAME || 'yes-enterprises-public-images';

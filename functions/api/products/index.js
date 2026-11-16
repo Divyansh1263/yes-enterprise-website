@@ -84,8 +84,8 @@ export async function onRequestGet(context) {
         (
           SELECT image_key 
           FROM product_images 
-          WHERE product_id = p.id AND variant_id IS NULL 
-          ORDER BY is_primary DESC, sort_order ASC 
+          WHERE product_id = p.id 
+          ORDER BY is_primary DESC, (variant_id IS NULL) DESC, sort_order ASC 
           LIMIT 1
         ) as primary_image_key,
         (

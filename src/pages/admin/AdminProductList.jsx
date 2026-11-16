@@ -745,7 +745,11 @@ export default function AdminProductList() {
       <ConfirmModal
         isOpen={deleteModalOpen}
         title={`Delete Product "${productToDelete?.name}"?`}
-        message="Are you sure you want to permanently delete this product? All image records and variant configurations will be removed."
+        message={
+          productToDelete?.id?.startsWith('prod-')
+            ? `Notice: "${productToDelete?.name}" is a protected core catalogue product. If you want to hide it from customers, set its status to "Draft" or "Archived" instead. Permanent deletion of core catalogue records is blocked.`
+            : `Are you sure you want to permanently delete this product? All image records and variant configurations will be permanently removed.`
+        }
         confirmLabel="Confirm Delete"
         isDanger={true}
         isLoading={deleting}

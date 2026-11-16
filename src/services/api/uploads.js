@@ -192,7 +192,8 @@ export async function finalizeUpload(payload) {
 }
 
 /**
- * Complete workflow: Compress -> Request URL -> Upload to R2 -> Finalize.
+ * Complete workflow: Compress -> Upload directly to Cloudflare R2 via Pages Functions -> Return record.
+ * Falls back to presigned URL workflow if direct upload endpoint is unavailable.
  *
  * @param {File} rawFile
  * @param {{ product_id: string, variant_id?: string | null, alt_text?: string, alt_text_hi?: string, is_primary?: boolean, sort_order?: number }} options
@@ -200,36 +201,98 @@ export async function finalizeUpload(payload) {
  * @returns {Promise<any>} Finalized image record
  */
 export async function executeDirectImageUpload(rawFile, options, onProgress) {
-  if (onProgress) onProgress('compressing', 10);
-  const { file: compressedFile, blob } = await compressImage(rawFile);
+  if (onProgress) onProgress('compressing', 15);
+  const { file: compressedFile } = await compressImage(rawFile);
 
-  if (onProgress) onProgress('requesting_url', 30);
-  const { upload_url, image_key } = await requestPresignedUrl({
-    product_id: options.product_id,
-    variant_id: options.variant_id || null,
-    filename: compressedFile.name,
-    mime_type: compressedFile.type,
-    file_size_bytes: compressedFile.size
-  });
+  try {
+    if (onProgress) onProgress('uploading', 35);
 
-  if (onProgress) onProgress('uploading', 40);
-  await uploadToR2(upload_url, blob, compressedFile.type, (pct) => {
-    if (onProgress) onProgress('uploading', 40 + Math.round(pct * 0.4)); // 40% to 80%
-  });
+    const formData = new FormData();
+    formData.append('file', compressedFile);
+    formData.append('product_id', options.product_id);
+    if (options.variant_id) formData.append('variant_id', options.variant_id);
+    if (options.alt_text) formData.append('alt_text', options.alt_text);
+    if (options.alt_text_hi) formData.append('alt_text_hi', options.alt_text_hi);
+    formData.append('is_primary', String(Boolean(options.is_primary)));
+    formData.append('sort_order', String(options.sort_order || 0));
 
-  if (onProgress) onProgress('finalizing', 85);
-  const imageRecord = await finalizeUpload({
-    image_key,
-    product_id: options.product_id,
-    variant_id: options.variant_id || null,
-    alt_text: options.alt_text || '',
-    alt_text_hi: options.alt_text_hi || '',
-    is_primary: Boolean(options.is_primary),
-    sort_order: options.sort_order || 0
-  });
+    const imageRecord = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/admin/uploads/direct', true);
+      xhr.withCredentials = true;
 
-  if (onProgress) onProgress('done', 100);
-  return imageRecord;
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const pct = Math.round((event.loaded / event.total) * 55); // 35% to 90%
+            onProgress('uploading', 35 + pct);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            resolve(res.data);
+          } catch {
+            reject(new ApiError('Invalid JSON response from upload endpoint.', xhr.status, 'INVALID_RESPONSE'));
+          }
+        } else {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            reject(new ApiError(res.error || `Upload failed with HTTP ${xhr.status}`, xhr.status, res.code));
+          } catch {
+            reject(new ApiError(`Upload failed with HTTP ${xhr.status}`, xhr.status, 'UPLOAD_FAILED'));
+          }
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new ApiError('Network error during image upload.', 0, 'NETWORK_ERROR'));
+      };
+
+      xhr.send(formData);
+    });
+
+    if (onProgress) onProgress('done', 100);
+    return imageRecord;
+  } catch (directErr) {
+    // If direct upload fails due to endpoint not found (404), fall back to presigned URL workflow
+    if (directErr.status !== 404) {
+      throw directErr;
+    }
+
+    console.warn('[executeDirectImageUpload] Direct upload returned 404, falling back to presigned URL:', directErr.message);
+
+    if (onProgress) onProgress('requesting_url', 40);
+    const { upload_url, image_key } = await requestPresignedUrl({
+      product_id: options.product_id,
+      variant_id: options.variant_id || null,
+      filename: compressedFile.name,
+      mime_type: compressedFile.type,
+      file_size_bytes: compressedFile.size
+    });
+
+    if (onProgress) onProgress('uploading', 50);
+    await uploadToR2(upload_url, compressedFile, compressedFile.type, (pct) => {
+      if (onProgress) onProgress('uploading', 50 + Math.round(pct * 0.35));
+    });
+
+    if (onProgress) onProgress('finalizing', 85);
+    const fallbackRecord = await finalizeUpload({
+      image_key,
+      product_id: options.product_id,
+      variant_id: options.variant_id || null,
+      alt_text: options.alt_text || '',
+      alt_text_hi: options.alt_text_hi || '',
+      is_primary: Boolean(options.is_primary),
+      sort_order: options.sort_order || 0
+    });
+
+    if (onProgress) onProgress('done', 100);
+    return fallbackRecord;
+  }
 }
 
 /**

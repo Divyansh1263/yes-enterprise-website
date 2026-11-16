@@ -110,8 +110,8 @@ export async function onRequestGet(context) {
         (SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = p.id) as image_count,
         (
           SELECT pi.image_key FROM product_images pi
-          WHERE pi.product_id = p.id AND pi.variant_id IS NULL
-          ORDER BY pi.is_primary DESC, pi.sort_order ASC
+          WHERE pi.product_id = p.id
+          ORDER BY pi.is_primary DESC, (pi.variant_id IS NULL) DESC, pi.sort_order ASC
           LIMIT 1
         ) as primary_image_key
       FROM products p

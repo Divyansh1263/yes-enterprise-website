@@ -353,6 +353,18 @@ export async function onRequestDelete(context) {
       return errorResponse('Product not found.', 404, 'NOT_FOUND');
     }
 
+    // Check if this product is part of protected historical catalogue records (e.g. active import snapshot or core prod-01..prod-19)
+    const isCoreLegacy = productId.startsWith('prod-') && /^[0-9]+$/.test(productId.replace('prod-', '')) && parseInt(productId.replace('prod-', ''), 10) <= 19;
+    const hasImportSnapshot = await db.prepare('SELECT 1 FROM catalogue_import_snapshots WHERE product_id = ? AND status != "rolled_back"').bind(productId).first();
+
+    if (isCoreLegacy || hasImportSnapshot) {
+      return errorResponse(
+        `Product "${existing.name}" is part of protected historical catalogue records and cannot be permanently deleted. You can set its status to Draft or Archived instead.`,
+        409,
+        'PROTECTED_PRODUCT'
+      );
+    }
+
     // 1. Gather all image keys associated with this product (both product_images and pending_uploads)
     const [images, pending] = await Promise.all([
       db.prepare('SELECT image_key FROM product_images WHERE product_id = ?').bind(productId).all(),
@@ -394,8 +406,18 @@ export async function onRequestDelete(context) {
       await db.batch(claimStatements);
     }
 
-    // 3. Delete product from database (cascades variants, images, pending uploads)
-    await db.prepare('DELETE FROM products WHERE id = ?').bind(productId).run();
+    // 3. Atomically delete all dependent child records and the product
+    const deleteBatch = [
+      db.prepare('DELETE FROM cleanup_claims WHERE image_key IN (SELECT image_key FROM pending_uploads WHERE product_id = ?)').bind(productId),
+      db.prepare('DELETE FROM pending_uploads WHERE product_id = ?').bind(productId),
+      db.prepare('DELETE FROM product_images WHERE product_id = ?').bind(productId),
+      db.prepare('DELETE FROM inventory_logs WHERE product_id = ?').bind(productId),
+      db.prepare('DELETE FROM product_conversion_snapshots WHERE product_id = ?').bind(productId),
+      db.prepare('DELETE FROM product_variants WHERE product_id = ?').bind(productId),
+      db.prepare('DELETE FROM products WHERE id = ?').bind(productId)
+    ];
+
+    await db.batch(deleteBatch);
 
     // 4. Asynchronously attempt R2 deletion for the claimed images
     for (const key of keysToDelete) {
