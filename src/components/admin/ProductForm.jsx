@@ -24,10 +24,11 @@ export default function ProductForm({
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
 
-  // 2. Commercial / Pricing Fields (Optional)
+  // 2. Commercial / Pricing Fields
+  const [compareAtPriceInr, setCompareAtPriceInr] = useState('');
   const [priceInr, setPriceInr] = useState('');
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
-  const [expectedPrice100Inr, setExpectedPrice100Inr] = useState('');
+  const [pricingFormError, setPricingFormError] = useState(null);
 
   // Variant Management (Phase 11.3)
   const [hasVariants, setHasVariants] = useState(Boolean(initialData?.has_variants));
@@ -98,9 +99,9 @@ export default function ProductForm({
       setSortOrder(initialData.sort_order ?? 0);
 
       // Commercial
-      setPriceInr(initialData.base_price_paise != null ? String(paiseToInr(initialData.base_price_paise)) : '');
+      setCompareAtPriceInr(initialData.compare_at_price_paise != null && initialData.compare_at_price_paise > 0 ? String(paiseToInr(initialData.compare_at_price_paise)) : '');
+      setPriceInr(initialData.base_price_paise != null && initialData.base_price_paise > 0 ? String(paiseToInr(initialData.base_price_paise)) : '');
       setMinOrderQuantity(initialData.min_order_quantity != null ? String(initialData.min_order_quantity) : '');
-      setExpectedPrice100Inr(initialData.expected_price_per_100_paise != null ? String(paiseToInr(initialData.expected_price_per_100_paise)) : '');
 
       // Variants
       setHasVariants(Boolean(initialData.has_variants));
@@ -112,8 +113,8 @@ export default function ProductForm({
           title_hi: v.title_hi || '',
           attributes: v.attributes || (v.attributes_json ? (typeof v.attributes_json === 'string' ? JSON.parse(v.attributes_json) : v.attributes_json) : null),
           attributes_json: v.attributes_json || null,
-          priceInr: v.price_paise != null ? String(paiseToInr(v.price_paise)) : '',
-          expectedPrice100Inr: v.expected_price_per_100_paise != null ? String(paiseToInr(v.expected_price_per_100_paise)) : '',
+          compareAtPriceInr: v.compare_at_price_paise != null && v.compare_at_price_paise > 0 ? String(paiseToInr(v.compare_at_price_paise)) : '',
+          priceInr: v.price_paise != null && v.price_paise > 0 ? String(paiseToInr(v.price_paise)) : '',
           minOrderQuantity: v.min_order_quantity != null ? String(v.min_order_quantity) : '',
           stock_quantity: v.stock_quantity ?? 0,
           status: v.status || 'active',
@@ -247,8 +248,8 @@ export default function ProductForm({
         sku: '',
         title: '',
         title_hi: '',
+        compareAtPriceInr: '',
         priceInr: '',
-        expectedPrice100Inr: '',
         minOrderQuantity: '',
         stock_quantity: 0,
         status: 'active',
@@ -288,6 +289,7 @@ export default function ProductForm({
   // Form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+    setPricingFormError(null);
 
     // Assemble clean specifications array
     const cleanSpecs = [];
@@ -301,6 +303,51 @@ export default function ProductForm({
         cleanSpecs.push({ key: s.key.trim(), value: String(s.value).trim() });
       }
     });
+
+    // Validate Crossed-out Price > Actual Price
+    const actualPaise = !hasVariants && priceInr !== '' && priceInr != null && !isNaN(parseFloat(priceInr))
+      ? inrToPaise(priceInr)
+      : null;
+    const comparePaise = !hasVariants && compareAtPriceInr !== '' && compareAtPriceInr != null && !isNaN(parseFloat(compareAtPriceInr))
+      ? inrToPaise(compareAtPriceInr)
+      : null;
+
+    if (!hasVariants && comparePaise != null && actualPaise != null && comparePaise <= actualPaise) {
+      setPricingFormError('Crossed-out price must be greater than actual price.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (hasVariants) {
+      for (const v of variants) {
+        const vActualPaise = v.priceInr !== '' && v.priceInr != null && !isNaN(parseFloat(v.priceInr))
+          ? inrToPaise(v.priceInr)
+          : null;
+        const vComparePaise = v.compareAtPriceInr !== '' && v.compareAtPriceInr != null && !isNaN(parseFloat(v.compareAtPriceInr))
+          ? inrToPaise(v.compareAtPriceInr)
+          : null;
+
+        if (vComparePaise != null && vActualPaise != null && vComparePaise <= vActualPaise) {
+          setPricingFormError('Crossed-out price must be greater than actual price.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
+    }
+
+    // Auto-calculated wholesale rate per 100 pcs (Actual Price x 100)
+    // Preserves existing expected_price_per_100_paise if price is untouched (Scenario 5)
+    let expectedPrice100Paise = null;
+    const isPriceUnchanged = initialData && (
+      (initialData.base_price_paise == null && priceInr === '') ||
+      (initialData.base_price_paise != null && priceInr === String(paiseToInr(initialData.base_price_paise)))
+    );
+
+    if (isPriceUnchanged && initialData?.expected_price_per_100_paise != null) {
+      expectedPrice100Paise = initialData.expected_price_per_100_paise;
+    } else if (actualPaise != null) {
+      expectedPrice100Paise = actualPaise * 100;
+    }
 
     const payload = {
       name: name.trim(),
@@ -318,33 +365,51 @@ export default function ProductForm({
       specifications_json: cleanSpecs.length > 0 ? JSON.stringify(cleanSpecs) : null,
       has_variants: hasVariants,
       sku: hasVariants ? null : (initialData?.sku || null),
-      base_price_paise: hasVariants
-        ? null
-        : (priceInr !== '' && priceInr != null && !isNaN(parseFloat(priceInr)) ? inrToPaise(priceInr) : null),
-      compare_at_price_paise: null,
+      base_price_paise: hasVariants ? null : actualPaise,
+      compare_at_price_paise: hasVariants ? null : comparePaise,
       min_order_quantity: hasVariants
         ? null
         : (minOrderQuantity !== '' && minOrderQuantity != null && !isNaN(parseInt(minOrderQuantity, 10)) ? parseInt(minOrderQuantity, 10) : null),
-      expected_price_per_100_paise: hasVariants
-        ? null
-        : (expectedPrice100Inr !== '' && expectedPrice100Inr != null && !isNaN(parseFloat(expectedPrice100Inr)) ? inrToPaise(expectedPrice100Inr) : null),
+      expected_price_per_100_paise: hasVariants ? null : expectedPrice100Paise,
       stock_quantity: initialData?.stock_quantity ?? 0,
       low_stock_threshold: initialData?.low_stock_threshold ?? 5,
       variant_attributes_schema_json: initialData?.variant_attributes_schema_json || null,
       variants: hasVariants
-        ? variants.map((v, idx) => ({
-            id: v.id || null,
-            sku: v.sku?.trim() || null,
-            title: v.title.trim(),
-            title_hi: (v.title_hi || v.title).trim(),
-            attributes: v.attributes || (v.attributes_json ? (typeof v.attributes_json === 'string' ? JSON.parse(v.attributes_json) : v.attributes_json) : { title: v.title.trim() }),
-            price_paise: v.priceInr !== '' && v.priceInr != null && !isNaN(parseFloat(v.priceInr)) ? inrToPaise(v.priceInr) : null,
-            expected_price_per_100_paise: v.expectedPrice100Inr !== '' && v.expectedPrice100Inr != null && !isNaN(parseFloat(v.expectedPrice100Inr)) ? inrToPaise(v.expectedPrice100Inr) : null,
-            min_order_quantity: v.minOrderQuantity !== '' && v.minOrderQuantity != null && !isNaN(parseInt(v.minOrderQuantity, 10)) ? parseInt(v.minOrderQuantity, 10) : null,
-            stock_quantity: v.stock_quantity ?? 0,
-            status: v.status || 'active',
-            sort_order: idx
-          }))
+        ? variants.map((v, idx) => {
+            const vActualPaise = v.priceInr !== '' && v.priceInr != null && !isNaN(parseFloat(v.priceInr))
+              ? inrToPaise(v.priceInr)
+              : null;
+            const vComparePaise = v.compareAtPriceInr !== '' && v.compareAtPriceInr != null && !isNaN(parseFloat(v.compareAtPriceInr))
+              ? inrToPaise(v.compareAtPriceInr)
+              : null;
+
+            let vExpected100 = null;
+            const oldV = v.id && initialData?.variants?.find(ov => ov.id === v.id);
+            const isVUnchanged = oldV && (
+              (oldV.price_paise == null && v.priceInr === '') ||
+              (oldV.price_paise != null && v.priceInr === String(paiseToInr(oldV.price_paise)))
+            );
+            if (isVUnchanged && oldV.expected_price_per_100_paise != null) {
+              vExpected100 = oldV.expected_price_per_100_paise;
+            } else if (vActualPaise != null) {
+              vExpected100 = vActualPaise * 100;
+            }
+
+            return {
+              id: v.id || null,
+              sku: v.sku?.trim() || null,
+              title: v.title.trim(),
+              title_hi: (v.title_hi || v.title).trim(),
+              attributes: v.attributes || (v.attributes_json ? (typeof v.attributes_json === 'string' ? JSON.parse(v.attributes_json) : v.attributes_json) : { title: v.title.trim() }),
+              price_paise: vActualPaise,
+              compare_at_price_paise: vComparePaise,
+              expected_price_per_100_paise: vExpected100,
+              min_order_quantity: v.minOrderQuantity !== '' && v.minOrderQuantity != null && !isNaN(parseInt(v.minOrderQuantity, 10)) ? parseInt(v.minOrderQuantity, 10) : null,
+              stock_quantity: v.stock_quantity ?? 0,
+              status: v.status || 'active',
+              sort_order: idx
+            };
+          })
         : []
     };
 
@@ -365,12 +430,20 @@ export default function ProductForm({
     navigate('/admin/products');
   };
 
+  // Automatic Wholesale Price Calculation for Simple Product:
+  // Wholesale Rate per 100 pcs = Actual Price x 100
+  // Integer paise math avoids floating-point errors
+  const parsedPricePaise = priceInr !== '' && !isNaN(parseFloat(priceInr)) ? inrToPaise(priceInr) : 0;
+  const autoWholesalePaise = parsedPricePaise > 0 ? parsedPricePaise * 100 : 0;
+  const autoWholesaleInr = autoWholesalePaise > 0 ? paiseToInr(autoWholesalePaise) : null;
+  const displayActualInr = parsedPricePaise > 0 ? paiseToInr(parsedPricePaise) : null;
+
   return (
     <form onSubmit={handleSubmit} onChange={() => setIsDirty(true)} className="space-y-5 sm:space-y-6 max-w-3xl mx-auto">
-      {apiError && (
+      {(apiError || pricingFormError) && (
         <div className="p-3.5 sm:p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-2">
           <span>⚠️</span>
-          <span>{apiError}</span>
+          <span>{pricingFormError || apiError}</span>
         </div>
       )}
 
@@ -531,56 +604,99 @@ export default function ProductForm({
 
         {!hasVariants ? (
           /* Simple Product Pricing Inputs */
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 pt-2">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                Product Price (₹ INR)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                inputMode="decimal"
-                value={priceInr}
-                onChange={(e) => setPriceInr(e.target.value)}
-                placeholder="e.g. 250"
-                className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Leave empty for &quot;Contact for Price&quot;</p>
+          <div className="space-y-3.5 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+              {/* A. Crossed-out Price (₹) */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Crossed-out Price (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputMode="decimal"
+                  value={compareAtPriceInr}
+                  onChange={(e) => {
+                    setCompareAtPriceInr(e.target.value);
+                    setPricingFormError(null);
+                  }}
+                  placeholder="e.g. 240"
+                  className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Original / MRP strikethrough price (optional)
+                </p>
+              </div>
+
+              {/* B. Actual Price (₹) */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Actual Price (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputMode="decimal"
+                  value={priceInr}
+                  onChange={(e) => {
+                    setPriceInr(e.target.value);
+                    setPricingFormError(null);
+                  }}
+                  placeholder="e.g. 85"
+                  className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Actual per-piece selling / wholesale price
+                </p>
+              </div>
+
+              {/* C. Minimum Order Quantity (MOQ) */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Minimum Order (MOQ)
+                </label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  inputMode="numeric"
+                  value={minOrderQuantity}
+                  onChange={(e) => setMinOrderQuantity(e.target.value)}
+                  placeholder="e.g. 100"
+                  className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Minimum required order pieces (optional)
+                </p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                Minimum Order (MOQ)
-              </label>
-              <input
-                type="number"
-                step="1"
-                min="1"
-                inputMode="numeric"
-                value={minOrderQuantity}
-                onChange={(e) => setMinOrderQuantity(e.target.value)}
-                placeholder="e.g. 100"
-                className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Optional minimum wholesale order units</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                Price per 100 Pcs (₹)
-              </label>
-              <input
-                type="number"
-                step="1"
-                min="0"
-                inputMode="numeric"
-                value={expectedPrice100Inr}
-                onChange={(e) => setExpectedPrice100Inr(e.target.value)}
-                placeholder="e.g. 22000"
-                className="w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Expected wholesale rate for 100 units</p>
+            {/* Read-only Auto-calculated Wholesale Rate Preview (100 pcs = Actual Price x 100) */}
+            <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold text-brand-navy block">
+                  Wholesale Rate (100 pcs):
+                </span>
+                {autoWholesaleInr != null ? (
+                  <div className="flex items-baseline gap-2 mt-0.5 flex-wrap">
+                    <span className="text-base sm:text-lg font-extrabold text-emerald-700">
+                      ₹{autoWholesaleInr.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      (Auto-calculated: ₹{displayActualInr.toLocaleString('en-IN')} × 100)
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 italic mt-0.5">
+                    Enter actual price to calculate wholesale rate.
+                  </p>
+                )}
+              </div>
+              <span className="px-2 py-1 bg-blue-100 text-brand-navy text-[10px] font-bold uppercase rounded-md tracking-wider shrink-0">
+                Auto-Calculated
+              </span>
             </div>
           </div>
         ) : (
@@ -696,7 +812,40 @@ export default function ProductForm({
 
                     <div>
                       <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        Single Price (₹ INR)
+                        SKU (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={v.sku}
+                        onChange={(e) => handleUpdateVariant(index, 'sku', e.target.value.toUpperCase())}
+                        placeholder="e.g. YE-SS-150"
+                        className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Crossed-out Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        inputMode="decimal"
+                        value={v.compareAtPriceInr}
+                        onChange={(e) => {
+                          handleUpdateVariant(index, 'compareAtPriceInr', e.target.value);
+                          setPricingFormError(null);
+                        }}
+                        placeholder="e.g. 240 (Optional)"
+                        className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
+                      />
+                      <p className="text-[10px] text-gray-400 mt-0.5">Original / MRP (optional)</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Actual Price (₹) <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -704,26 +853,14 @@ export default function ProductForm({
                         min="0"
                         inputMode="decimal"
                         value={v.priceInr}
-                        onChange={(e) => handleUpdateVariant(index, 'priceInr', e.target.value)}
-                        placeholder="e.g. 350"
+                        onChange={(e) => {
+                          handleUpdateVariant(index, 'priceInr', e.target.value);
+                          setPricingFormError(null);
+                        }}
+                        placeholder="e.g. 85"
                         className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        Wholesale Rate / 100 Pcs (₹)
-                      </label>
-                      <input
-                        type="number"
-                        step="1"
-                        min="0"
-                        inputMode="numeric"
-                        value={v.expectedPrice100Inr}
-                        onChange={(e) => handleUpdateVariant(index, 'expectedPrice100Inr', e.target.value)}
-                        placeholder="e.g. 13500"
-                        className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
-                      />
+                      <p className="text-[10px] text-gray-400 mt-0.5">Actual wholesale per-piece</p>
                     </div>
 
                     <div>
@@ -737,23 +874,42 @@ export default function ProductForm({
                         inputMode="numeric"
                         value={v.minOrderQuantity}
                         onChange={(e) => handleUpdateVariant(index, 'minOrderQuantity', e.target.value)}
-                        placeholder="e.g. 10 (Optional)"
+                        placeholder="e.g. 100 (Optional)"
                         className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
                       />
+                      <p className="text-[10px] text-gray-400 mt-0.5">Min required order pieces</p>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        SKU (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={v.sku}
-                        onChange={(e) => handleUpdateVariant(index, 'sku', e.target.value.toUpperCase())}
-                        placeholder="e.g. YE-SS-150"
-                        className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-brand-navy bg-white"
-                      />
-                    </div>
+                    {/* Auto-calculated Variant Wholesale Rate Preview (100 pcs = Actual Price x 100) */}
+                    {(() => {
+                      const vActualPaise = v.priceInr !== '' && !isNaN(parseFloat(v.priceInr)) ? inrToPaise(v.priceInr) : 0;
+                      const vWholesaleInr = vActualPaise > 0 ? paiseToInr(vActualPaise * 100) : null;
+                      const vDisplayActual = vActualPaise > 0 ? paiseToInr(vActualPaise) : null;
+                      return (
+                        <div className="col-span-1 sm:col-span-2 md:col-span-3 p-2.5 bg-blue-50/60 border border-blue-200/70 rounded-lg flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-bold text-brand-navy">
+                              Wholesale Rate (100 pcs):
+                            </span>{' '}
+                            {vWholesaleInr != null ? (
+                              <span className="font-extrabold text-emerald-700">
+                                ₹{vWholesaleInr.toLocaleString('en-IN')}{' '}
+                                <span className="font-normal text-gray-500">
+                                  (Auto-calculated: ₹{vDisplayActual.toLocaleString('en-IN')} × 100)
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 italic">
+                                Enter actual price to calculate wholesale rate.
+                              </span>
+                            )}
+                          </div>
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-brand-navy text-[9px] font-bold uppercase rounded">
+                            Auto
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

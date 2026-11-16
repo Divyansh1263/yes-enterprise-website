@@ -21,31 +21,40 @@ export default function ProductCard({ product }) {
     if (prices.length > 0) minPricePaise = Math.min(...prices);
   }
 
-  // Wholesale & Original pricing resolution
-  let minWholesaleInr = null;
-  let minOriginalInr = null;
+  // Wholesale & Crossed-out pricing resolution
+  let cardCrossedOutInr = null;
+  let cardActualInr = null;
 
   if (isVariable) {
-    if (product.min_variant_expected_price_100_paise != null) {
-      minWholesaleInr = expPrice100PaiseToPieceInr(product.min_variant_expected_price_100_paise);
-    } else if (activeVariants.length > 0) {
-      const wholesaleRates = activeVariants
-        .map(v => expPrice100PaiseToPieceInr(v.expected_price_per_100_paise))
-        .filter(r => r != null);
-      if (wholesaleRates.length > 0) minWholesaleInr = Math.min(...wholesaleRates);
-    }
+    if (activeVariants.length > 0) {
+      const parsedVariants = activeVariants.map(v => {
+        let vCrossed = v.compare_at_price_paise != null && v.compare_at_price_paise > 0 ? paiseToInr(v.compare_at_price_paise) : null;
+        let vAct = v.price_paise != null && v.price_paise > 0 ? paiseToInr(v.price_paise) : null;
+        if (vCrossed == null && v.expected_price_per_100_paise != null && (v.expected_price_per_100_paise / 100) < (v.price_paise || 0)) {
+          vCrossed = paiseToInr(v.price_paise);
+          vAct = expPrice100PaiseToPieceInr(v.expected_price_per_100_paise);
+        }
+        return { crossed: vCrossed, actual: vAct };
+      }).filter(v => v.actual != null);
 
-    if (minPricePaise != null) {
-      minOriginalInr = paiseToInr(minPricePaise);
+      if (parsedVariants.length > 0) {
+        parsedVariants.sort((a, b) => a.actual - b.actual);
+        cardActualInr = parsedVariants[0].actual;
+        cardCrossedOutInr = parsedVariants[0].crossed;
+      }
+    }
+  } else {
+    if (product.compare_at_price_paise != null && product.compare_at_price_paise > 0) {
+      cardCrossedOutInr = paiseToInr(product.compare_at_price_paise);
+    }
+    if (product.base_price_paise != null && product.base_price_paise > 0) {
+      cardActualInr = paiseToInr(product.base_price_paise);
+    }
+    if (cardCrossedOutInr == null && product.expected_price_per_100_paise != null && (product.expected_price_per_100_paise / 100) < (product.base_price_paise || 0)) {
+      cardCrossedOutInr = paiseToInr(product.base_price_paise);
+      cardActualInr = expPrice100PaiseToPieceInr(product.expected_price_per_100_paise);
     }
   }
-
-  const standaloneWholesaleInr = !isVariable
-    ? expPrice100PaiseToPieceInr(product.expected_price_per_100_paise)
-    : null;
-  const standaloneOriginalInr = !isVariable
-    ? (product.base_price_paise != null ? paiseToInr(product.base_price_paise) : (product.price != null ? Number(product.price) : null))
-    : null;
 
   // Determine available capacities for variable products
   let capacities = product.available_capacities || [];
@@ -161,70 +170,33 @@ export default function ProductCard({ product }) {
           )
         )}
 
-        {/* Wholesale & Original Pricing Slot */}
+        {/* Wholesale & Crossed-out Pricing Slot */}
         <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
-          {isVariable ? (
-            minWholesaleInr != null ? (
-              <div className="flex flex-col items-start w-full">
-                <div className="flex items-baseline gap-1.5 flex-wrap">
-                  {minOriginalInr != null && minOriginalInr > minWholesaleInr && (
-                    <span className="line-through text-gray-400 text-xs sm:text-sm font-medium">
-                      ₹{minOriginalInr.toLocaleString('en-IN')}
-                    </span>
-                  )}
+          {cardActualInr != null ? (
+            <div className="flex flex-col items-start w-full">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                {cardCrossedOutInr != null && cardCrossedOutInr > cardActualInr && (
+                  <span className="line-through text-gray-400 text-xs sm:text-sm font-medium">
+                    ₹{cardCrossedOutInr.toLocaleString('en-IN')}
+                  </span>
+                )}
+                {isVariable && (
                   <span className="text-[10px] sm:text-xs font-semibold text-gray-500">
                     {lang === 'hi' ? 'से शुरू: ' : 'From '}
                   </span>
-                  <span className="text-sm sm:text-base font-extrabold text-emerald-700">
-                    ₹{minWholesaleInr.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <span className="text-[10px] text-gray-500 font-medium tracking-tight">
-                  {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
+                )}
+                <span className="text-sm sm:text-base font-extrabold text-emerald-700">
+                  ₹{cardActualInr.toLocaleString('en-IN')}
                 </span>
               </div>
-            ) : minOriginalInr != null ? (
-              <div className="flex flex-col items-start w-full">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-gray-500">
-                    {lang === 'hi' ? 'से शुरू: ' : 'From '}
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-brand-navy">
-                    ₹{minOriginalInr.toLocaleString('en-IN')}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <span className="text-[10px] sm:text-xs font-semibold text-brand-navy">
-                {lang === 'hi' ? 'मूल्य के लिए संपर्क करें' : 'Contact for Price'}
+              <span className="text-[10px] text-gray-500 font-medium tracking-tight">
+                {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
               </span>
-            )
+            </div>
           ) : (
-            standaloneWholesaleInr != null ? (
-              <div className="flex flex-col items-start w-full">
-                <div className="flex items-baseline gap-1.5 flex-wrap">
-                  {standaloneOriginalInr != null && standaloneOriginalInr > standaloneWholesaleInr && (
-                    <span className="line-through text-gray-400 text-xs sm:text-sm font-medium">
-                      ₹{standaloneOriginalInr.toLocaleString('en-IN')}
-                    </span>
-                  )}
-                  <span className="text-sm sm:text-base font-extrabold text-emerald-700">
-                    ₹{standaloneWholesaleInr.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <span className="text-[10px] text-gray-500 font-medium tracking-tight">
-                  {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
-                </span>
-              </div>
-            ) : standaloneOriginalInr != null ? (
-              <span className="text-xs sm:text-sm font-bold text-brand-navy">
-                ₹{standaloneOriginalInr.toLocaleString('en-IN')}
-              </span>
-            ) : (
-              <span className="text-[10px] sm:text-xs font-semibold text-brand-navy">
-                {lang === 'hi' ? 'मूल्य के लिए संपर्क करें' : 'Contact for Price'}
-              </span>
-            )
+            <span className="text-[10px] sm:text-xs font-semibold text-brand-navy">
+              {lang === 'hi' ? 'मूल्य के लिए संपर्क करें' : 'Contact for Price'}
+            </span>
           )}
         </div>
       </div>

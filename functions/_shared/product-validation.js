@@ -168,6 +168,16 @@ export function validateVariantInput(variant) {
     }
   }
 
+  // Crossed-out price must be strictly greater than actual price when both are supplied
+  if (
+    compare_at_price_paise !== undefined && compare_at_price_paise !== null &&
+    price_paise !== undefined && price_paise !== null
+  ) {
+    if (compare_at_price_paise <= price_paise) {
+      return { valid: false, error: 'Crossed-out price must be greater than actual price.' };
+    }
+  }
+
   let expectedP100 = null;
   if (expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== '') {
     if (!Number.isInteger(expected_price_per_100_paise) || expected_price_per_100_paise < 0) {
@@ -177,6 +187,9 @@ export function validateVariantInput(variant) {
       return { valid: false, error: `Variant "${title}": expected_price_per_100_paise cannot exceed 500,000,000 paise (₹50,00,000).` };
     }
     expectedP100 = expected_price_per_100_paise;
+  } else if (price_paise !== undefined && price_paise !== null) {
+    // Auto-calculate: Wholesale Rate (100 pcs) = Actual Price * 100
+    expectedP100 = price_paise * 100;
   }
 
   let moq = null;
@@ -363,6 +376,16 @@ export function validateProductInput(body, isUpdate = false) {
       }
     }
 
+    // Crossed-out price must be strictly greater than actual price when both are supplied
+    if (
+      compare_at_price_paise !== undefined && compare_at_price_paise !== null &&
+      base_price_paise !== undefined && base_price_paise !== null
+    ) {
+      if (compare_at_price_paise <= base_price_paise) {
+        return { valid: false, error: 'Crossed-out price must be greater than actual price.' };
+      }
+    }
+
     if (expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== '') {
       if (!Number.isInteger(expected_price_per_100_paise) || expected_price_per_100_paise < 0) {
         return { valid: false, error: 'expected_price_per_100_paise must be a non-negative integer or null.' };
@@ -466,9 +489,13 @@ export function validateProductInput(body, isUpdate = false) {
       compare_at_price_paise: hasVars
         ? null
         : (isUpdate && compare_at_price_paise === undefined ? undefined : (compare_at_price_paise ?? null)),
-      expected_price_per_100_paise: expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== ''
-        ? expected_price_per_100_paise
-        : (isUpdate && expected_price_per_100_paise === undefined ? undefined : null),
+      expected_price_per_100_paise: hasVars
+        ? null
+        : (expected_price_per_100_paise !== undefined && expected_price_per_100_paise !== null && expected_price_per_100_paise !== ''
+            ? expected_price_per_100_paise
+            : (base_price_paise !== undefined && base_price_paise !== null
+                ? base_price_paise * 100
+                : (isUpdate && expected_price_per_100_paise === undefined ? undefined : null))),
       min_order_quantity: min_order_quantity !== undefined && min_order_quantity !== null && min_order_quantity !== ''
         ? Number(min_order_quantity)
         : (isUpdate && min_order_quantity === undefined ? undefined : null),
