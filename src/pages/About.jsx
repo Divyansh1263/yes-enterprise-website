@@ -4,6 +4,7 @@ import { useLanguage } from '../i18n'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { buildWhatsAppContactUrl } from '../lib/whatsapp'
 import { getR2ImageUrl } from '../services/api/uploads.js'
+import SEO from '../components/seo/SEO'
 
 export default function About() {
   const { t, lang, getLangPath } = useLanguage()
@@ -30,8 +31,21 @@ export default function About() {
   ]
   const cardBgs = ['#D8E9F4', '#BDE5D8', '#F8DFD1', '#E8DDF7', '#B9D9CE', '#F8E9B7']
 
+  const seoTitle = lang === 'hi'
+    ? 'हमारे बारे में — निर्माता एवं आपूर्तिकर्ता'
+    : 'About Us — Feeding Bottles & Stainless Steel Manufacturers';
+
+  const seoDesc = lang === 'hi'
+    ? 'YES ENTERPRISES के बारे में जानें — उच्च गुणवत्ता वाली फीडिंग बोतलें, स्टेनलेस स्टील पानी की बोतलें और टिफिन के प्रमुख निर्माता एवं सप्लायर।'
+    : 'Learn about YES ENTERPRISES — direct manufacturers & wholesale suppliers of premium feeding bottles, water bottles and stainless steel products.';
+
   return (
     <div className="bg-white">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        canonicalPath={lang === 'hi' ? '/hi/about' : '/about'}
+      />
 
       {/* ── Page header ──────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #19345A 0%, #263449 100%)' }}>

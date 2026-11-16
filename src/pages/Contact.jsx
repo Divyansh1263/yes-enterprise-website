@@ -2,6 +2,7 @@ import { useLanguage } from '../i18n'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { buildWholesaleEnquiryUrl } from '../lib/whatsapp'
 import siteConfig from '../config/site.config'
+import SEO from '../components/seo/SEO'
 
 const WaIcon = () => (
   <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -21,8 +22,21 @@ export default function Contact() {
 
   const steps = t('contactPage.steps')
 
+  const seoTitle = lang === 'hi'
+    ? 'संपर्क एवं थोक पूछताछ'
+    : 'Contact & Wholesale Enquiries';
+
+  const seoDesc = lang === 'hi'
+    ? 'YES ENTERPRISES से संपर्क करें — थोक ऑर्डर एवं पूछताछ के लिए डायरेक्ट फोन व WhatsApp: +91 74548 48548, ईमेल: uvaisalikhan0143@gmail.com।'
+    : 'Contact YES ENTERPRISES for factory-direct wholesale pricing and bulk orders. Direct WhatsApp: +91 74548 48548, Email: uvaisalikhan0143@gmail.com.';
+
   return (
     <div className="bg-white">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        canonicalPath={lang === 'hi' ? '/hi/contact' : '/contact'}
+      />
 
       {/* ── Page header ──────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #19345A 0%, #263449 100%)' }}>

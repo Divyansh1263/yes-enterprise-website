@@ -10,6 +10,7 @@ import ProductGrid from '../components/ui/ProductGrid';
 import CategoryFilter from '../components/ui/CategoryFilter';
 import SearchBar from '../components/ui/SearchBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import SEO from '../components/seo/SEO';
 
 export default function Products() {
   const { t, lang } = useLanguage();
@@ -98,8 +99,21 @@ export default function Products() {
   const waContactUrl = buildWhatsAppContactUrl(lang);
   const hasError = Boolean(productsError && products.length === 0);
 
+  const seoTitle = lang === 'hi'
+    ? `${activeCategoryName ? activeCategoryName + ' — ' : ''}थोक प्रोडक्ट कैटलॉग`
+    : `${activeCategoryName ? activeCategoryName + ' — ' : ''}Wholesale Product Catalogue`;
+
+  const seoDesc = lang === 'hi'
+    ? 'YES ENTERPRISES का संपूर्ण थोक कैटलॉग देखें — कांच व स्टील की फीडिंग बोतलें, वैक्यूम पानी की बोतलें और टिफिन सेट। थोक मूल्य व सीधे निर्माता से आपूर्ति।'
+    : 'Browse complete wholesale catalogue from YES ENTERPRISES — glass & stainless steel feeding bottles, vacuum water bottles and tiffins. Factory rates.';
+
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        canonicalPath={lang === 'hi' ? '/hi/products' : '/products'}
+      />
       {/* ── Page header ── */}
       <div className="bg-brand-ivory border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-10">

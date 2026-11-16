@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
+import SEO from '../../components/seo/SEO.jsx';
 
 export default function AdminLogin() {
   const { user, isAdmin, loading, error, statusCode, isForbidden, isLocal, isDevBypass, signInDev } = useAuth();
@@ -50,6 +51,7 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <SEO title="Admin Login" noindex={true} />
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <Link to="/" className="inline-block">
           <img

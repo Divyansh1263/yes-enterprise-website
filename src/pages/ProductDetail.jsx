@@ -18,6 +18,8 @@ import ImageGallery from '../components/ui/ImageGallery';
 import ProductCard from '../components/ui/ProductCard';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import SEO from '../components/seo/SEO';
+import { getR2ImageUrl } from '../services/api/uploads.js';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -327,8 +329,129 @@ export default function ProductDetail() {
 
   const displayNotes = product.notes && !/cannot be confirmed/i.test(product.notes) ? product.notes : null;
 
+  // ── SEO & Structured Data ───────────────────────────────────────────────────
+  const activeVariants = (product.variants || []).filter(v => v.status === 'active' || !v.status);
+  const canonicalPath = `${getLangPath('/products')}/${product.slug}`;
+  const absoluteCanonicalUrl = `https://yesenterprises.net.in${canonicalPath}`;
+  const primaryImgRaw = displayImages[0]?.image_key || displayImages[0]?.src || displayImages[0]?.url || product.primary_image_key;
+  const primaryImgUrl = primaryImgRaw ? getR2ImageUrl(primaryImgRaw) : '/assets/logo.jpeg';
+  const fullImageUrl = primaryImgUrl.startsWith('http') ? primaryImgUrl : `https://yesenterprises.net.in${primaryImgUrl}`;
+
+  const isOutOfStock = product.status === 'out_of_stock' || product.status === 'unavailable';
+  const availabilityUrl = isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock';
+
+  let offersSchema;
+  if (product.has_variants && activeVariants.length > 0) {
+    const wholesalePrices = activeVariants
+      .map(v => expPrice100PaiseToPieceInr(v.expected_price_per_100_paise))
+      .filter(p => p != null);
+    const regularPrices = activeVariants
+      .map(v => v.price_paise ? v.price_paise / 100 : null)
+      .filter(p => p != null);
+
+    const priceList = wholesalePrices.length > 0 ? wholesalePrices : regularPrices;
+    const minP = priceList.length > 0 ? Math.min(...priceList) : undefined;
+    const maxP = priceList.length > 0 ? Math.max(...priceList) : undefined;
+
+    offersSchema = {
+      '@type': 'AggregateOffer',
+      'url': absoluteCanonicalUrl,
+      'priceCurrency': 'INR',
+      ...(minP != null ? { 'lowPrice': minP } : {}),
+      ...(maxP != null ? { 'highPrice': maxP } : {}),
+      'offerCount': activeVariants.length,
+      'offers': activeVariants.map(v => {
+        const vWholesale = expPrice100PaiseToPieceInr(v.expected_price_per_100_paise);
+        const vPrice = vWholesale != null ? vWholesale : (v.price_paise ? v.price_paise / 100 : undefined);
+        return {
+          '@type': 'Offer',
+          'name': (lang === 'hi' && v.title_hi) ? v.title_hi : v.title,
+          'sku': v.sku || undefined,
+          'priceCurrency': 'INR',
+          ...(vPrice != null ? { 'price': vPrice } : {}),
+          'availability': v.status === 'out_of_stock' ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+          'seller': {
+            '@type': 'Organization',
+            'name': 'YES ENTERPRISES'
+          }
+        };
+      })
+    };
+  } else {
+    const itemPrice = displayWholesalePrice != null ? displayWholesalePrice : displayOriginalPrice;
+    offersSchema = {
+      '@type': 'Offer',
+      'url': absoluteCanonicalUrl,
+      'priceCurrency': 'INR',
+      ...(itemPrice != null ? { 'price': itemPrice } : {}),
+      'priceValidUntil': '2027-12-31',
+      'itemCondition': 'https://schema.org/NewCondition',
+      'availability': availabilityUrl,
+      'seller': {
+        '@type': 'Organization',
+        'name': 'YES ENTERPRISES'
+      }
+    };
+  }
+
+  const productSchema = {
+    '@type': 'Product',
+    'name': productName,
+    'description': productDesc || `${productName} manufactured by YES ENTERPRISES`,
+    'image': fullImageUrl,
+    'sku': product.sku || selectedVariant?.sku || `SKU-${product.id}`,
+    'brand': {
+      '@type': 'Brand',
+      'name': product.brand || 'YES ENTERPRISES'
+    },
+    ...(cleanMaterial ? { 'material': cleanMaterial } : {}),
+    'offers': offersSchema
+  };
+
+  const breadcrumbSchema = {
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': lang === 'hi' ? 'होम' : 'Home',
+        'item': 'https://yesenterprises.net.in' + (lang === 'hi' ? '/hi' : '')
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': lang === 'hi' ? 'कैटलॉग' : 'Catalogue',
+        'item': 'https://yesenterprises.net.in' + (lang === 'hi' ? '/hi/products' : '/products')
+      },
+      {
+        '@type': 'ListItem',
+        'position': 3,
+        'name': productName,
+        'item': absoluteCanonicalUrl
+      }
+    ]
+  };
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [productSchema, breadcrumbSchema]
+  };
+
+  const seoTitle = `${productName}${categoryName ? ' — ' + categoryName : ''}`;
+  const seoDesc = productDesc
+    ? `${productDesc.slice(0, 140)}... Wholesale rate & direct factory supply from YES ENTERPRISES.`
+    : `${productName} wholesale rate and manufacturer supply from YES ENTERPRISES. Contact +91 74548 48548 for bulk orders.`;
+
   return (
     <div className="min-h-screen bg-white pb-12">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        canonicalPath={canonicalPath}
+        image={fullImageUrl}
+        type="product"
+        schema={structuredData}
+      />
       {/* ── Breadcrumb ───────────────────────────────────────────────────────── */}
       <div className="bg-brand-ivory border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">

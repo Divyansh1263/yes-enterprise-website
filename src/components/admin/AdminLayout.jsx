@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
+import SEO from '../seo/SEO.jsx';
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
@@ -32,6 +33,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F5EF]">
+      <SEO title="Admin Portal" noindex={true} />
       {/* ── Top Header Navigation ─────────────────────────────────────────── */}
       <header className="bg-brand-navy text-white sticky top-0 z-40 shadow-md border-b border-brand-navy-dark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

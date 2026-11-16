@@ -1,0 +1,20 @@
+# YES ENTERPRISES — robots.txt
+# Production domain: https://yesenterprises.net.in
+
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /about
+Allow: /contact
+Allow: /hi/
+Allow: /assets/
+Allow: /uploads/
+
+# Block administrative panel and backend endpoints from search indexing
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/admin/
+Disallow: /cdn-cgi/access/
+
+# Explicit XML Sitemap
+Sitemap: https://yesenterprises.net.in/sitemap.xml

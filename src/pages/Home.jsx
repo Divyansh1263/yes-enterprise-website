@@ -14,6 +14,7 @@ import ProductCard from '../components/ui/ProductCard';
 import { getR2ImageUrl } from '../services/api/uploads.js';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import SEO from '../components/seo/SEO';
 
 const fallbackFeatured = getFeaturedProducts();
 const fallbackCategories = getAllCategories();
@@ -101,8 +102,22 @@ export default function Home() {
     refetch: refetchProducts
   } = useProducts({ featured: true, limit: 4 }, fallbackFeatured);
 
+  const pageTitle = lang === 'hi'
+    ? 'फीडिंग बोतलें, पानी की बोतलें एवं स्टेनलेस स्टील टिफिन'
+    : 'Feeding Bottles, Water Bottles & Stainless Steel Tiffins';
+
+  const pageDesc = lang === 'hi'
+    ? 'YES ENTERPRISES — फीडिंग बोतलें, पानी की बोतलें, स्टेनलेस स्टील सिपर और टिफिन बॉक्स के निर्माता एवं थोक आपूर्तिकर्ता।'
+    : 'Direct factory manufacturers and wholesale suppliers of feeding bottles, stainless steel water bottles and tiffins. Pan-India wholesale delivery.';
+
   return (
     <div className="overflow-x-hidden">
+      <SEO
+        title={pageTitle}
+        description={pageDesc}
+        canonicalPath={lang === 'hi' ? '/hi' : '/'}
+        image="/assets/logo.jpeg"
+      />
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section className="relative bg-grad-hero pt-3 pb-12 sm:pt-8 sm:pb-16 lg:py-0 lg:min-h-screen flex items-center overflow-hidden">

@@ -31,6 +31,9 @@ export default function ImageGallery({ images = [], productName = 'Product' }) {
           key={active}
           src={activeUrl}
           alt={activeImg?.alt || activeImg?.alt_text || `${productName} — view ${active + 1}`}
+          width="440"
+          height="440"
+          decoding="async"
           className="w-full h-full object-contain transition-opacity duration-300"
         />
       </div>
@@ -55,8 +58,11 @@ export default function ImageGallery({ images = [], productName = 'Product' }) {
                 <img
                   src={thumbUrl}
                   alt={img.alt || img.alt_text || `${productName} thumbnail ${i + 1}`}
+                  width="64"
+                  height="64"
                   className="w-full h-full object-contain"
                   loading="lazy"
+                  decoding="async"
                 />
               </button>
             );
