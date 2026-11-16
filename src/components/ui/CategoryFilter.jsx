@@ -1,8 +1,11 @@
 import { useLanguage } from '../../i18n';
 import { getCategoryName } from '../../data/products';
 
-export default function CategoryFilter({ categories, activeCategory, onCategoryChange, totalCount = null }) {
+export default function CategoryFilter({ categories = [], activeCategory, onCategoryChange, totalCount = null }) {
   const { t, lang } = useLanguage();
+
+  // Filter out empty categories (zero active products) in accordance with Section 8
+  const activeCategories = (categories || []).filter(cat => (cat.product_count || 0) > 0);
 
   return (
     <div className="space-y-1">
@@ -13,7 +16,7 @@ export default function CategoryFilter({ categories, activeCategory, onCategoryC
       >
         {t('categories.all')}
       </FilterBtn>
-      {categories.map(cat => {
+      {activeCategories.map(cat => {
         const isSelected = activeCategory === cat.id || activeCategory === cat.slug;
         return (
           <FilterBtn

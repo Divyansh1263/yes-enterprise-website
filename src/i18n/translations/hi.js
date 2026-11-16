@@ -11,10 +11,17 @@ export const hi = {
 
   nav: {
     home: 'होम',
-    products: 'प्रोडक्ट',
+    products: 'कैटलॉग',
     about: 'हमारे बारे में',
     contact: 'संपर्क करें',
     whatsapp: 'WhatsApp',
+  },
+
+  pricing: {
+    wholesalePerPiece: 'थोक मूल्य / पीस',
+    from: 'से शुरू: ',
+    contactForPrice: 'मूल्य के लिए संपर्क करें',
+    wholesaleBanner: 'कैटलॉग विशेष थोक दर (प्रति पीस)। बॉक्स एवं कार्टन पैकिंग उपलब्ध।',
   },
 
   hero: {

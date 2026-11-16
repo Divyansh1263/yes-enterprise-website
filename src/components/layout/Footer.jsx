@@ -3,7 +3,7 @@ import siteConfig from '../../config/site.config'
 import { useLanguage } from '../../i18n'
 import { getAllCategories, getCategoryName } from '../../data/products'
 
-const categories = getAllCategories()
+const categories = getAllCategories().filter(cat => cat.id !== 'plastic-bottles')
 
 export default function Footer() {
   const { t, getLangPath, lang } = useLanguage()

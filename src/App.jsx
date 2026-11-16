@@ -62,6 +62,8 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/catalogue" element={<Navigate to="/products" replace />} />
+          <Route path="/catalogue/*" element={<Navigate to="/products" replace />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -72,6 +74,8 @@ export default function App() {
         <Route path="/hi" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="products" element={<Products />} />
+          <Route path="catalogue" element={<Navigate to="/hi/products" replace />} />
+          <Route path="catalogue/*" element={<Navigate to="/hi/products" replace />} />
           <Route path="products/:slug" element={<ProductDetail />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />

@@ -25,6 +25,18 @@ export function inrToPaise(inr) {
 }
 
 /**
+ * Calculates wholesale price per piece in INR from expected_price_per_100_paise.
+ * Formula: (expected_price_per_100_paise / 100) / 100 = expected_price_per_100_paise / 10000
+ * @param {number | null | undefined} expPrice100Paise
+ * @returns {number | null}
+ */
+export function expPrice100PaiseToPieceInr(expPrice100Paise) {
+  if (expPrice100Paise == null || isNaN(expPrice100Paise) || expPrice100Paise <= 0) return null;
+  return Number((expPrice100Paise / 10000).toFixed(2));
+}
+
+
+/**
  * Formats a price in paise as a formatted INR string (e.g. ₹ 1,250).
  * @param {number | null | undefined} paise
  * @param {boolean} [showDecimals=false]

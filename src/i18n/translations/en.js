@@ -9,10 +9,17 @@ export const en = {
 
   nav: {
     home: 'Home',
-    products: 'Products',
+    products: 'Catalogue',
     about: 'About',
     contact: 'Contact',
     whatsapp: 'WhatsApp',
+  },
+
+  pricing: {
+    wholesalePerPiece: 'Wholesale / piece',
+    from: 'From ',
+    contactForPrice: 'Contact for Price',
+    wholesaleBanner: 'WhatsApp catalogue wholesale rate per piece. Box & carton packing available.',
   },
 
   hero: {

@@ -13,7 +13,7 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 import { buildWhatsAppUrl, buildWhatsAppContactUrl } from '../lib/whatsapp';
 import { getPublicProductBySlug, getPublicProducts } from '../services/api/products.js';
 import { isFixtureFallbackAllowed } from '../services/api/client.js';
-import { paiseToInr } from '../utils/currency.js';
+import { paiseToInr, expPrice100PaiseToPieceInr } from '../utils/currency.js';
 import ImageGallery from '../components/ui/ImageGallery';
 import ProductCard from '../components/ui/ProductCard';
 import Badge from '../components/ui/Badge';
@@ -212,27 +212,30 @@ export default function ProductDetail() {
   const productDesc = getProductDescription(product, lang);
   const categoryName = category ? getCategoryName(category, lang) : '';
 
-  // Calculate active price, wholesale rate per 100, and effective MOQ
-  let displayPrice = null;
+  // Calculate active original price, wholesale per piece, rate per 100, and effective MOQ
+  let displayOriginalPrice = null;
+  let displayWholesalePrice = null;
   let displayExpectedPrice100 = null;
   let effectiveMoq = product.min_order_quantity || null;
 
   if (selectedVariant) {
     if (selectedVariant.price_paise != null) {
-      displayPrice = paiseToInr(selectedVariant.price_paise);
+      displayOriginalPrice = paiseToInr(selectedVariant.price_paise);
     }
     if (selectedVariant.expected_price_per_100_paise != null) {
       displayExpectedPrice100 = paiseToInr(selectedVariant.expected_price_per_100_paise);
+      displayWholesalePrice = expPrice100PaiseToPieceInr(selectedVariant.expected_price_per_100_paise);
     }
     if (selectedVariant.min_order_quantity != null) {
       effectiveMoq = selectedVariant.min_order_quantity;
     }
   } else if (!product.has_variants) {
     if (product.base_price_paise != null) {
-      displayPrice = paiseToInr(product.base_price_paise);
+      displayOriginalPrice = paiseToInr(product.base_price_paise);
     }
     if (product.expected_price_per_100_paise != null) {
       displayExpectedPrice100 = paiseToInr(product.expected_price_per_100_paise);
+      displayWholesalePrice = expPrice100PaiseToPieceInr(product.expected_price_per_100_paise);
     }
   }
 
@@ -251,9 +254,12 @@ export default function ProductDetail() {
 
   // WhatsApp enquiry detail with variant awareness and dual pricing
   const variantTitle = selectedVariant ? ((lang === 'hi' && selectedVariant.title_hi) ? selectedVariant.title_hi : (selectedVariant.title || selectedVariant.sku)) : '';
+  const enquiryPricePart = displayWholesalePrice != null
+    ? ` [Wholesale: ₹${displayWholesalePrice}/pc${displayOriginalPrice != null ? `, MRP: ₹${displayOriginalPrice}` : ''}]`
+    : (displayOriginalPrice != null ? ` - ₹${displayOriginalPrice}/pc` : '');
   const enquiryItemName = selectedVariant
-    ? `${productName} (${variantTitle})${displayPrice != null ? ` - ₹${displayPrice}/pc` : ''}${displayExpectedPrice100 != null ? ` (Approx ₹${displayExpectedPrice100.toLocaleString('en-IN')}/100 pcs)` : ''}`
-    : productName;
+    ? `${productName} (${variantTitle})${enquiryPricePart}`
+    : `${productName}${enquiryPricePart}`;
 
   const effectiveQty = quantity ? parseInt(quantity, 10) : (effectiveMoq || undefined);
   const waUrl = buildWhatsAppUrl({
@@ -393,10 +399,31 @@ export default function ProductDetail() {
             )}
 
             {/* Price Header */}
-            {displayPrice != null ? (
+            {displayWholesalePrice != null ? (
+              <div className="mb-4">
+                <div className="flex items-baseline gap-2.5 flex-wrap">
+                  {displayOriginalPrice != null && displayOriginalPrice > displayWholesalePrice && (
+                    <span className="line-through text-gray-400 text-base sm:text-lg font-medium">
+                      ₹{displayOriginalPrice.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
+                    ₹{displayWholesalePrice.toLocaleString('en-IN')}
+                  </span>
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg uppercase tracking-wider">
+                    {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {lang === 'hi'
+                    ? 'कैटलॉग विशेष थोक दर (प्रति पीस)। बॉक्स एवं कार्टन पैकिंग उपलब्ध।'
+                    : 'WhatsApp catalogue wholesale per-piece rate. Box & carton packing available.'}
+                </p>
+              </div>
+            ) : displayOriginalPrice != null ? (
               <div className="mb-4 flex items-baseline gap-2">
                 <span className="text-xl sm:text-2xl font-bold text-brand-navy">
-                  {lang === 'hi' ? 'मूल्य: ' : 'Price: '}₹{displayPrice.toLocaleString('en-IN')}
+                  {lang === 'hi' ? 'मूल्य: ' : 'Price: '}₹{displayOriginalPrice.toLocaleString('en-IN')}
                 </span>
                 <span className="text-xs text-gray-500">
                   {lang === 'hi' ? '(थोक दर के लिए संपर्क करें)' : '(Wholesale rate)'}
@@ -453,8 +480,8 @@ export default function ProductDetail() {
                   {product.variants.filter(v => v.status === 'active').map((v) => {
                     const isSelected = selectedVariant?.id === v.id;
                     const vTitle = (lang === 'hi' && v.title_hi) ? v.title_hi : (v.title || v.sku);
-                    const vPrice = v.price_paise != null ? paiseToInr(v.price_paise) : null;
-                    const vP100 = v.expected_price_per_100_paise != null ? paiseToInr(v.expected_price_per_100_paise) : null;
+                    const vOrig = v.price_paise != null ? paiseToInr(v.price_paise) : null;
+                    const vWholesale = expPrice100PaiseToPieceInr(v.expected_price_per_100_paise);
 
                     return (
                       <button
@@ -470,14 +497,21 @@ export default function ProductDetail() {
                         <p className={`text-xs font-bold ${isSelected ? 'text-brand-navy' : 'text-gray-800'}`}>
                           {vTitle}
                         </p>
-                        {vPrice != null && (
+                        {vWholesale != null ? (
+                          <div className="mt-0.5 flex items-baseline gap-1.5 flex-wrap">
+                            {vOrig != null && vOrig > vWholesale && (
+                              <span className="line-through text-[11px] text-gray-400">₹{vOrig}</span>
+                            )}
+                            <span className="text-xs font-extrabold text-emerald-700">₹{vWholesale}</span>
+                          </div>
+                        ) : vOrig != null ? (
                           <p className="text-[11px] font-semibold text-brand-navy mt-0.5">
-                            ₹{vPrice.toLocaleString('en-IN')}
+                            ₹{vOrig.toLocaleString('en-IN')}
                           </p>
-                        )}
-                        {vP100 != null && (
-                          <p className="text-[10px] text-gray-500">
-                            100 pcs: ₹{vP100.toLocaleString('en-IN')}
+                        ) : null}
+                        {v.expected_price_per_100_paise != null && (
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            100 pcs: ₹{paiseToInr(v.expected_price_per_100_paise).toLocaleString('en-IN')}
                           </p>
                         )}
                       </button>

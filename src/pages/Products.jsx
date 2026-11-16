@@ -80,12 +80,15 @@ export default function Products() {
     setSearchQuery('');
   };
 
-  const activeCategoryObj = categories.find(c => c.id === activeCategory || c.slug === activeCategory);
+  // Section 8: Automatically filter out empty categories (zero published products)
+  const visibleCategories = (categories || []).filter(c => (c.product_count || 0) > 0);
+
+  const activeCategoryObj = visibleCategories.find(c => c.id === activeCategory || c.slug === activeCategory);
   const activeCategoryName = activeCategoryObj
     ? getCategoryName(activeCategoryObj, lang)
     : null;
 
-  const totalProductCount = categories.reduce((sum, c) => sum + (c.product_count || 0), 0) || (products ? products.length : 0);
+  const totalProductCount = visibleCategories.reduce((sum, c) => sum + (c.product_count || 0), 0) || (products ? products.length : 0);
 
   const handleRetryAll = () => {
     refetchCategories();
@@ -226,7 +229,7 @@ export default function Products() {
                   {lang === 'hi' ? 'श्रेणियाँ' : 'Categories'}
                 </p>
                 <CategoryFilter
-                  categories={categories}
+                  categories={visibleCategories}
                   activeCategory={activeCategory}
                   onCategoryChange={handleCategoryChange}
                   totalCount={totalProductCount}
@@ -271,7 +274,7 @@ export default function Products() {
                       </span>
                     )}
                   </button>
-                  {categories.map((c) => {
+                  {visibleCategories.map((c) => {
                     const cName = getCategoryName(c, lang);
                     const isSelected = activeCategory === c.id || activeCategory === c.slug;
                     const pCount = c.product_count != null ? c.product_count : null;

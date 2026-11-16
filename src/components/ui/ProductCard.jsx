@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../i18n';
 import { getProductName } from '../../data/products';
 import { getR2ImageUrl } from '../../services/api/uploads.js';
-import { paiseToInr } from '../../utils/currency.js';
+import { paiseToInr, expPrice100PaiseToPieceInr } from '../../utils/currency.js';
 
 export default function ProductCard({ product }) {
   const { t, lang, getLangPath } = useLanguage();
@@ -20,6 +20,32 @@ export default function ProductCard({ product }) {
     const prices = activeVariants.map(v => v.price_paise).filter(p => p != null);
     if (prices.length > 0) minPricePaise = Math.min(...prices);
   }
+
+  // Wholesale & Original pricing resolution
+  let minWholesaleInr = null;
+  let minOriginalInr = null;
+
+  if (isVariable) {
+    if (product.min_variant_expected_price_100_paise != null) {
+      minWholesaleInr = expPrice100PaiseToPieceInr(product.min_variant_expected_price_100_paise);
+    } else if (activeVariants.length > 0) {
+      const wholesaleRates = activeVariants
+        .map(v => expPrice100PaiseToPieceInr(v.expected_price_per_100_paise))
+        .filter(r => r != null);
+      if (wholesaleRates.length > 0) minWholesaleInr = Math.min(...wholesaleRates);
+    }
+
+    if (minPricePaise != null) {
+      minOriginalInr = paiseToInr(minPricePaise);
+    }
+  }
+
+  const standaloneWholesaleInr = !isVariable
+    ? expPrice100PaiseToPieceInr(product.expected_price_per_100_paise)
+    : null;
+  const standaloneOriginalInr = !isVariable
+    ? (product.base_price_paise != null ? paiseToInr(product.base_price_paise) : (product.price != null ? Number(product.price) : null))
+    : null;
 
   // Determine available capacities for variable products
   let capacities = product.available_capacities || [];
@@ -132,17 +158,38 @@ export default function ProductCard({ product }) {
           )
         )}
 
-        {/* Pricing Slot: From ₹X for Variable; ₹X for Simple */}
-        <div className="mt-auto pt-2 border-t border-gray-100 flex items-baseline justify-between">
+        {/* Wholesale & Original Pricing Slot */}
+        <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
           {isVariable ? (
-            minPricePaise != null ? (
-              <div className="flex items-baseline gap-1">
-                <span className="text-[10px] sm:text-[11px] font-semibold text-gray-500">
-                  {lang === 'hi' ? 'से शुरू: ' : 'From '}
+            minWholesaleInr != null ? (
+              <div className="flex flex-col items-start w-full">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  {minOriginalInr != null && minOriginalInr > minWholesaleInr && (
+                    <span className="line-through text-gray-400 text-xs sm:text-sm font-medium">
+                      ₹{minOriginalInr.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  <span className="text-[10px] sm:text-xs font-semibold text-gray-500">
+                    {lang === 'hi' ? 'से शुरू: ' : 'From '}
+                  </span>
+                  <span className="text-sm sm:text-base font-extrabold text-emerald-700">
+                    ₹{minWholesaleInr.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <span className="text-[10px] text-gray-500 font-medium tracking-tight">
+                  {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
                 </span>
-                <span className="text-xs sm:text-sm font-bold text-brand-navy">
-                  ₹{paiseToInr(minPricePaise).toLocaleString('en-IN')}
-                </span>
+              </div>
+            ) : minOriginalInr != null ? (
+              <div className="flex flex-col items-start w-full">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-gray-500">
+                    {lang === 'hi' ? 'से शुरू: ' : 'From '}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-brand-navy">
+                    ₹{minOriginalInr.toLocaleString('en-IN')}
+                  </span>
+                </div>
               </div>
             ) : (
               <span className="text-[10px] sm:text-xs font-semibold text-brand-navy">
@@ -150,13 +197,25 @@ export default function ProductCard({ product }) {
               </span>
             )
           ) : (
-            product.base_price_paise != null ? (
+            standaloneWholesaleInr != null ? (
+              <div className="flex flex-col items-start w-full">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  {standaloneOriginalInr != null && standaloneOriginalInr > standaloneWholesaleInr && (
+                    <span className="line-through text-gray-400 text-xs sm:text-sm font-medium">
+                      ₹{standaloneOriginalInr.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  <span className="text-sm sm:text-base font-extrabold text-emerald-700">
+                    ₹{standaloneWholesaleInr.toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <span className="text-[10px] text-gray-500 font-medium tracking-tight">
+                  {lang === 'hi' ? 'थोक मूल्य / पीस' : 'Wholesale / piece'}
+                </span>
+              </div>
+            ) : standaloneOriginalInr != null ? (
               <span className="text-xs sm:text-sm font-bold text-brand-navy">
-                ₹{paiseToInr(product.base_price_paise).toLocaleString('en-IN')}
-              </span>
-            ) : product.price != null ? (
-              <span className="text-xs sm:text-sm font-bold text-brand-navy">
-                ₹{Number(product.price).toLocaleString('en-IN')}
+                ₹{standaloneOriginalInr.toLocaleString('en-IN')}
               </span>
             ) : (
               <span className="text-[10px] sm:text-xs font-semibold text-brand-navy">
