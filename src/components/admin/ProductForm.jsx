@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPublicCategories } from '../../services/api/categories.js';
+import { getAdminCategories } from '../../services/api/categories.js';
 import ImageUploader from './ImageUploader.jsx';
 import { paiseToInr, inrToPaise } from '../../utils/currency.js';
 import { slugify } from '../../utils/slugify.js';
@@ -71,9 +71,9 @@ export default function ProductForm({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Load public categories
+  // Load all categories for admin (including draft-only categories)
   useEffect(() => {
-    getPublicCategories({ cache: 'no-cache' })
+    getAdminCategories({ cache: 'no-cache' })
       .then(cats => {
         setCategories(cats || []);
         if (cats && cats.length > 0 && !categoryId) {
@@ -308,7 +308,7 @@ export default function ProductForm({
       description: description.trim() || null,
       description_hi: descriptionHi.trim() || null,
       material: specMaterial.trim() || null,
-      brand: 'YES ENTERPRISES',
+      brand: initialData?.brand || 'YE',
       status: status || 'active',
       is_featured: isFeatured,
       sort_order: parseInt(sortOrder, 10) || 0,
@@ -418,6 +418,63 @@ export default function ProductForm({
               ))}
             </select>
           </div>
+
+          {/* Publishing Status Selector */}
+          <div className="pt-2 border-t border-gray-100">
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              Publishing Status
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus('active');
+                  setIsDirty(true);
+                }}
+                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-2 transition-all ${
+                  status === 'active'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-800'
+                }`}
+              >
+                <span>✅ Active (Published)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus('draft');
+                  setIsDirty(true);
+                }}
+                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-2 transition-all ${
+                  status === 'draft'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-800'
+                }`}
+              >
+                <span>🔒 Draft (Admin Only)</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1">
+              {status === 'active'
+                ? 'Visible on public website catalogue immediately.'
+                : 'Hidden from public catalogue. Preserved safely in admin.'}
+            </p>
+          </div>
+
+          {isEdit && slug && (
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs text-gray-500">Preview product in catalogue:</span>
+              <a
+                href={`/products/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-brand-navy hover:underline flex items-center gap-1 min-h-[36px]"
+              >
+                <span>Preview Page</span>
+                <span>↗</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

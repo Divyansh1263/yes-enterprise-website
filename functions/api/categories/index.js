@@ -30,9 +30,10 @@ export async function onRequestGet(context) {
           LIMIT 1
         ) as primary_image_key
       FROM categories c
-      LEFT JOIN products p 
+      JOIN products p 
         ON p.category_id = c.id AND p.status = 'active'
       GROUP BY c.id
+      HAVING COUNT(p.id) > 0
       ORDER BY c.sort_order ASC, c.name ASC;
     `;
 

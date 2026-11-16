@@ -24,7 +24,9 @@ export function useCategories(devFallback = []) {
     setError(null);
     try {
       const data = await getPublicCategories();
-      setCategories(data || []);
+      // Ensure only categories with at least one active product are exposed publicly
+      const activeCategories = (data || []).filter(c => (c.product_count ?? 0) > 0);
+      setCategories(activeCategories);
     } catch (err) {
       const errMsg = err.message || 'Unable to connect to catalogue categories.';
       setError(errMsg);
@@ -32,7 +34,8 @@ export function useCategories(devFallback = []) {
       // Fixture fallback is strictly disabled in production builds
       if (isFixtureFallbackAllowed() && devFallback && devFallback.length > 0) {
         console.info('[useCategories] Using local dev fixture fallback (VITE_ENABLE_FIXTURE_FALLBACK=true).');
-        setCategories(devFallback);
+        const activeFallback = (devFallback || []).filter(c => (c.product_count ?? 0) > 0);
+        setCategories(activeFallback);
       } else {
         setCategories([]);
       }

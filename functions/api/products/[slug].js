@@ -3,9 +3,10 @@
  * Retrieves a single active product by slug, including full category, active variants, and images.
  */
 
-import { jsonResponse, errorResponse, publicCacheHeaders } from '../../_shared/responses.js';
+import { jsonResponse, errorResponse, publicCacheHeaders, noCacheHeaders } from '../../_shared/responses.js';
 import { getDatabase, handleDbError } from '../../_shared/db.js';
 import { validateSlug } from '../../_shared/validation.js';
+import { validateAdminSession } from '../../_shared/auth.js';
 
 function parseJsonSafe(jsonString, fallback) {
   if (!jsonString || typeof jsonString !== 'string') return fallback;
@@ -64,7 +65,31 @@ export async function onRequestGet(context) {
       LIMIT 1;
     `;
 
-    const product = await db.prepare(productSql).bind(slug).first();
+    let product = await db.prepare(productSql).bind(slug).first();
+    let isDraftPreview = false;
+
+    // If not found as active, allow authenticated admins to preview draft products
+    if (!product) {
+      const auth = await validateAdminSession(context);
+      if (auth.ok) {
+        const previewSql = `
+          SELECT 
+            p.id, p.name, p.name_hi, p.slug, p.category_id,
+            c.name as category_name, c.name_hi as category_name_hi, c.slug as category_slug,
+            p.description, p.description_hi, p.material, p.brand, p.has_variants,
+            p.base_price_paise, p.compare_at_price_paise, p.expected_price_per_100_paise,
+            p.min_order_quantity, p.sku, p.stock_quantity, p.low_stock_threshold,
+            p.specifications_json, p.variant_attributes_schema_json, p.status,
+            p.is_featured, p.sort_order, p.created_at, p.updated_at
+          FROM products p
+          JOIN categories c ON c.id = p.category_id
+          WHERE p.slug = ?
+          LIMIT 1;
+        `;
+        product = await db.prepare(previewSql).bind(slug).first();
+        if (product) isDraftPreview = true;
+      }
+    }
 
     if (!product) {
       return errorResponse(`Product with slug '${slug}' not found.`, 404, 'PRODUCT_NOT_FOUND');
@@ -183,9 +208,12 @@ export async function onRequestGet(context) {
       sort_order: product.sort_order,
       variants: formattedVariants,
       images: formattedImages,
+      is_draft_preview: isDraftPreview,
       created_at: product.created_at,
       updated_at: product.updated_at
     };
+
+    const cacheHeaders = isDraftPreview ? noCacheHeaders() : publicCacheHeaders(60, 300);
 
     return jsonResponse(
       {
@@ -193,7 +221,7 @@ export async function onRequestGet(context) {
         data: responseData
       },
       200,
-      publicCacheHeaders(60, 300)
+      cacheHeaders
     );
   } catch (err) {
     return handleDbError(err, 'Failed to retrieve product details.');

@@ -1,5 +1,5 @@
 /**
- * Admin Categories API: Create Category (POST)
+ * Admin Categories API: List Categories (GET) and Create Category (POST)
  * Requires admin authentication.
  */
 
@@ -7,6 +7,57 @@ import { jsonResponse, errorResponse, noCacheHeaders } from '../../../_shared/re
 import { getDatabase, handleDbError } from '../../../_shared/db.js';
 import { validateAdminSession } from '../../../_shared/auth.js';
 import { validateCategoryInput } from '../../../_shared/product-validation.js';
+
+export async function onRequestGet(context) {
+  const auth = await validateAdminSession(context);
+  if (!auth.ok) {
+    return errorResponse(auth.message, auth.status, auth.code);
+  }
+
+  try {
+    const db = getDatabase(context);
+
+    // Retrieve all categories with active and draft counts
+    const query = `
+      SELECT 
+        c.id,
+        c.name,
+        c.name_hi,
+        c.slug,
+        c.description,
+        c.description_hi,
+        c.sort_order,
+        c.created_at,
+        c.updated_at,
+        COUNT(CASE WHEN p.status = 'active' THEN 1 END) as active_count,
+        COUNT(CASE WHEN p.status = 'draft' THEN 1 END) as draft_count,
+        COUNT(p.id) as total_count,
+        COUNT(CASE WHEN p.status = 'active' THEN 1 END) as product_count,
+        CASE WHEN COUNT(CASE WHEN p.status = 'active' THEN 1 END) > 0 THEN 1 ELSE 0 END as is_publicly_visible,
+        (
+          SELECT pi.image_key
+          FROM product_images pi
+          JOIN products p2 ON pi.product_id = p2.id
+          WHERE p2.category_id = c.id AND pi.variant_id IS NULL
+          ORDER BY p2.sort_order ASC, pi.is_primary DESC, pi.sort_order ASC
+          LIMIT 1
+        ) as primary_image_key
+      FROM categories c
+      LEFT JOIN products p ON p.category_id = c.id
+      GROUP BY c.id
+      ORDER BY c.sort_order ASC, c.name ASC;
+    `;
+
+    const { results } = await db.prepare(query).all();
+
+    return jsonResponse({
+      success: true,
+      data: results || []
+    }, 200, noCacheHeaders());
+  } catch (err) {
+    return handleDbError(err, 'Failed to retrieve admin categories.');
+  }
+}
 
 export async function onRequestPost(context) {
   const auth = await validateAdminSession(context);
@@ -49,4 +100,14 @@ export async function onRequestPost(context) {
   } catch (err) {
     return handleDbError(err, 'Failed to create category.');
   }
+}
+
+export async function onRequest(context) {
+  if (context.request.method === 'GET') {
+    return onRequestGet(context);
+  }
+  if (context.request.method === 'POST') {
+    return onRequestPost(context);
+  }
+  return errorResponse('Method not allowed.', 405, 'METHOD_NOT_ALLOWED');
 }

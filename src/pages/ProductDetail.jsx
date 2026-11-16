@@ -485,6 +485,20 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      {/* ── Draft Preview Notification ───────────────────────────────────────── */}
+      {(product.status === 'draft' || product.is_draft_preview) && (
+        <div className="bg-amber-50 border-b border-amber-200 py-3 px-4 text-center">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-amber-900">
+            <span>🔒</span>
+            <span>
+              {lang === 'hi'
+                ? 'ड्राफ्ट पूर्वावलोकन मोड — यह उत्पाद अभी ड्राफ्ट स्थिति में है और केवल व्यवस्थापक (Admin) को दिखाई दे रहा है।'
+                : 'Draft Preview Mode — This product is currently saved as a draft and is only visible to administrators.'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Main product section ─────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 md:py-14">
         <div className="lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 items-start">

@@ -23,6 +23,7 @@ export async function onRequestGet(context) {
 
   const statusParam = url.searchParams.get('status');
   const categoryIdParam = url.searchParams.get('category_id');
+  const typeParam = url.searchParams.get('type');
   const searchQuery = sanitizeSearchQuery(url.searchParams.get('search'));
 
   try {
@@ -40,8 +41,15 @@ export async function onRequestGet(context) {
       params.push(statusParam);
     }
 
+    // Filter by product structure type
+    if (typeParam === 'variable') {
+      conditions.push('p.has_variants = 1');
+    } else if (typeParam === 'simple' || typeParam === 'standalone') {
+      conditions.push('p.has_variants = 0');
+    }
+
     // Filter by category_id
-    if (categoryIdParam) {
+    if (categoryIdParam && categoryIdParam !== 'all') {
       conditions.push('p.category_id = ?');
       params.push(categoryIdParam);
     }
@@ -84,8 +92,21 @@ export async function onRequestGet(context) {
         c.name as category_name,
         c.name_hi as category_name_hi,
         c.slug as category_slug,
-        (SELECT COUNT(*) FROM product_variants pv WHERE pv.product_id = p.id) as variant_count,
-        (SELECT COALESCE(SUM(pv.stock_quantity), 0) FROM product_variants pv WHERE pv.product_id = p.id) as variants_stock,
+        (SELECT COUNT(*) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active') as variant_count,
+        (SELECT COALESCE(SUM(pv.stock_quantity), 0) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active') as variants_stock,
+        (SELECT MIN(pv.price_paise) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active') as min_variant_price_paise,
+        (SELECT MAX(pv.price_paise) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active') as max_variant_price_paise,
+        (SELECT MIN(pv.expected_price_per_100_paise) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active' AND pv.expected_price_per_100_paise IS NOT NULL) as min_variant_expected_price_100_paise,
+        (SELECT MAX(pv.expected_price_per_100_paise) FROM product_variants pv WHERE pv.product_id = p.id AND pv.status = 'active' AND pv.expected_price_per_100_paise IS NOT NULL) as max_variant_expected_price_100_paise,
+        (
+          SELECT GROUP_CONCAT(title, ', ')
+          FROM (
+            SELECT title
+            FROM product_variants
+            WHERE product_id = p.id AND status = 'active'
+            ORDER BY sort_order ASC, price_paise ASC, id ASC
+          )
+        ) as variant_capacities_summary,
         (SELECT COUNT(*) FROM product_images pi WHERE pi.product_id = p.id) as image_count,
         (
           SELECT pi.image_key FROM product_images pi
@@ -118,10 +139,15 @@ export async function onRequestGet(context) {
           slug: row.category_slug
         } : null,
         has_variants: hasVariants,
-        price_paise: hasVariants ? null : row.base_price_paise,
-        base_price_paise: hasVariants ? null : row.base_price_paise,
+        price_paise: hasVariants ? row.min_variant_price_paise : row.base_price_paise,
+        base_price_paise: hasVariants ? row.min_variant_price_paise : row.base_price_paise,
         compare_at_price_paise: hasVariants ? null : row.compare_at_price_paise,
-        expected_price_per_100_paise: row.expected_price_per_100_paise,
+        expected_price_per_100_paise: hasVariants ? row.min_variant_expected_price_100_paise : row.expected_price_per_100_paise,
+        min_variant_price_paise: row.min_variant_price_paise ?? null,
+        max_variant_price_paise: row.max_variant_price_paise ?? null,
+        min_variant_expected_price_100_paise: row.min_variant_expected_price_100_paise ?? null,
+        max_variant_expected_price_100_paise: row.max_variant_expected_price_100_paise ?? null,
+        variant_capacities_summary: row.variant_capacities_summary || null,
         min_order_quantity: row.min_order_quantity ?? null,
         sku: hasVariants ? null : row.sku,
         stock_quantity: hasVariants ? row.variants_stock : row.stock_quantity,

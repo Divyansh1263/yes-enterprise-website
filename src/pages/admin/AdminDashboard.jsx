@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminProducts } from '../../services/api/products.js';
-import { getPublicCategories } from '../../services/api/categories.js';
+import { getAdminCategories } from '../../services/api/categories.js';
 import { getInventoryLogs } from '../../services/api/inventory.js';
 import { getR2ImageUrl } from '../../services/api/uploads.js';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
@@ -28,7 +28,7 @@ export default function AdminDashboard() {
     try {
       const [prodsRes, catsRes, logsRes] = await Promise.all([
         getAdminProducts({ limit: 100 }),
-        getPublicCategories(),
+        getAdminCategories(),
         getInventoryLogs({ limit: 8 }).catch(() => ({ data: [] }))
       ]);
 
@@ -55,6 +55,10 @@ export default function AdminDashboard() {
         return timeB - timeA;
       }).slice(0, 6);
 
+      const allCats = catsRes || [];
+      const publicCats = allCats.filter(c => (c.active_count ?? 0) > 0 || c.is_publicly_visible).length;
+      const draftCats = allCats.filter(c => (c.active_count ?? 0) === 0 && (c.draft_count ?? 0) > 0).length;
+
       setMetrics({
         totalProducts,
         activeProducts,
@@ -62,7 +66,9 @@ export default function AdminDashboard() {
         archivedProducts,
         outOfStockProducts,
         lowStockProducts,
-        totalCategories: (catsRes || []).length,
+        totalCategories: allCats.length,
+        publicCategories: publicCats,
+        draftCategories: draftCats,
         totalImages,
         recentProducts: sortedRecent,
         recentLogs: logsRes.data || []
@@ -177,7 +183,11 @@ export default function AdminDashboard() {
             </div>
             <p className="text-2xl sm:text-3xl font-extrabold text-brand-navy">{metrics.totalCategories}</p>
           </div>
-          <p className="text-[11px] text-gray-400 mt-2 font-medium">Active catalogue lines</p>
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mt-2 font-medium">
+            <span className="text-emerald-700 font-semibold">{metrics.publicCategories} public</span>
+            <span>•</span>
+            <span className="text-amber-800 font-semibold">{metrics.draftCategories} draft only</span>
+          </div>
         </div>
 
         {/* Low Stock Card (Desktop) */}

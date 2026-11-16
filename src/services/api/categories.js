@@ -7,11 +7,23 @@ import { apiFetch } from './client.js';
 
 /**
  * Fetches all public categories with active product counts.
+ * Only returns categories containing at least one active product.
  * @param {RequestInit} [options]
  * @returns {Promise<any[]>}
  */
 export async function getPublicCategories(options = {}) {
   const res = await apiFetch('/categories', options);
+  return res.data || [];
+}
+
+/**
+ * Fetches all categories for admin management including draft counts.
+ * Returns all categories (active, draft-only, and empty).
+ * @param {RequestInit} [options]
+ * @returns {Promise<any[]>}
+ */
+export async function getAdminCategories(options = {}) {
+  const res = await apiFetch('/admin/categories', options);
   return res.data || [];
 }
 

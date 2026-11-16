@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdminProducts, deleteProduct } from '../../services/api/products.js';
-import { getPublicCategories } from '../../services/api/categories.js';
+import { getAdminProducts, deleteProduct, updateProduct } from '../../services/api/products.js';
+import { getAdminCategories } from '../../services/api/categories.js';
 import { getR2ImageUrl } from '../../services/api/uploads.js';
 import LoadingSpinner from '../../components/ui/LoadingSpinner.jsx';
 import ConfirmModal from '../../components/admin/ConfirmModal.jsx';
-import { paiseToInr } from '../../utils/currency.js';
+import { paiseToInr, expPrice100PaiseToPieceInr } from '../../utils/currency.js';
 
 export default function AdminProductList() {
   const [products, setProducts] = useState([]);
@@ -13,12 +13,14 @@ export default function AdminProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionSuccess, setActionSuccess] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all'); // 'all' | 'active' | 'draft'
+  const [selectedType, setSelectedType] = useState('all'); // 'all' | 'variable' | 'simple'
 
   // Debounce search input
   useEffect(() => {
@@ -33,9 +35,9 @@ export default function AdminProductList() {
   const [productToDelete, setProductToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Load categories for filter dropdown & name mapping
+  // Load all categories (including draft-only categories like plastic-bottles)
   useEffect(() => {
-    getPublicCategories({ cache: 'no-cache' })
+    getAdminCategories({ cache: 'no-cache' })
       .then(cats => setCategories(cats || []))
       .catch(() => { });
   }, []);
@@ -56,6 +58,7 @@ export default function AdminProductList() {
       const res = await getAdminProducts({
         category_id: selectedCategory !== 'all' ? selectedCategory : undefined,
         status: selectedStatus !== 'all' ? selectedStatus : undefined,
+        type: selectedType !== 'all' ? selectedType : undefined,
         search: search.trim() || undefined,
         limit: 100,
         offset: 0
@@ -66,11 +69,50 @@ export default function AdminProductList() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, selectedStatus, search]);
+  }, [selectedCategory, selectedStatus, selectedType, search]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // Client-side counts for tabs when viewing full list
+  const counts = useMemo(() => {
+    const total = products.length;
+    let active = 0;
+    let draft = 0;
+    let variable = 0;
+    let standalone = 0;
+
+    products.forEach(p => {
+      if (p.status === 'active') active++;
+      if (p.status === 'draft') draft++;
+      if (p.has_variants) variable++;
+      else standalone++;
+    });
+
+    return { total, active, draft, variable, standalone };
+  }, [products]);
+
+  // Quick toggle between Active (Published) and Draft
+  const handleToggleStatus = async (prod) => {
+    const newStatus = prod.status === 'active' ? 'draft' : 'active';
+    setUpdatingId(prod.id);
+    setError(null);
+    try {
+      await updateProduct(prod.id, { status: newStatus });
+      setActionSuccess(
+        newStatus === 'active'
+          ? `"${prod.name}" is now Published to public catalogue!`
+          : `"${prod.name}" is now moved to Draft (hidden from public catalogue).`
+      );
+      await fetchProducts();
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch (err) {
+      setError(`Failed to update status: ${err.message}`);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleDeleteClick = (prod) => {
     setProductToDelete(prod);
@@ -104,7 +146,7 @@ export default function AdminProductList() {
             Manage Your Products
           </h1>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            Add, update, and manage the products displayed on your website.
+            Catalogue manager &bull; <strong className="text-emerald-700">10 Active cards publicly visible</strong> &bull; <strong className="text-gray-600">7 Drafts preserved in admin</strong>.
           </p>
         </div>
 
@@ -152,9 +194,63 @@ export default function AdminProductList() {
         </div>
       )}
 
+      {/* ── Status Tabs Strip ───────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('all')}
+          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all min-h-[40px] flex items-center gap-2 whitespace-nowrap ${
+            selectedStatus === 'all'
+              ? 'bg-brand-navy text-white shadow-sm'
+              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <span>All Products</span>
+          <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+            selectedStatus === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+          }`}>
+            {counts.total}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('active')}
+          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all min-h-[40px] flex items-center gap-2 whitespace-nowrap ${
+            selectedStatus === 'active'
+              ? 'bg-emerald-700 text-white shadow-sm'
+              : 'bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-50'
+          }`}
+        >
+          <span>Active (Public)</span>
+          <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+            selectedStatus === 'active' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+          }`}>
+            {counts.active}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('draft')}
+          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all min-h-[40px] flex items-center gap-2 whitespace-nowrap ${
+            selectedStatus === 'draft'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'bg-white text-amber-800 border border-amber-200 hover:bg-amber-50'
+          }`}
+        >
+          <span>Draft (Admin Only)</span>
+          <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+            selectedStatus === 'draft' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'
+          }`}>
+            {counts.draft}
+          </span>
+        </button>
+      </div>
+
       {/* ── Search & Filter Controls ───────────────────────────────────────── */}
       <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-gray-200/80 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Keyword Search */}
           <div className="lg:col-span-2">
             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -166,7 +262,7 @@ export default function AdminProductList() {
               </span>
               <input
                 type="text"
-                placeholder="Search by product name, Hindi name..."
+                placeholder="Search by product name, Hindi name, SKU..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-10 pr-10 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
@@ -183,6 +279,22 @@ export default function AdminProductList() {
             </div>
           </div>
 
+          {/* Product Type Filter */}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Product Structure
+            </label>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full px-3 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
+            >
+              <option value="all">All Types ({counts.total})</option>
+              <option value="variable">Variant Families ({counts.variable})</option>
+              <option value="simple">Standalone Products ({counts.standalone})</option>
+            </select>
+          </div>
+
           {/* Category Filter */}
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -196,7 +308,7 @@ export default function AdminProductList() {
               <option value="all">All Categories ({categories.length})</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
+                  {c.name} ({c.total_count ?? c.product_count ?? 0})
                 </option>
               ))}
             </select>
@@ -208,15 +320,17 @@ export default function AdminProductList() {
           <span>
             Showing <strong className="text-gray-800">{products.length}</strong> product{products.length === 1 ? '' : 's'}
           </span>
-          {(searchInput || selectedCategory !== 'all') && (
+          {(searchInput || selectedCategory !== 'all' || selectedStatus !== 'all' || selectedType !== 'all') && (
             <button
               onClick={() => {
                 setSearchInput('');
                 setSelectedCategory('all');
+                setSelectedStatus('all');
+                setSelectedType('all');
               }}
               className="text-brand-navy hover:underline font-semibold min-h-[36px] flex items-center"
             >
-              Clear filters
+              Clear all filters
             </button>
           )}
         </div>
@@ -234,8 +348,8 @@ export default function AdminProductList() {
           </div>
           <h3 className="text-lg font-bold text-gray-800">No products found</h3>
           <p className="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto">
-            {searchInput || selectedCategory !== 'all'
-              ? 'Try adjusting your search terms or selecting a different category.'
+            {searchInput || selectedCategory !== 'all' || selectedStatus !== 'all' || selectedType !== 'all'
+              ? 'Try adjusting your search terms or filter selection.'
               : 'Your catalogue is empty. Get started by adding your first product.'}
           </p>
           <Link
@@ -253,13 +367,25 @@ export default function AdminProductList() {
             {products.map((prod) => {
               const catName = categoryMap.get(prod.category_id) || prod.category_name || 'Uncategorised';
               const imageUrl = prod.primary_image_key ? getR2ImageUrl(prod.primary_image_key) : null;
-              const sellingPrice = prod.base_price_paise != null ? paiseToInr(prod.base_price_paise) : null;
-              const expectedPrice100 = prod.expected_price_per_100_paise != null ? paiseToInr(prod.expected_price_per_100_paise) : null;
+              const isVariable = Boolean(prod.has_variants);
+
+              // Pricing Resolution
+              const minVariantPrice = prod.min_variant_price_paise != null ? paiseToInr(prod.min_variant_price_paise) : null;
+              const minVariantExp100 = prod.min_variant_expected_price_100_paise != null ? paiseToInr(prod.min_variant_expected_price_100_paise) : null;
+              const minVariantWholesalePc = prod.min_variant_expected_price_100_paise != null ? expPrice100PaiseToPieceInr(prod.min_variant_expected_price_100_paise) : null;
+
+              const standalonePrice = prod.base_price_paise != null ? paiseToInr(prod.base_price_paise) : null;
+              const standaloneExp100 = prod.expected_price_per_100_paise != null ? paiseToInr(prod.expected_price_per_100_paise) : null;
+              const standaloneWholesalePc = prod.expected_price_per_100_paise != null ? expPrice100PaiseToPieceInr(prod.expected_price_per_100_paise) : null;
+
+              const isUpdating = updatingId === prod.id;
 
               return (
                 <div
                   key={prod.id}
-                  className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-3.5 flex flex-col gap-3"
+                  className={`bg-white rounded-2xl border shadow-sm p-3.5 flex flex-col gap-3 ${
+                    prod.status === 'active' ? 'border-gray-200/90' : 'border-amber-200/80 bg-amber-50/20'
+                  }`}
                 >
                   <div className="flex gap-3 items-start">
                     {/* Thumbnail */}
@@ -287,10 +413,20 @@ export default function AdminProductList() {
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-navy/10 text-brand-navy">
                           {catName}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${prod.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-700'
-                          }`}>
-                          {prod.status || 'active'}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          prod.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          {prod.status === 'active' ? 'Active' : 'Draft'}
                         </span>
+                        {isVariable ? (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                            🔀 Variant Family ({prod.variant_count})
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">
+                            📦 Standalone
+                          </span>
+                        )}
                       </div>
 
                       <h3 className="font-bold text-gray-900 text-sm leading-snug break-words line-clamp-2">
@@ -303,42 +439,91 @@ export default function AdminProductList() {
                       )}
 
                       {/* Pricing info */}
-                      <div className="flex items-center gap-2 flex-wrap mt-1.5 text-xs">
-                        {sellingPrice != null ? (
-                          <span className="font-bold text-brand-navy">
-                            ₹{sellingPrice.toLocaleString('en-IN')}
-                          </span>
+                      <div className="mt-1.5 text-xs">
+                        {isVariable ? (
+                          minVariantPrice != null ? (
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-brand-navy">
+                                From ₹{minVariantPrice.toLocaleString('en-IN')}
+                              </span>
+                              {minVariantWholesalePc != null && (
+                                <span className="text-emerald-700 font-bold text-[11px]">
+                                  • Wholesale: ₹{minVariantWholesalePc.toLocaleString('en-IN')}/pc
+                                </span>
+                              )}
+                              {minVariantExp100 != null && (
+                                <span className="text-gray-400 text-[10px]">
+                                  (₹{minVariantExp100.toLocaleString('en-IN')}/100)
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[11px]">Pricing on request</span>
+                          )
                         ) : (
-                          <span className="text-gray-400 italic text-[11px]">Enquiry</span>
-                        )}
-                        {prod.min_order_quantity != null && (
-                          <span className="text-emerald-700 font-semibold text-[11px]">
-                            • MOQ: {prod.min_order_quantity}
-                          </span>
-                        )}
-                        {expectedPrice100 != null && (
-                          <span className="text-gray-500 text-[11px]">
-                            • ₹{expectedPrice100.toLocaleString('en-IN')}/100 pcs
-                          </span>
+                          standalonePrice != null ? (
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-brand-navy">
+                                ₹{standalonePrice.toLocaleString('en-IN')}
+                              </span>
+                              {standaloneWholesalePc != null && (
+                                <span className="text-emerald-700 font-bold text-[11px]">
+                                  • Wholesale: ₹{standaloneWholesalePc.toLocaleString('en-IN')}/pc
+                                </span>
+                              )}
+                              {standaloneExp100 != null && (
+                                <span className="text-gray-400 text-[10px]">
+                                  (₹{standaloneExp100.toLocaleString('en-IN')}/100)
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-amber-800 italic text-[11px]">Draft &bull; Price not set</span>
+                          )
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions Row with >= 44px touch targets */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  {/* Actions Row */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100 flex-wrap">
                     <Link
                       to={`/admin/products/${prod.id}/edit`}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-[44px] py-2.5 px-3 bg-brand-ivory hover:bg-brand-navy hover:text-white text-brand-navy border border-brand-navy/20 text-xs font-bold rounded-xl transition-colors text-center"
+                      className="flex-1 inline-flex items-center justify-center gap-1 min-h-[44px] py-2 px-3 bg-brand-ivory hover:bg-brand-navy hover:text-white text-brand-navy border border-brand-navy/20 text-xs font-bold rounded-xl transition-colors text-center"
                     >
                       <span>✏️</span>
-                      <span>Edit Product</span>
+                      <span>Edit</span>
                     </Link>
 
                     <button
                       type="button"
+                      disabled={isUpdating}
+                      onClick={() => handleToggleStatus(prod)}
+                      className={`inline-flex items-center justify-center min-h-[44px] py-2 px-3 text-xs font-bold rounded-xl border transition-colors ${
+                        prod.status === 'active'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                          : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : 'Publish'}
+                    </button>
+
+                    {prod.slug && (
+                      <a
+                        href={`/products/${prod.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-h-[44px] px-2.5 py-2 text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
+                        title="Preview in Catalogue"
+                      >
+                        ↗
+                      </a>
+                    )}
+
+                    <button
+                      type="button"
                       onClick={() => handleDeleteClick(prod)}
-                      className="min-h-[44px] min-w-[44px] py-2.5 px-3 text-red-600 hover:text-white hover:bg-red-600 border border-red-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
+                      className="min-h-[44px] min-w-[44px] py-2 px-2.5 text-red-600 hover:text-white hover:bg-red-600 border border-red-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
                       title="Delete this product"
                     >
                       <span>🗑️</span>
@@ -354,13 +539,25 @@ export default function AdminProductList() {
             {products.map((prod) => {
               const catName = categoryMap.get(prod.category_id) || prod.category_name || 'Uncategorised';
               const imageUrl = prod.primary_image_key ? getR2ImageUrl(prod.primary_image_key) : null;
-              const sellingPrice = prod.base_price_paise != null ? paiseToInr(prod.base_price_paise) : null;
-              const expectedPrice100 = prod.expected_price_per_100_paise != null ? paiseToInr(prod.expected_price_per_100_paise) : null;
+              const isVariable = Boolean(prod.has_variants);
+
+              // Pricing Resolution
+              const minVariantPrice = prod.min_variant_price_paise != null ? paiseToInr(prod.min_variant_price_paise) : null;
+              const minVariantExp100 = prod.min_variant_expected_price_100_paise != null ? paiseToInr(prod.min_variant_expected_price_100_paise) : null;
+              const minVariantWholesalePc = prod.min_variant_expected_price_100_paise != null ? expPrice100PaiseToPieceInr(prod.min_variant_expected_price_100_paise) : null;
+
+              const standalonePrice = prod.base_price_paise != null ? paiseToInr(prod.base_price_paise) : null;
+              const standaloneExp100 = prod.expected_price_per_100_paise != null ? paiseToInr(prod.expected_price_per_100_paise) : null;
+              const standaloneWholesalePc = prod.expected_price_per_100_paise != null ? expPrice100PaiseToPieceInr(prod.expected_price_per_100_paise) : null;
+
+              const isUpdating = updatingId === prod.id;
 
               return (
                 <div
                   key={prod.id}
-                  className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow group"
+                  className={`bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow group ${
+                    prod.status === 'active' ? 'border-gray-200/80' : 'border-amber-300/80 bg-amber-50/10'
+                  }`}
                 >
                   {/* Product Photograph Container */}
                   <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden border-b border-gray-100">
@@ -382,14 +579,19 @@ export default function AdminProductList() {
                     )}
 
                     {/* Status Tag */}
-                    <div className="absolute top-2.5 right-2.5">
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                      {isVariable && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-navy/90 text-white shadow-sm">
+                          🔀 Variant Family
+                        </span>
+                      )}
                       {prod.status === 'active' ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                           Active
                         </span>
                       ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-600 text-white shadow-sm">
-                          {prod.status}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-600 text-white shadow-sm">
+                          Draft
                         </span>
                       )}
                     </div>
@@ -409,69 +611,129 @@ export default function AdminProductList() {
                         {prod.name}
                       </h3>
                       {prod.name_hi && (
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1" title={prod.name_hi}>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1 font-devanagari" title={prod.name_hi}>
                           {prod.name_hi}
                         </p>
                       )}
-                    </div>
-
-                    {/* Pricing Details (Only rendered when set) */}
-                    <div className="space-y-1.5 pt-1">
-                      {sellingPrice != null && (
-                        <div className="flex items-baseline justify-between text-xs">
-                          <span className="text-gray-500 font-medium">Selling Price:</span>
-                          <span className="text-base font-bold text-brand-navy">
-                            ₹{sellingPrice.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      )}
-
-                      {prod.min_order_quantity != null && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500 font-medium">Min Order (MOQ):</span>
-                          <span className="font-semibold text-emerald-700">
-                            {prod.min_order_quantity} pcs
-                          </span>
-                        </div>
-                      )}
-
-                      {expectedPrice100 != null && (
-                        <div className="p-2 rounded-xl bg-brand-ivory border border-brand-navy/10 flex items-center justify-between text-xs">
-                          <span className="text-gray-600 font-medium">Price / 100 pcs:</span>
-                          <span className="font-bold text-brand-navy">
-                            ₹{expectedPrice100.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      )}
-
-                      {sellingPrice == null && expectedPrice100 == null && (
-                        <p className="text-xs text-gray-400 italic">
-                          Pricing on request (WhatsApp enquiry)
+                      {isVariable && prod.variant_capacities_summary && (
+                        <p className="text-[11px] text-brand-navy font-semibold mt-1 line-clamp-1">
+                          Capacities: {prod.variant_capacities_summary}
                         </p>
                       )}
                     </div>
 
-                    {/* Action Buttons: Edit and Delete with min-h-[44px] */}
-                    <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
+                    {/* Pricing Details */}
+                    <div className="space-y-1.5 pt-1 border-t border-gray-100">
+                      {isVariable ? (
+                        minVariantPrice != null ? (
+                          <div className="space-y-1">
+                            <div className="flex items-baseline justify-between text-xs">
+                              <span className="text-gray-500 font-medium">Selling Price:</span>
+                              <span className="text-base font-extrabold text-brand-navy">
+                                From ₹{minVariantPrice.toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                            {minVariantWholesalePc != null && (
+                              <div className="flex items-baseline justify-between text-xs">
+                                <span className="text-gray-500 font-medium">Wholesale Rate:</span>
+                                <span className="font-bold text-emerald-700">
+                                  ₹{minVariantWholesalePc.toLocaleString('en-IN')} / piece
+                                </span>
+                              </div>
+                            )}
+                            {minVariantExp100 != null && (
+                              <div className="p-2 rounded-xl bg-brand-ivory border border-brand-navy/10 flex items-center justify-between text-xs">
+                                <span className="text-gray-600 font-medium">Price / 100 pcs:</span>
+                                <span className="font-bold text-brand-navy">
+                                  From ₹{minVariantExp100.toLocaleString('en-IN')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">
+                            Pricing on request (WhatsApp enquiry)
+                          </p>
+                        )
+                      ) : (
+                        standalonePrice != null ? (
+                          <div className="space-y-1">
+                            <div className="flex items-baseline justify-between text-xs">
+                              <span className="text-gray-500 font-medium">Selling Price:</span>
+                              <span className="text-base font-extrabold text-brand-navy">
+                                ₹{standalonePrice.toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                            {standaloneWholesalePc != null && (
+                              <div className="flex items-baseline justify-between text-xs">
+                                <span className="text-gray-500 font-medium">Wholesale Rate:</span>
+                                <span className="font-bold text-emerald-700">
+                                  ₹{standaloneWholesalePc.toLocaleString('en-IN')} / piece
+                                </span>
+                              </div>
+                            )}
+                            {standaloneExp100 != null && (
+                              <div className="p-2 rounded-xl bg-brand-ivory border border-brand-navy/10 flex items-center justify-between text-xs">
+                                <span className="text-gray-600 font-medium">Price / 100 pcs:</span>
+                                <span className="font-bold text-brand-navy">
+                                  ₹{standaloneExp100.toLocaleString('en-IN')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-amber-800 italic">
+                            Draft &bull; Pricing not yet configured
+                          </p>
+                        )
+                      )}
+                    </div>
+
+                    {/* Action Controls */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
                       <Link
                         to={`/admin/products/${prod.id}/edit`}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-[44px] py-2 px-3 bg-brand-ivory hover:bg-brand-navy hover:text-white text-brand-navy border border-brand-navy/20 text-xs font-bold rounded-xl transition-colors text-center"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-brand-ivory hover:bg-brand-navy hover:text-white text-brand-navy border border-brand-navy/20 text-xs font-bold rounded-xl transition-colors min-h-[44px] text-center"
                       >
-                        <span>✏️</span>
-                        <span>Edit</span>
+                        <span>✏️ Edit</span>
                       </Link>
 
                       <button
                         type="button"
+                        disabled={isUpdating}
+                        onClick={() => handleToggleStatus(prod)}
+                        className={`inline-flex items-center justify-center px-3 py-2.5 text-xs font-bold rounded-xl border transition-colors min-h-[44px] ${
+                          prod.status === 'active'
+                            ? 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
+                            : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                        }`}
+                        title={prod.status === 'active' ? 'Unpublish to Draft' : 'Publish to Public Catalogue'}
+                      >
+                        {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : 'Publish'}
+                      </button>
+
+                      {prod.slug && (
+                        <a
+                          href={`/products/${prod.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[44px] px-3 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
+                          title="Preview Product Page"
+                        >
+                          ↗
+                        </a>
+                      )}
+
+                      <button
+                        type="button"
                         onClick={() => handleDeleteClick(prod)}
-                        className="min-h-[44px] min-w-[44px] py-2 px-3 text-red-600 hover:text-white hover:bg-red-600 border border-red-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
-                        title="Delete this product"
+                        className="min-h-[44px] min-w-[44px] p-2.5 text-red-600 hover:text-white hover:bg-red-600 border border-red-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center"
+                        title="Delete product"
                       >
                         <span>🗑️</span>
                       </button>
                     </div>
                   </div>
-
                 </div>
               );
             })}
@@ -479,28 +741,20 @@ export default function AdminProductList() {
         </>
       )}
 
-      {/* ── Delete Confirmation Modal ─────────────────────────────────────── */}
+      {/* ── Delete Confirmation Modal ────────────────────────────────────── */}
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title="Delete Product"
-        message={
-          productToDelete
-            ? `Are you sure you want to permanently delete "${productToDelete.name}"? This action cannot be undone and will remove the product from your public catalogue.`
-            : 'Are you sure you want to delete this product?'
-        }
-        confirmLabel={deleting ? 'Deleting...' : 'Yes, Delete Product'}
-        cancelLabel="Cancel"
+        title={`Delete Product "${productToDelete?.name}"?`}
+        message="Are you sure you want to permanently delete this product? All image records and variant configurations will be removed."
+        confirmLabel="Confirm Delete"
         isDanger={true}
         isLoading={deleting}
         onConfirm={confirmDelete}
         onCancel={() => {
-          if (!deleting) {
-            setDeleteModalOpen(false);
-            setProductToDelete(null);
-          }
+          setDeleteModalOpen(false);
+          setProductToDelete(null);
         }}
       />
-
     </div>
   );
 }

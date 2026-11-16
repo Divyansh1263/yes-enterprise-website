@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  getPublicCategories,
+  getAdminCategories,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -43,7 +43,7 @@ export default function AdminCategories() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPublicCategories({ cache: 'no-cache' });
+      const data = await getAdminCategories({ cache: 'no-cache' });
       setCategories(data || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch categories.');
@@ -102,29 +102,35 @@ export default function AdminCategories() {
     setFormSubmitting(true);
     setFormError(null);
 
-    if (!formData.name.trim()) {
-      setFormError('Category name in English is required.');
+    const payload = {
+      name: formData.name.trim(),
+      name_hi: formData.name_hi.trim() || undefined,
+      slug: formData.slug.trim().toLowerCase(),
+      description: formData.description.trim() || undefined,
+      description_hi: formData.description_hi.trim() || undefined,
+      sort_order: parseInt(formData.sort_order, 10) || 0,
+      is_active: formData.is_active
+    };
+
+    if (!payload.name) {
+      setFormError('Category name is required.');
       setFormSubmitting(false);
       return;
     }
-    if (!formData.name_hi.trim()) {
-      setFormError('Category name in Hindi is required.');
-      setFormSubmitting(false);
-      return;
-    }
-    if (!formData.slug.trim()) {
-      setFormError('URL slug is required.');
+
+    if (!payload.slug) {
+      setFormError('Slug is required.');
       setFormSubmitting(false);
       return;
     }
 
     try {
       if (editingCategory) {
-        await updateCategory(editingCategory.id, formData);
-        setSuccessMessage(`Category "${formData.name}" updated successfully.`);
+        await updateCategory(editingCategory.id, payload);
+        setSuccessMessage(`Category "${payload.name}" updated successfully.`);
       } else {
-        await createCategory(formData);
-        setSuccessMessage(`Category "${formData.name}" created successfully.`);
+        await createCategory(payload);
+        setSuccessMessage(`Category "${payload.name}" created successfully.`);
       }
       setIsModalOpen(false);
       await fetchCategories();
@@ -144,18 +150,24 @@ export default function AdminCategories() {
 
   const handleConfirmDelete = async () => {
     if (!categoryToDelete) return;
+    const totalCount = categoryToDelete.total_count ?? categoryToDelete.product_count ?? 0;
+    if (totalCount > 0) {
+      setDeleteError(`Cannot delete category "${categoryToDelete.name}" because it contains ${totalCount} product(s) (${categoryToDelete.active_count || 0} active, ${categoryToDelete.draft_count || 0} draft). Please reassign or delete these products before deleting this category.`);
+      return;
+    }
+
     setDeleting(true);
     setDeleteError(null);
     try {
       await deleteCategory(categoryToDelete.id);
-      setSuccessMessage(`Category "${categoryToDelete.name}" deleted successfully.`);
+      setSuccessMessage(`Category "${categoryToDelete.name}" deleted.`);
       setDeleteModalOpen(false);
+      setCategoryToDelete(null);
       await fetchCategories();
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
-      // Backend returns 409 if category has products
-      if (err.status === 409 || err.code === 'CATEGORY_HAS_PRODUCTS') {
-        setDeleteError(`Cannot delete category: ${err.message || 'Products still reference this category. Reassign or delete those products first.'}`);
+      if (err.status === 409 || err.code === 'CATEGORY_IN_USE') {
+        setDeleteError(`Cannot delete "${categoryToDelete.name}" because products still reference it.`);
       } else {
         setDeleteError(err.message || 'Failed to delete category.');
       }
@@ -191,6 +203,9 @@ export default function AdminCategories() {
     return <LoadingSpinner message="Loading categories from database..." />;
   }
 
+  const publicCategoriesCount = categories.filter(c => (c.active_count ?? 0) > 0 || c.is_publicly_visible).length;
+  const draftOnlyCategoriesCount = categories.filter(c => ((c.active_count ?? 0) === 0 && (c.draft_count ?? 0) > 0)).length;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* ── Back Navigation ──────────────────────────────────────────────── */}
@@ -207,7 +222,9 @@ export default function AdminCategories() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Category Management</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Organize catalogue categories and manage display ordering.</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            Organize catalogue categories. Exactly <strong className="text-brand-navy">{publicCategoriesCount} categories</strong> are publicly visible with active products; <strong className="text-amber-800">{draftOnlyCategoriesCount} draft-only category</strong> is preserved.
+          </p>
         </div>
         <button
           onClick={openAddModal}
@@ -215,6 +232,17 @@ export default function AdminCategories() {
         >
           <span>➕</span> Add New Category
         </button>
+      </div>
+
+      {/* ── Guidance Banner ──────────────────────────────────────────────── */}
+      <div className="p-3.5 sm:p-4 bg-brand-ivory border border-brand-navy/10 rounded-2xl text-xs text-brand-navy flex items-start gap-2.5">
+        <span className="text-base shrink-0">ℹ️</span>
+        <div className="space-y-0.5 leading-relaxed">
+          <p className="font-bold">Public Catalogue Category Rule</p>
+          <p className="text-gray-600">
+            The public website displays only categories that contain at least one published, active product. Categories with only draft products (like <em>Plastic Feeding Bottles</em>) remain preserved here in Admin and will automatically appear on the public website as soon as any product inside them is published.
+          </p>
+        </div>
       </div>
 
       {/* ── Alerts ──────────────────────────────────────────────────────── */}
@@ -244,93 +272,140 @@ export default function AdminCategories() {
                 <th className="px-6 py-3.5">Category Name</th>
                 <th className="px-6 py-3.5">Hindi Name</th>
                 <th className="px-6 py-3.5">URL Slug</th>
-                <th className="px-6 py-3.5">Active Products</th>
+                <th className="px-6 py-3.5">Public Visibility</th>
+                <th className="px-6 py-3.5">Products Breakdown</th>
                 <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {categories.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 italic">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400 italic">
                     No categories found. Click "Add New Category" above to create one.
                   </td>
                 </tr>
               ) : (
-                categories.map((cat, index) => (
-                  <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
-                    {/* Order Controls */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1 text-gray-400">
-                        <button
-                          type="button"
-                          onClick={() => handleMoveOrder(index, -1)}
-                          disabled={index === 0}
-                          className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
-                          title="Move Up"
-                        >
-                          ▲
-                        </button>
-                        <span className="font-mono text-xs font-semibold text-gray-600 w-4 text-center">
-                          {cat.sort_order ?? index + 1}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleMoveOrder(index, 1)}
-                          disabled={index === categories.length - 1}
-                          className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
-                          title="Move Down"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </td>
+                categories.map((cat, index) => {
+                  const activeCount = cat.active_count ?? (cat.status === 'active' ? cat.product_count : 0) ?? 0;
+                  const draftCount = cat.draft_count ?? 0;
+                  const totalCount = cat.total_count ?? (activeCount + draftCount);
+                  const isPublic = activeCount > 0 || cat.is_publicly_visible;
 
-                    {/* Name */}
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {cat.name}
-                      {cat.description && (
-                        <p className="text-xs text-gray-400 font-normal line-clamp-1 mt-0.5">{cat.description}</p>
-                      )}
-                    </td>
+                  return (
+                    <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
+                      {/* Order Controls */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveOrder(index, -1)}
+                            disabled={index === 0}
+                            className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
+                            title="Move Up"
+                          >
+                            ▲
+                          </button>
+                          <span className="font-mono text-xs font-semibold text-gray-600 w-4 text-center">
+                            {cat.sort_order ?? index + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveOrder(index, 1)}
+                            disabled={index === categories.length - 1}
+                            className="p-1 hover:text-gray-700 disabled:opacity-20 min-h-[32px] min-w-[32px] flex items-center justify-center"
+                            title="Move Down"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </td>
 
-                    {/* Hindi Name */}
-                    <td className="px-6 py-4 text-gray-700 font-medium font-devanagari">
-                      {cat.name_hi || <span className="text-gray-300 italic">—</span>}
-                    </td>
+                      {/* Name */}
+                      <td className="px-6 py-4 font-semibold text-gray-900">
+                        {cat.name}
+                        {cat.description && (
+                          <p className="text-xs text-gray-400 font-normal line-clamp-1 mt-0.5">{cat.description}</p>
+                        )}
+                      </td>
 
-                    {/* Slug */}
-                    <td className="px-6 py-4 font-mono text-xs text-gray-500">
-                      {cat.slug}
-                    </td>
+                      {/* Hindi Name */}
+                      <td className="px-6 py-4 text-gray-700 font-medium font-devanagari">
+                        {cat.name_hi || <span className="text-gray-300 italic">—</span>}
+                      </td>
 
-                    {/* Products Count */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-soft-blue/30 text-brand-navy">
-                        {cat.product_count ?? 0} active
-                      </span>
-                    </td>
+                      {/* Slug */}
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                        {cat.slug}
+                      </td>
 
-                    {/* Actions */}
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(cat)}
-                          className="px-3 py-1.5 text-xs font-semibold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-lg transition-colors border border-brand-navy/20 min-h-[36px]"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openDeleteModal(cat)}
-                          className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-colors border border-red-200 min-h-[36px]"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      {/* Public Visibility */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isPublic ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            <span>✅</span>
+                            <span>Public ({activeCount} active)</span>
+                          </span>
+                        ) : draftCount > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800" title="Hidden from public catalogue because all products are drafts">
+                            <span>🔒</span>
+                            <span>Hidden (Drafts Only)</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span>⚪</span>
+                            <span>Empty (Hidden)</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Products Count Breakdown */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                            {activeCount} active
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                            {draftCount} draft
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-medium">
+                            (Total: {totalCount})
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(cat)}
+                            className="px-3 py-1.5 text-xs font-semibold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-lg transition-colors border border-brand-navy/20 min-h-[36px]"
+                          >
+                            Edit
+                          </button>
+                          {totalCount > 0 ? (
+                            <button
+                              type="button"
+                              disabled
+                              title={`Cannot delete category because it contains ${totalCount} product(s). Reassign or delete products first.`}
+                              className="px-3 py-1.5 text-xs font-semibold text-gray-400 bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed min-h-[36px]"
+                            >
+                              Delete
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => openDeleteModal(cat)}
+                              className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-colors border border-red-200 min-h-[36px]"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -343,121 +418,157 @@ export default function AdminCategories() {
               No categories found. Click "Add New Category" above to create one.
             </div>
           ) : (
-            categories.map((cat, index) => (
-              <div key={cat.id} className="p-4 space-y-3">
-                {/* Header: Name, Hindi, and Product Count */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-base leading-tight">
-                      {cat.name}
-                    </h3>
-                    {cat.name_hi && (
-                      <p className="text-xs text-gray-500 font-devanagari mt-0.5">
-                        {cat.name_hi}
-                      </p>
-                    )}
-                    <span className="font-mono text-[11px] text-gray-400 block mt-1">
-                      /{cat.slug}
+            categories.map((cat, index) => {
+              const activeCount = cat.active_count ?? (cat.status === 'active' ? cat.product_count : 0) ?? 0;
+              const draftCount = cat.draft_count ?? 0;
+              const totalCount = cat.total_count ?? (activeCount + draftCount);
+              const isPublic = activeCount > 0 || cat.is_publicly_visible;
+
+              return (
+                <div key={cat.id} className="p-4 space-y-3">
+                  {/* Header: Name, Hindi, and Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-base leading-tight">
+                        {cat.name}
+                      </h3>
+                      {cat.name_hi && (
+                        <p className="text-xs text-gray-500 font-devanagari mt-0.5">
+                          {cat.name_hi}
+                        </p>
+                      )}
+                      <span className="font-mono text-[11px] text-gray-400 block mt-1">
+                        /{cat.slug}
+                      </span>
+                    </div>
+
+                    <div>
+                      {isPublic ? (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 shrink-0">
+                          ✅ Public ({activeCount})
+                        </span>
+                      ) : draftCount > 0 ? (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 shrink-0">
+                          🔒 Hidden (Drafts)
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 shrink-0">
+                          Empty
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Counts Breakdown */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200/60">
+                      {activeCount} active
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 font-semibold border border-gray-200">
+                      {draftCount} draft
+                    </span>
+                    <span className="text-gray-400 text-[11px]">
+                      (Total {totalCount} products)
                     </span>
                   </div>
 
-                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-soft-blue/30 text-brand-navy shrink-0">
-                    {cat.product_count ?? 0} products
-                  </span>
-                </div>
+                  {cat.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2">
+                      {cat.description}
+                    </p>
+                  )}
 
-                {cat.description && (
-                  <p className="text-xs text-gray-500 line-clamp-2">
-                    {cat.description}
-                  </p>
-                )}
+                  {/* Bottom Row: Reordering controls and Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                    {/* Reorder controls */}
+                    <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveOrder(index, -1)}
+                        disabled={index === 0}
+                        className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
+                        title="Move Up"
+                      >
+                        ▲
+                      </button>
+                      <span className="font-mono text-xs font-bold text-gray-700 px-1">
+                        #{cat.sort_order ?? index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveOrder(index, 1)}
+                        disabled={index === categories.length - 1}
+                        className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
+                        title="Move Down"
+                      >
+                        ▼
+                      </button>
+                    </div>
 
-                {/* Bottom Row: Reordering controls and Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
-                  {/* Reorder controls */}
-                  <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveOrder(index, -1)}
-                      disabled={index === 0}
-                      className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
-                      title="Move Up"
-                    >
-                      ▲
-                    </button>
-                    <span className="font-mono text-xs font-bold text-gray-700 px-1">
-                      #{cat.sort_order ?? index + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveOrder(index, 1)}
-                      disabled={index === categories.length - 1}
-                      className="p-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-20 min-h-[36px] min-w-[36px] flex items-center justify-center font-bold text-sm"
-                      title="Move Down"
-                    >
-                      ▼
-                    </button>
+                    {/* Actions with >= 44px touch targets */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(cat)}
+                        className="px-3.5 py-2.5 text-xs font-bold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-xl transition-colors border border-brand-navy/20 min-h-[44px] flex items-center justify-center"
+                      >
+                        ✏️ Edit
+                      </button>
+                      {totalCount > 0 ? (
+                        <button
+                          type="button"
+                          disabled
+                          title={`Cannot delete category because it contains ${totalCount} products.`}
+                          className="px-3 py-2.5 text-xs font-semibold text-gray-400 bg-gray-100 rounded-xl border border-gray-200 cursor-not-allowed min-h-[44px] flex items-center justify-center"
+                        >
+                          🗑️
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(cat)}
+                          className="px-3.5 py-2.5 text-xs font-bold text-red-600 hover:text-white hover:bg-red-600 rounded-xl transition-colors border border-red-200 min-h-[44px] flex items-center justify-center"
+                        >
+                          🗑️ Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Actions with >= 44px touch targets */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(cat)}
-                      className="px-3.5 py-2.5 text-xs font-bold text-brand-navy bg-brand-ivory hover:bg-brand-navy hover:text-white rounded-xl transition-colors border border-brand-navy/20 min-h-[44px] flex items-center justify-center"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openDeleteModal(cat)}
-                      className="px-3.5 py-2.5 text-xs font-bold text-red-600 hover:text-white hover:bg-red-600 rounded-xl transition-colors border border-red-200 min-h-[44px] flex items-center justify-center"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
-
       </div>
 
       {/* ── Add / Edit Category Modal ────────────────────────────────────── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => !formSubmitting && setIsModalOpen(false)}
-          />
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-gray-100 my-8">
+            <div className="bg-brand-navy px-5 sm:px-6 py-4 flex items-center justify-between text-white">
+              <h3 className="font-bold text-base sm:text-lg">
+                {editingCategory ? `Edit Category: ${editingCategory.name}` : 'Add New Category'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="text-white/70 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
 
-          <div className="relative bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden z-10">
             <form onSubmit={handleFormSubmit}>
-              <div className="bg-brand-navy text-white px-5 sm:px-6 py-4 flex items-center justify-between">
-                <h3 className="font-bold text-base sm:text-lg">
-                  {editingCategory ? 'Edit Category' : 'Add New Category'}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={formSubmitting}
-                  className="text-white/70 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-lg"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="p-5 sm:p-6 space-y-4">
                 {formError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium">
-                    {formError}
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs sm:text-sm font-medium">
+                    ⚠️ {formError}
                   </div>
                 )}
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Category Name (English) *
+                    Category Name (English) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -465,36 +576,36 @@ export default function AdminCategories() {
                     value={formData.name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
-                    placeholder="e.g. Glass Feeding Bottles"
+                    placeholder="e.g. Stainless Steel Feeding Bottles"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Category Name (Hindi) *
+                    Hindi Name (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.name_hi}
                     onChange={(e) => setFormData(prev => ({ ...prev, name_hi: e.target.value }))}
                     className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-navy/30 font-devanagari bg-white"
-                    placeholder="उदा. कांच की फीडिंग बोतलें"
+                    placeholder="e.g. स्टेनलेस स्टील फीडिंग बोतलें"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    URL Slug *
+                    URL Slug <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.slug}
                     onChange={(e) => setFormData(prev => ({ ...prev, slug: slugify(e.target.value) }))}
-                    className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-white"
-                    placeholder="glass-feeding-bottles"
+                    className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-navy/30 bg-gray-50"
+                    placeholder="e.g. ss-feeding-bottles"
                   />
+                  <p className="text-[11px] text-gray-400 mt-1">Used in catalogue filtering and URLs (lowercase, hyphens only).</p>
                 </div>
 
                 <div>
@@ -578,16 +689,22 @@ export default function AdminCategories() {
       {/* ── Delete Confirmation Modal ────────────────────────────────────── */}
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title={`Delete Category "${categoryToDelete?.name}"?`}
+        title={
+          (categoryToDelete?.total_count || 0) > 0
+            ? `Cannot Delete Category "${categoryToDelete?.name}"`
+            : `Delete Category "${categoryToDelete?.name}"?`
+        }
         message={
           deleteError
             ? deleteError
-            : `Are you sure you want to delete this category? If any products reference it, the server will strictly reject deletion to protect data integrity.`
+            : (categoryToDelete?.total_count || 0) > 0
+            ? `This category contains ${categoryToDelete.total_count} product(s) (${categoryToDelete.active_count || 0} active, ${categoryToDelete.draft_count || 0} draft). Categories containing products cannot be deleted. Please reassign or delete these products first.`
+            : `Are you sure you want to delete this category? This action cannot be undone.`
         }
-        confirmLabel="Confirm Delete"
+        confirmLabel={(categoryToDelete?.total_count || 0) > 0 ? undefined : "Confirm Delete"}
         isDanger={true}
         isLoading={deleting}
-        onConfirm={handleConfirmDelete}
+        onConfirm={(categoryToDelete?.total_count || 0) > 0 ? () => setDeleteModalOpen(false) : handleConfirmDelete}
         onCancel={() => {
           setDeleteModalOpen(false);
           setDeleteError(null);
