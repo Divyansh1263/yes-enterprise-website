@@ -109,8 +109,11 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-white/8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-1.5 text-xs text-white/35">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-white/35 text-center md:text-left">
           <span>&copy; {year} {siteConfig.companyName}. {t('footer.rights')}</span>
+          <span className="text-white/45">
+            Designed &amp; Developed by <span className="text-brand-amber font-medium">Divyansh Tyagi</span>
+          </span>
           <div className="flex items-center gap-4">
             <span>{t('footer.madeInIndia')}</span>
             <span className="text-white/20">|</span>
