@@ -314,7 +314,12 @@ export async function onRequestPut(context) {
 
     await db.batch(statements);
 
-    const updatedProduct = await db.prepare('SELECT * FROM products WHERE id = ?').bind(productId).first();
+    const updatedProduct = await db.prepare(`
+      SELECT p.*, c.name as category_name, c.name_hi as category_name_hi, c.slug as category_slug
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.id = ?
+    `).bind(productId).first();
     const updatedVariants = (await db.prepare('SELECT * FROM product_variants WHERE product_id = ? ORDER BY sort_order ASC').bind(productId).all()).results;
 
     return jsonResponse({
@@ -322,6 +327,13 @@ export async function onRequestPut(context) {
       data: {
         ...updatedProduct,
         has_variants: Boolean(updatedProduct.has_variants),
+        is_featured: Boolean(updatedProduct.is_featured),
+        category: updatedProduct.category_id ? {
+          id: updatedProduct.category_id,
+          name: updatedProduct.category_name,
+          name_hi: updatedProduct.category_name_hi,
+          slug: updatedProduct.category_slug
+        } : null,
         variants: updatedVariants
       }
     }, 200, noCacheHeaders());
@@ -355,7 +367,12 @@ export async function onRequestDelete(context) {
 
     // Check if this product is part of protected historical catalogue records (e.g. active import snapshot or core prod-01..prod-19)
     const isCoreLegacy = productId.startsWith('prod-') && /^[0-9]+$/.test(productId.replace('prod-', '')) && parseInt(productId.replace('prod-', ''), 10) <= 19;
-    const hasImportSnapshot = await db.prepare('SELECT 1 FROM catalogue_import_snapshots WHERE product_id = ? AND status != "rolled_back"').bind(productId).first();
+    let hasImportSnapshot = false;
+    if (!isCoreLegacy) {
+      try {
+        hasImportSnapshot = Boolean(await db.prepare('SELECT 1 FROM catalogue_import_snapshots WHERE product_id = ? AND status != "rolled_back"').bind(productId).first());
+      } catch {}
+    }
 
     if (isCoreLegacy || hasImportSnapshot) {
       return errorResponse(

@@ -295,7 +295,9 @@ export function validateProductInput(body, isUpdate = false) {
     stock_quantity,
     low_stock_threshold,
     specifications,
+    specifications_json,
     variant_attributes_schema,
+    variant_attributes_schema_json,
     status,
     is_featured,
     sort_order,
@@ -439,28 +441,30 @@ export function validateProductInput(body, isUpdate = false) {
   }
 
   // JSON fields handling
-  let specsJson = '{}';
-  if (specifications !== undefined && specifications !== null) {
-    if (typeof specifications === 'object') {
-      specsJson = JSON.stringify(specifications);
-    } else if (typeof specifications === 'string') {
+  const incomingSpecs = specifications !== undefined ? specifications : specifications_json;
+  let specsJson = isUpdate && incomingSpecs === undefined ? undefined : '{}';
+  if (incomingSpecs !== undefined && incomingSpecs !== null) {
+    if (typeof incomingSpecs === 'object') {
+      specsJson = JSON.stringify(incomingSpecs);
+    } else if (typeof incomingSpecs === 'string') {
       try {
-        JSON.parse(specifications);
-        specsJson = specifications;
+        JSON.parse(incomingSpecs);
+        specsJson = incomingSpecs;
       } catch {
-        return { valid: false, error: 'specifications must be a valid JSON object.' };
+        return { valid: false, error: 'specifications must be a valid JSON object or array.' };
       }
     }
   }
 
-  let schemaJson = '[]';
-  if (variant_attributes_schema !== undefined && variant_attributes_schema !== null) {
-    if (Array.isArray(variant_attributes_schema)) {
-      schemaJson = JSON.stringify(variant_attributes_schema);
-    } else if (typeof variant_attributes_schema === 'string') {
+  const incomingSchema = variant_attributes_schema !== undefined ? variant_attributes_schema : variant_attributes_schema_json;
+  let schemaJson = isUpdate && incomingSchema === undefined ? undefined : '[]';
+  if (incomingSchema !== undefined && incomingSchema !== null) {
+    if (Array.isArray(incomingSchema) || (typeof incomingSchema === 'object' && incomingSchema !== null)) {
+      schemaJson = JSON.stringify(incomingSchema);
+    } else if (typeof incomingSchema === 'string') {
       try {
-        JSON.parse(variant_attributes_schema);
-        schemaJson = variant_attributes_schema;
+        JSON.parse(incomingSchema);
+        schemaJson = incomingSchema;
       } catch {
         return { valid: false, error: 'variant_attributes_schema must be a valid JSON array.' };
       }

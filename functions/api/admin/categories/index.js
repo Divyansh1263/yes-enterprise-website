@@ -31,7 +31,8 @@ export async function onRequestGet(context) {
         c.updated_at,
         COUNT(CASE WHEN p.status = 'active' THEN 1 END) as active_count,
         COUNT(CASE WHEN p.status = 'draft' THEN 1 END) as draft_count,
-        COUNT(p.id) as total_count,
+        COUNT(CASE WHEN p.status = 'archived' THEN 1 END) as archived_count,
+        COUNT(CASE WHEN p.status IN ('active', 'draft') THEN 1 END) as total_count,
         COUNT(CASE WHEN p.status = 'active' THEN 1 END) as product_count,
         CASE WHEN COUNT(CASE WHEN p.status = 'active' THEN 1 END) > 0 THEN 1 ELSE 0 END as is_publicly_visible,
         (

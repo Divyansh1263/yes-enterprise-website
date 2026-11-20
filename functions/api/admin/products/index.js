@@ -32,13 +32,15 @@ export async function onRequestGet(context) {
     const conditions = [];
     const params = [];
 
-    // Filter by status (default is 'all' for admin)
+    // Filter by status (default is 'all' for admin: shows active and draft, excludes archived)
     if (statusParam && statusParam !== 'all') {
       if (!['active', 'draft', 'archived'].includes(statusParam)) {
         return errorResponse('Invalid status parameter. Must be "all", "active", "draft", or "archived".', 400, 'INVALID_FILTER');
       }
       conditions.push('p.status = ?');
       params.push(statusParam);
+    } else {
+      conditions.push("p.status != 'archived'");
     }
 
     // Filter by product structure type
@@ -138,6 +140,9 @@ export async function onRequestGet(context) {
           name_hi: row.category_name_hi,
           slug: row.category_slug
         } : null,
+        category_name: row.category_name || null,
+        category_name_hi: row.category_name_hi || null,
+        category_slug: row.category_slug || null,
         has_variants: hasVariants,
         price_paise: hasVariants ? row.min_variant_price_paise : row.base_price_paise,
         base_price_paise: hasVariants ? row.min_variant_price_paise : row.base_price_paise,

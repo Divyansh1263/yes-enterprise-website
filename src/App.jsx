@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import LoadingSpinner from './components/ui/LoadingSpinner.jsx';
 import AccessDenied from './components/admin/AccessDenied.jsx';
 import AdminErrorBoundary from './components/admin/AdminErrorBoundary.jsx';
+import ProductErrorBoundary from './components/common/ProductErrorBoundary.jsx';
 
 // Layouts
 import Layout from './components/layout/Layout';
@@ -64,7 +65,7 @@ export default function App() {
           <Route path="/products" element={<Products />} />
           <Route path="/catalogue" element={<Navigate to="/products" replace />} />
           <Route path="/catalogue/*" element={<Navigate to="/products" replace />} />
-          <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/products/:slug" element={<ProductErrorBoundary><ProductDetail /></ProductErrorBoundary>} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
@@ -76,7 +77,7 @@ export default function App() {
           <Route path="products" element={<Products />} />
           <Route path="catalogue" element={<Navigate to="/hi/products" replace />} />
           <Route path="catalogue/*" element={<Navigate to="/hi/products" replace />} />
-          <Route path="products/:slug" element={<ProductDetail />} />
+          <Route path="products/:slug" element={<ProductErrorBoundary><ProductDetail /></ProductErrorBoundary>} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />

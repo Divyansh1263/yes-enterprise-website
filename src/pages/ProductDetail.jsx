@@ -21,6 +21,10 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import SEO from '../components/seo/SEO';
 import { getR2ImageUrl } from '../services/api/uploads.js';
 
+const SLUG_ALIASES = {
+  'glass-feeding-bottle-125ml-teal': 'plastic-feeding-bottle-125ml-teal'
+};
+
 export default function ProductDetail() {
   const { slug } = useParams();
   const { t, lang, getLangPath } = useLanguage();
@@ -41,7 +45,9 @@ export default function ProductDetail() {
     setErrorStatus(null);
     setErrorMessage(null);
 
-    getPublicProductBySlug(slug)
+    const targetSlug = SLUG_ALIASES[slug] || slug;
+
+    getPublicProductBySlug(targetSlug)
       .then((data) => {
         if (isMounted) {
           if (data) {
@@ -400,7 +406,7 @@ export default function ProductDetail() {
       })
     };
   } else {
-    const itemPrice = displayWholesalePrice != null ? displayWholesalePrice : displayOriginalPrice;
+    const itemPrice = displayActualPrice != null ? displayActualPrice : displayCrossedOutPrice;
     offersSchema = {
       '@type': 'Offer',
       'url': absoluteCanonicalUrl,

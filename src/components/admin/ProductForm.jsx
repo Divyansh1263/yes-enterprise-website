@@ -21,8 +21,8 @@ export default function ProductForm({
   const [showAdditional, setShowAdditional] = useState(false);
 
   // 1. Mandatory Fields (Only English Name and Category)
-  const [name, setName] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [name, setName] = useState(initialData?.name || '');
+  const [categoryId, setCategoryId] = useState(initialData?.category_id || '');
 
   // 2. Commercial / Pricing Fields
   const [compareAtPriceInr, setCompareAtPriceInr] = useState('');
@@ -77,12 +77,12 @@ export default function ProductForm({
     getAdminCategories({ cache: 'no-cache' })
       .then(cats => {
         setCategories(cats || []);
-        if (cats && cats.length > 0 && !categoryId) {
-          setCategoryId(cats[0].id);
+        if (!isEdit && cats && cats.length > 0) {
+          setCategoryId(prev => prev || cats[0].id);
         }
       })
       .catch(() => { });
-  }, []);
+  }, [isEdit]);
 
   // Pre-fill initialData on edit
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function ProductForm({
         if (k === 'capacity' || k === 'size' || k === 'capacity/size') {
           cap = v;
         } else if (k === 'material') {
-          if (!mat) mat = v;
+          mat = v || mat;
         } else if (k === 'colour' || k === 'color' || k === 'colour/design' || k === 'design') {
           col = v;
         } else if (k === 'packaging' || k === 'package') {
@@ -362,7 +362,8 @@ export default function ProductForm({
       is_featured: isFeatured,
       sort_order: parseInt(sortOrder, 10) || 0,
       notes: null,
-      specifications_json: cleanSpecs.length > 0 ? JSON.stringify(cleanSpecs) : null,
+      specifications: cleanSpecs,
+      specifications_json: cleanSpecs.length > 0 ? JSON.stringify(cleanSpecs) : '{}',
       has_variants: hasVariants,
       sku: hasVariants ? null : (initialData?.sku || null),
       base_price_paise: hasVariants ? null : actualPaise,
@@ -500,20 +501,20 @@ export default function ProductForm({
             <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
               Publishing Status
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setStatus('active');
                   setIsDirty(true);
                 }}
-                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-2 transition-all ${
+                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-1.5 transition-all ${
                   status === 'active'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-800'
                 }`}
               >
-                <span>✅ Active (Published)</span>
+                <span>✅ Active</span>
               </button>
               <button
                 type="button"
@@ -521,19 +522,35 @@ export default function ProductForm({
                   setStatus('draft');
                   setIsDirty(true);
                 }}
-                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-2 transition-all ${
+                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-1.5 transition-all ${
                   status === 'draft'
                     ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50 hover:text-amber-800'
                 }`}
               >
-                <span>🔒 Draft (Admin Only)</span>
+                <span>🔒 Draft</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStatus('archived');
+                  setIsDirty(true);
+                }}
+                className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold min-h-[44px] flex items-center justify-center gap-1.5 transition-all ${
+                  status === 'archived'
+                    ? 'bg-slate-700 text-white border-slate-700 shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <span>📦 Archived</span>
               </button>
             </div>
             <p className="text-[11px] text-gray-400 mt-1">
               {status === 'active'
                 ? 'Visible on public website catalogue immediately.'
-                : 'Hidden from public catalogue. Preserved safely in admin.'}
+                : status === 'draft'
+                ? 'Hidden from public catalogue. Preserved safely in admin drafts.'
+                : 'Archived. Excluded from normal catalogue and admin listings.'}
             </p>
           </div>
 
@@ -1053,7 +1070,10 @@ export default function ProductForm({
                 <input
                   type="text"
                   value={specCapacity}
-                  onChange={(e) => setSpecCapacity(e.target.value)}
+                  onChange={(e) => {
+                    setSpecCapacity(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="e.g. 250 ml / 500 ml"
                   className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
                 />
@@ -1066,7 +1086,10 @@ export default function ProductForm({
                 <input
                   type="text"
                   value={specMaterial}
-                  onChange={(e) => setSpecMaterial(e.target.value)}
+                  onChange={(e) => {
+                    setSpecMaterial(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="e.g. Stainless Steel 304 / Borosilicate Glass"
                   className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
                 />
@@ -1079,7 +1102,10 @@ export default function ProductForm({
                 <input
                   type="text"
                   value={specColour}
-                  onChange={(e) => setSpecColour(e.target.value)}
+                  onChange={(e) => {
+                    setSpecColour(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="e.g. Silver, Blue, Pink"
                   className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
                 />
@@ -1092,7 +1118,10 @@ export default function ProductForm({
                 <input
                   type="text"
                   value={specPackaging}
-                  onChange={(e) => setSpecPackaging(e.target.value)}
+                  onChange={(e) => {
+                    setSpecPackaging(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="e.g. Carton of 50 pcs / Individual Box"
                   className="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/30"
                 />

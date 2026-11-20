@@ -77,25 +77,30 @@ export default function AdminProductList() {
 
   // Client-side counts for tabs when viewing full list
   const counts = useMemo(() => {
-    const total = products.length;
+    let total = 0;
     let active = 0;
     let draft = 0;
+    let archived = 0;
     let variable = 0;
     let standalone = 0;
 
     products.forEach(p => {
-      if (p.status === 'active') active++;
-      if (p.status === 'draft') draft++;
+      if (p.status === 'active') { active++; total++; }
+      else if (p.status === 'draft') { draft++; total++; }
+      else if (p.status === 'archived') { archived++; }
       if (p.has_variants) variable++;
       else standalone++;
     });
 
-    return { total, active, draft, variable, standalone };
+    return { total, active, draft, archived, variable, standalone };
   }, [products]);
 
-  // Quick toggle between Active (Published) and Draft
+  // Quick toggle between Active (Published), Draft, and Archived
   const handleToggleStatus = async (prod) => {
-    const newStatus = prod.status === 'active' ? 'draft' : 'active';
+    let newStatus = 'active';
+    if (prod.status === 'active') newStatus = 'draft';
+    else if (prod.status === 'draft') newStatus = 'active';
+    else if (prod.status === 'archived') newStatus = 'draft';
     setUpdatingId(prod.id);
     setError(null);
     try {
@@ -103,7 +108,9 @@ export default function AdminProductList() {
       setActionSuccess(
         newStatus === 'active'
           ? `"${prod.name}" is now Published to public catalogue!`
-          : `"${prod.name}" is now moved to Draft (hidden from public catalogue).`
+          : newStatus === 'draft'
+          ? `"${prod.name}" is now moved to Draft (hidden from public catalogue).`
+          : `"${prod.name}" is now Archived.`
       );
       await fetchProducts();
       setTimeout(() => setActionSuccess(null), 4000);
@@ -131,6 +138,23 @@ export default function AdminProductList() {
       setTimeout(() => setActionSuccess(null), 4000);
     } catch (err) {
       setError(`Failed to delete product: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleArchiveProtected = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+    try {
+      await updateProduct(productToDelete.id, { status: 'archived' });
+      setActionSuccess(`"${productToDelete.name}" has been cleanly archived.`);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+      await fetchProducts();
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch (err) {
+      setError(`Failed to archive product: ${err.message}`);
     } finally {
       setDeleting(false);
     }
@@ -244,6 +268,23 @@ export default function AdminProductList() {
             selectedStatus === 'draft' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'
           }`}>
             {counts.draft}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('archived')}
+          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all min-h-[40px] flex items-center gap-2 whitespace-nowrap ${
+            selectedStatus === 'archived'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>Archived</span>
+          <span className={`text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+            selectedStatus === 'archived' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+          }`}>
+            {counts.archived}
           </span>
         </button>
       </div>
@@ -365,7 +406,7 @@ export default function AdminProductList() {
           {/* ── MOBILE PRODUCT LIST (< sm breakpoint: compact responsive cards) ── */}
           <div data-mobile-list="true" className="sm:hidden flex flex-col gap-3">
             {products.map((prod) => {
-              const catName = categoryMap.get(prod.category_id) || prod.category_name || 'Uncategorised';
+              const catName = prod.category?.name || prod.category_name || categoryMap.get(prod.category_id) || 'Uncategorised';
               const imageUrl = prod.primary_image_key ? getR2ImageUrl(prod.primary_image_key) : null;
               const isVariable = Boolean(prod.has_variants);
 
@@ -414,9 +455,13 @@ export default function AdminProductList() {
                           {catName}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          prod.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                          prod.status === 'active'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : prod.status === 'draft'
+                            ? 'bg-amber-100 text-amber-900'
+                            : 'bg-slate-200 text-slate-800'
                         }`}>
-                          {prod.status === 'active' ? 'Active' : 'Draft'}
+                          {prod.status === 'active' ? 'Active' : prod.status === 'draft' ? 'Draft' : 'Archived'}
                         </span>
                         {isVariable ? (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
@@ -502,10 +547,13 @@ export default function AdminProductList() {
                       className={`inline-flex items-center justify-center min-h-[44px] py-2 px-3 text-xs font-bold rounded-xl border transition-colors ${
                         prod.status === 'active'
                           ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                          : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                          : prod.status === 'draft'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                       }`}
+                      title={prod.status === 'active' ? 'Unpublish to Draft' : prod.status === 'draft' ? 'Publish to Public Catalogue' : 'Restore from Archive'}
                     >
-                      {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : 'Publish'}
+                      {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : prod.status === 'draft' ? 'Publish' : 'Restore'}
                     </button>
 
                     {prod.slug && (
@@ -537,7 +585,7 @@ export default function AdminProductList() {
           {/* ── DESKTOP/TABLET GRID (sm: and up — Preserves approved desktop layout) ── */}
           <div data-desktop-grid="true" className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((prod) => {
-              const catName = categoryMap.get(prod.category_id) || prod.category_name || 'Uncategorised';
+              const catName = prod.category?.name || prod.category_name || categoryMap.get(prod.category_id) || 'Uncategorised';
               const imageUrl = prod.primary_image_key ? getR2ImageUrl(prod.primary_image_key) : null;
               const isVariable = Boolean(prod.has_variants);
 
@@ -589,9 +637,13 @@ export default function AdminProductList() {
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                           Active
                         </span>
-                      ) : (
+                      ) : prod.status === 'draft' ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-600 text-white shadow-sm">
                           Draft
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-600 text-white shadow-sm">
+                          Archived
                         </span>
                       )}
                     </div>
@@ -705,11 +757,13 @@ export default function AdminProductList() {
                         className={`inline-flex items-center justify-center px-3 py-2.5 text-xs font-bold rounded-xl border transition-colors min-h-[44px] ${
                           prod.status === 'active'
                             ? 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
-                            : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                            : prod.status === 'draft'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
                         }`}
-                        title={prod.status === 'active' ? 'Unpublish to Draft' : 'Publish to Public Catalogue'}
+                        title={prod.status === 'active' ? 'Unpublish to Draft' : prod.status === 'draft' ? 'Publish to Public Catalogue' : 'Restore from Archive'}
                       >
-                        {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : 'Publish'}
+                        {isUpdating ? '...' : prod.status === 'active' ? 'To Draft' : prod.status === 'draft' ? 'Publish' : 'Restore'}
                       </button>
 
                       {prod.slug && (
@@ -741,19 +795,23 @@ export default function AdminProductList() {
         </>
       )}
 
-      {/* ── Delete Confirmation Modal ────────────────────────────────────── */}
+      {/* ── Delete / Archive Confirmation Modal ────────────────────────── */}
       <ConfirmModal
         isOpen={deleteModalOpen}
-        title={`Delete Product "${productToDelete?.name}"?`}
+        title={
+          productToDelete?.id?.startsWith('prod-')
+            ? `Archive Protected Product "${productToDelete?.name}"?`
+            : `Delete Product "${productToDelete?.name}"?`
+        }
         message={
           productToDelete?.id?.startsWith('prod-')
-            ? `Notice: "${productToDelete?.name}" is a protected core catalogue product. If you want to hide it from customers, set its status to "Draft" or "Archived" instead. Permanent deletion of core catalogue records is blocked.`
+            ? `Notice: "${productToDelete?.name}" is a protected core catalogue product and cannot be permanently deleted. You can cleanly Archive it instead, which excludes it from the customer catalogue and normal admin listings.`
             : `Are you sure you want to permanently delete this product? All image records and variant configurations will be permanently removed.`
         }
-        confirmLabel="Confirm Delete"
-        isDanger={true}
+        confirmLabel={productToDelete?.id?.startsWith('prod-') ? 'Archive Product' : 'Confirm Delete'}
+        isDanger={!productToDelete?.id?.startsWith('prod-')}
         isLoading={deleting}
-        onConfirm={confirmDelete}
+        onConfirm={productToDelete?.id?.startsWith('prod-') ? handleArchiveProtected : confirmDelete}
         onCancel={() => {
           setDeleteModalOpen(false);
           setProductToDelete(null);
